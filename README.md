@@ -34,22 +34,13 @@
    - Masukkan nominal uang saku makan harian (misal Rp 20.000 atau Rp 25.000).
    - Algoritma otomatis menyusun menu 3x makan (Sarapan, Makan Siang, Makan Malam) yang pas dengan budget dan memaksimalkan porsi kenyang.
 
-5. **Pitch Deck & Business Architecture Hub (Slide 1 - 8)**
-   - **Slide 1:** Profil Tim Pengembang Kelompok 6 UNEJ.
-   - **Slide 2:** Background Problem (Kondisi, Masalah, Dampak Mahasiswa vs UMKM).
-   - **Slide 3:** Business Model Canvas (9 blok interaktif).
-   - **Slide 4:** Value Proposition Canvas (Customer Profile vs Value Map).
-   - **Slide 5:** Product-Solution Fit Matrix (5 masalah vs solusi vs fitur).
-   - **Slide 6-7:** Market Size TAM (Rp 120 Juta), SAM (Rp 48 Juta), SOM (Rp 12 Juta), Basis Pengguna (38.995 Mahasiswa UNEJ) + **Simulator Finansial Interaktif**.
-   - **Slide 8:** Competitor Analysis Matrix (Muyang vs Google Maps vs Ojol vs Medsos vs Rekomendasi Teman).
-
-6. **Paket Kemitraan & Registrasi UMKM (Slide 3 & 7 Monetisasi)**
+5. **Paket Kemitraan & Registrasi UMKM (Slide 3 & 7 Monetisasi)**
    - Featured Listing: Rp 50.000 / bulan.
    - Promosi Kilat: Rp 30.000 / event promosi.
    - Kampanye Bersama: Rp 100.000 / paket kampanye.
    - Form pendaftaran online terintegrasi langsung untuk pemilik warung.
 
-7. **Ulasan Komunitas & Kenyang Meter**
+6. **Ulasan Komunitas & Kenyang Meter**
    - Mahasiswa dapat mengirim ulasan riil dengan skor rasa (1-5 bintang) dan skor Kenyang Meter (1-5 porsi).
 
 ---
