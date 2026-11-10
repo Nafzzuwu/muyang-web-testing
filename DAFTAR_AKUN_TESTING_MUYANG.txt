@@ -1,0 +1,54 @@
+========================================
+       DAFTAR AKUN PENGUJIAN USER
+           MUYANG (MURAH KENYANG)
+========================================
+
+--- 1. AKUN ADMIN ---
+Login via: Klik "Portal Login Admin" di Footer / URL ?admin=1
+Username : admin_muyang
+Password : muyang2026
+
+
+--- 2. AKUN MAHASISWA ---
+Login via: Tombol [Masuk] di Navbar -> Tab Mahasiswa
+
+Akun 1:
+NIM      : 242410102001
+Password : demo123
+Nama     : Budi Santoso (Fasilkom '24)
+
+Akun 2:
+NIM      : 242410102002
+Password : demo123
+Nama     : Siti Rahma (FEB '24)
+
+
+--- 3. AKUN MITRA UMKM ---
+Login via: Tombol [Masuk] di Navbar -> Tab UMKM Mitra
+
+Akun 1 (Status: Aktif):
+Email    : busiti@demo.id
+Password : demo123
+Warung   : Lalapan Tahu Tempe & Telur Penyet Bu Siti
+
+Akun 2 (Status: Pending):
+Email    : pakbudi@demo.id
+Password : demo123
+Warung   : Depot Nasi Goreng Pak Budi
+
+Akun 3 (Status: Menunggu Bayar):
+Email    : mieayam@demo.id
+Password : demo123
+Warung   : Mie Ayam Mas Joko
+
+
+========================================
+Catatan Khusus Tester / Penguji:
+1. Tersedia tombol "⚡ 1-Klik Login Demo" 
+   di dalam modal login untuk langsung masuk
+   tanpa perlu mengetik manual (ramah HP/mobile).
+2. Pengguna baru juga bisa langsung 
+   mendaftar lewat tombol [Daftar] di web.
+3. Hubungi warung langsung via tombol 
+   "Chat WhatsApp" di menu detail kuliner.
+========================================
