@@ -3476,15 +3476,6 @@ button, input, select, textarea {
   background: linear-gradient(90deg, transparent, var(--neutral-300), transparent);
 }
 
-/* Catalogue filter bar: sticky on desktop */
-@media (min-width: 769px) {
-  .filter-bar-card {
-    position: sticky;
-    top: 80px;
-    z-index: 50;
-  }
-}
-
 /* Culinary card: improved mobile */
 @media (max-width: 480px) {
   .hero-title {
