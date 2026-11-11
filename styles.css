@@ -335,6 +335,41 @@ button, input, select, textarea {
   overflow: hidden;
 }
 
+/* Floating food emoji decorations */
+.hero-section::before {
+  content: '🍜';
+  position: absolute;
+  top: 12%;
+  left: 3%;
+  font-size: 2.4rem;
+  opacity: 0.12;
+  animation: floatA 7s ease-in-out infinite;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hero-section::after {
+  content: '🍚';
+  position: absolute;
+  bottom: 10%;
+  right: 4%;
+  font-size: 2.8rem;
+  opacity: 0.1;
+  animation: floatB 9s ease-in-out infinite;
+  pointer-events: none;
+  user-select: none;
+}
+
+@keyframes floatA {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50% { transform: translateY(-18px) rotate(5deg); }
+}
+
+@keyframes floatB {
+  0%, 100% { transform: translateY(0) rotate(8deg); }
+  50% { transform: translateY(-22px) rotate(-6deg); }
+}
+
 .hero-banner {
   background: linear-gradient(135deg, #3d1414 0%, #4a1916 55%, #2a0c0a 100%);
   border-radius: var(--radius-xl);
@@ -625,37 +660,43 @@ button, input, select, textarea {
 .section-header {
   text-align: center;
   max-width: 720px;
-  margin: 0 auto 40px;
+  margin: 0 auto 48px;
 }
 
 .section-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--primary-100);
+  background: linear-gradient(135deg, var(--primary-100), #fff);
   color: var(--primary-800);
   font-size: 0.8rem;
-  font-weight: 700;
-  padding: 4px 14px;
+  font-weight: 800;
+  padding: 5px 16px;
   border-radius: var(--radius-full);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
+  border: 1px solid rgba(74, 25, 22, 0.12);
+  box-shadow: 0 2px 8px rgba(74, 25, 22, 0.08);
 }
 
 .section-title {
   font-size: 2.2rem;
-  font-weight: 800;
+  font-weight: 900;
   color: var(--primary-950);
-  line-height: 1.2;
-  margin-bottom: 12px;
+  line-height: 1.15;
+  margin-bottom: 14px;
   letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--primary-950) 0%, var(--primary-700) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .section-subtitle {
   font-size: 1.05rem;
   color: var(--neutral-600);
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 /* Mode Switcher / Tab Navigation */
@@ -1130,17 +1171,41 @@ button, input, select, textarea {
    SECTION: KALKULATOR KENYANG ANAK KOS (MEAL PLANNER)
    =================================================================== */
 .meal-planner-section {
-  padding: 60px 0;
-  background: linear-gradient(180deg, var(--bg-parchment) 0%, #fff 100%);
-  border-top: 1px solid var(--neutral-200);
+  padding: 70px 0;
+  background: linear-gradient(180deg, #fff 0%, var(--bg-parchment) 100%);
+  border-top: 1px solid var(--neutral-100);
+  position: relative;
+}
+
+.meal-planner-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold-500), var(--accent-500), var(--gold-500));
+  background-size: 200% 100%;
+  animation: gradientSlide 5s linear infinite;
 }
 
 .planner-container-card {
-  background: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, #fdfaf6 100%);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--neutral-200);
+  box-shadow: 0 20px 50px -10px rgba(74, 25, 22, 0.1), 0 0 0 1px rgba(74, 25, 22, 0.05);
+  border: none;
   padding: 36px;
+  position: relative;
+  overflow: hidden;
+}
+
+.planner-container-card::before {
+  content: '🍱';
+  position: absolute;
+  top: -10px;
+  right: 20px;
+  font-size: 5rem;
+  opacity: 0.05;
+  pointer-events: none;
+  user-select: none;
 }
 
 .planner-control-box {
@@ -1304,97 +1369,193 @@ button, input, select, textarea {
 /* ===================================================================
    SECTION: PETA KULINER KAMPUS UNEJ INTERAKTIF
    =================================================================== */
+/* ===================================================================
+   MAP SECTION: REDESIGNED RADAR PETA KAMPUS
+   =================================================================== */
+
 .map-radar-section {
-  padding: 60px 0;
-  background: var(--bg-parchment);
+  padding: 70px 0;
+  background: linear-gradient(180deg, var(--bg-parchment) 0%, #f5f0e8 100%);
+  position: relative;
+}
+
+.map-radar-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-500), var(--gold-500), var(--accent-500));
+  background-size: 200% 100%;
+  animation: gradientSlide 4s linear infinite;
 }
 
 .radar-map-wrapper {
   background: #ffffff;
   border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--neutral-200);
+  box-shadow: 0 20px 50px -10px rgba(74, 25, 22, 0.14), 0 0 0 1px rgba(74, 25, 22, 0.06);
   display: grid;
   grid-template-columns: 1.8fr 1fr;
+  transition: box-shadow 0.3s ease;
 }
 
+.radar-map-wrapper:hover {
+  box-shadow: 0 28px 60px -10px rgba(74, 25, 22, 0.18), 0 0 0 1px rgba(74, 25, 22, 0.08);
+}
+
+/* Map Canvas: Warm map-like background */
 .radar-canvas-container {
   position: relative;
-  background: #eef2eb;
-  min-height: 480px;
-  background-image: 
-    radial-gradient(#cbd5e1 1px, transparent 1px),
-    linear-gradient(to right, rgba(203, 213, 225, 0.4) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(203, 213, 225, 0.4) 1px, transparent 1px);
-  background-size: 20px 20px, 60px 60px, 60px 60px;
+  min-height: 500px;
+  background-color: #f0ede0;
+  background-image:
+    /* Block grid - large */
+    linear-gradient(rgba(180, 170, 140, 0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180, 170, 140, 0.25) 1px, transparent 1px),
+    /* Sub-grid - small dots */
+    radial-gradient(circle, rgba(160, 150, 120, 0.4) 1px, transparent 1px);
+  background-size: 60px 60px, 60px 60px, 20px 20px;
   overflow: hidden;
 }
 
-/* Street Overlays for UNEJ Map */
+/* Vignette overlay for depth */
+.radar-canvas-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(100, 80, 50, 0.12) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Green park/campus area overlay */
+.radar-canvas-container::after {
+  content: '';
+  position: absolute;
+  top: 20%; left: 25%;
+  width: 40%; height: 50%;
+  background: rgba(134, 173, 90, 0.1);
+  border-radius: 50% 40% 55% 45% / 45% 50% 40% 55%;
+  pointer-events: none;
+  z-index: 1;
+  border: 1.5px dashed rgba(100, 150, 60, 0.25);
+}
+
+/* Street Overlays — road-like styling */
 .street-line {
   position: absolute;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  border: 1px solid #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #7a6a40;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
+  z-index: 5;
+  /* Road appearance */
+  background: linear-gradient(to right, #e8dfc0, #ede4c5, #e8dfc0);
+  box-shadow:
+    0 2px 5px rgba(0,0,0,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.6),
+    inset 0 -1px 0 rgba(0,0,0,0.08);
+  border: none;
+  border-top: 1.5px solid rgba(200, 185, 140, 0.8);
+  border-bottom: 1.5px solid rgba(200, 185, 140, 0.8);
+}
+
+/* Center dashed line for road lane markings */
+.street-line::before {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.street-kalimantan::before,
+.street-mastrip::before {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  transform: translateY(-50%);
+  border-top: 1.5px dashed rgba(255, 255, 255, 0.7);
+}
+
+.street-jawa::before,
+.street-riau::before {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  border-left: 1.5px dashed rgba(255, 255, 255, 0.7);
 }
 
 .street-kalimantan {
   top: 32%;
   left: 0;
   right: 0;
-  height: 22px;
-}
-
-.street-jawa {
-  top: 0;
-  bottom: 0;
-  left: 36%;
-  width: 24px;
-  writing-mode: vertical-rl;
+  height: 26px;
+  background: linear-gradient(to right, #dfd4a8, #e8dfc0, #dfd4a8);
 }
 
 .street-mastrip {
   top: 58%;
   left: 45%;
   right: 0;
-  height: 20px;
+  height: 22px;
+  background: linear-gradient(to right, #dfd4a8, #e8dfc0, #dfd4a8);
+}
+
+/* Vertical roads */
+.street-jawa,
+.street-riau {
+  writing-mode: vertical-rl;
+  background: linear-gradient(to bottom, #dfd4a8, #e8dfc0, #dfd4a8);
+  border-top: none;
+  border-bottom: none;
+  border-left: 1.5px solid rgba(200, 185, 140, 0.8);
+  border-right: 1.5px solid rgba(200, 185, 140, 0.8);
+}
+
+.street-jawa {
+  top: 0;
+  bottom: 0;
+  left: 36%;
+  width: 26px;
 }
 
 .street-riau {
   top: 0;
   bottom: 40%;
   left: 26%;
-  width: 18px;
-  writing-mode: vertical-rl;
+  width: 20px;
 }
 
-/* Campus Center Hub Marker */
+/* Campus Center Hub Marker — polished */
 .campus-hub-marker {
   position: absolute;
   top: 35%;
   left: 38%;
   transform: translate(-50%, -50%);
-  background: var(--primary-900);
+  background: linear-gradient(135deg, var(--primary-800), var(--primary-900));
   color: #fff;
-  padding: 8px 14px;
+  padding: 8px 15px;
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 14px rgba(74, 25, 22, 0.4);
-  font-size: 0.8rem;
+  box-shadow: 0 6px 20px rgba(74, 25, 22, 0.45), 0 0 0 3px rgba(255,255,255,0.9), 0 0 0 5px rgba(74, 25, 22, 0.2);
+  font-size: 0.78rem;
   font-weight: 800;
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: 8px;
-  border: 2px solid #fff;
+  gap: 7px;
+  animation: markerBreathe 3s ease-in-out infinite alternate;
+  letter-spacing: 0.3px;
+}
+
+@keyframes markerBreathe {
+  from { box-shadow: 0 6px 20px rgba(74, 25, 22, 0.45), 0 0 0 3px rgba(255,255,255,0.9), 0 0 0 5px rgba(74, 25, 22, 0.2); }
+  to   { box-shadow: 0 8px 28px rgba(74, 25, 22, 0.55), 0 0 0 3px rgba(255,255,255,1), 0 0 0 7px rgba(74, 25, 22, 0.15); }
 }
 
 .fasilkom-hub-marker {
@@ -1402,16 +1563,105 @@ button, input, select, textarea {
   top: 24%;
   left: 28%;
   transform: translate(-50%, -50%);
-  background: #0284c7;
+  background: linear-gradient(135deg, #0284c7, #0369a1);
   color: #fff;
-  padding: 6px 10px;
+  padding: 6px 11px;
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
-  font-size: 0.725rem;
-  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4), 0 0 0 2px rgba(255,255,255,0.9), 0 0 0 4px rgba(2, 132, 199, 0.2);
+  font-size: 0.72rem;
+  font-weight: 800;
   z-index: 9;
-  border: 1.5px solid #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: markerBreathe 3s 1.5s ease-in-out infinite alternate;
 }
+
+/* Map Compass */
+.map-compass {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 6px 9px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+  user-select: none;
+}
+
+.compass-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-800), var(--primary-900));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  box-shadow: 0 2px 6px rgba(74, 25, 22, 0.3);
+}
+
+.compass-circle i {
+  transform: rotate(-45deg);
+  color: #fbbf24;
+}
+
+.compass-label {
+  font-size: 0.62rem;
+  font-weight: 900;
+  color: var(--primary-900);
+  letter-spacing: 0.5px;
+}
+
+/* Map Legend */
+.map-legend {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 20;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+  border: 1px solid rgba(0,0,0,0.06);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--neutral-700);
+  user-select: none;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(255,255,255,0.8);
+}
+
+.legend-dot.regular { background: var(--accent-500); }
+.legend-dot.featured { background: var(--gold-500); }
+.legend-dot.campus { background: var(--primary-800); }
 
 /* Culinary Pins on Map */
 .culinary-map-pin {
@@ -1420,32 +1670,55 @@ button, input, select, textarea {
   z-index: 15;
   cursor: pointer;
   transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
 
 .culinary-map-pin:hover,
 .culinary-map-pin.active {
   transform: translate(-50%, -50%) scale(1.18);
   z-index: 25;
+  filter: drop-shadow(0 4px 8px rgba(234,88,12,0.4));
 }
 
 .pin-bubble {
+  position: relative;
   background: #ffffff;
-  border: 2px solid var(--accent-600);
+  border: 2.5px solid var(--accent-600);
   border-radius: var(--radius-full);
-  padding: 4px 10px;
+  padding: 5px 11px;
   display: flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18), 0 1px 3px rgba(0,0,0,0.1);
   font-size: 0.75rem;
   font-weight: 800;
   color: var(--primary-900);
   white-space: nowrap;
 }
 
+/* Downward Map Pin Arrow */
+.pin-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid var(--accent-600);
+  transition: border-top-color 0.2s;
+}
+
 .pin-bubble.featured {
   border-color: var(--gold-500);
-  background: var(--gold-50);
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3), 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.pin-bubble.featured::after {
+  border-top-color: var(--gold-500);
 }
 
 .pin-bubble i {
@@ -1454,9 +1727,13 @@ button, input, select, textarea {
 
 .culinary-map-pin.active .pin-bubble {
   border-color: var(--accent-500);
-  background: var(--primary-900);
+  background: linear-gradient(135deg, var(--primary-900), var(--primary-800));
   color: #ffffff;
   animation: radarPinPulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+.culinary-map-pin.active .pin-bubble::after {
+  border-top-color: var(--primary-900);
 }
 
 .culinary-map-pin.active .pin-bubble i {
@@ -1475,13 +1752,24 @@ button, input, select, textarea {
   }
 }
 
+/* Radar Sidebar — polished */
 .radar-sidebar-info {
   padding: 28px;
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #fdfaf6 100%);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border-left: 1px solid var(--neutral-200);
+  border-left: 3px solid var(--accent-500);
+  position: relative;
+}
+
+.radar-sidebar-info::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -1px;
+  width: 3px; height: 60px;
+  background: linear-gradient(to bottom, var(--gold-500), var(--accent-500));
+  border-radius: 0 2px 2px 0;
 }
 
 .radar-active-detail {
@@ -1489,10 +1777,18 @@ button, input, select, textarea {
 }
 
 .radar-spot-card {
-  background: var(--bg-surface-soft);
+  background: linear-gradient(135deg, var(--bg-surface-soft), #fff);
   border-radius: var(--radius-lg);
   padding: 18px;
-  border: 1.5px solid var(--neutral-200);
+  border: 1.5px solid rgba(234, 88, 12, 0.15);
+  box-shadow: 0 4px 14px rgba(74, 25, 22, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: sidebarFadeIn 0.3s ease;
+}
+
+@keyframes sidebarFadeIn {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .radar-spot-title {
@@ -1500,6 +1796,22 @@ button, input, select, textarea {
   font-weight: 800;
   color: var(--primary-900);
   margin-bottom: 4px;
+}
+
+/* Radar Tips Maba Card */
+.radar-tips-card {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  font-size: 0.8rem;
+  color: #92400e;
+  margin-top: 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
+  line-height: 1.5;
 }
 
 /* ===================================================================
@@ -2242,19 +2554,48 @@ button, input, select, textarea {
 /* Mobile Navigation Drawer */
 #mobileNavDrawer {
   display: none;
-  background: #ffffff;
-  padding: 18px 24px;
-  border-bottom: 3px solid var(--primary-700);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  animation: slideDown 0.25s ease-out;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 16px 20px 22px;
+  border-bottom: 3px solid var(--accent-500);
+  box-shadow: 0 16px 36px rgba(74, 25, 22, 0.15);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  animation: slideDown 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 #mobileNavDrawer.active {
   display: block;
 }
 
+#mobileNavDrawer a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--primary-900);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+#mobileNavDrawer a:hover,
+#mobileNavDrawer a:active {
+  background: var(--primary-50);
+  color: var(--accent-600);
+  transform: translateX(4px);
+}
+
+#mobileNavDrawer a i {
+  width: 20px;
+  text-align: center;
+  color: var(--accent-500);
+}
+
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
+  from { opacity: 0; transform: translateY(-12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -2304,17 +2645,31 @@ button, input, select, textarea {
 
 /* Footer */
 .main-footer {
-  background: var(--primary-950);
+  background: linear-gradient(180deg, #1a0908 0%, var(--primary-950) 40%, #0d0504 100%);
   color: rgba(255, 255, 255, 0.85);
-  padding: 50px 0 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 56px 0 24px;
+  border-top: 3px solid;
+  border-image: linear-gradient(90deg, var(--accent-600), var(--gold-500), var(--accent-600)) 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.main-footer::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(234, 88, 12, 0.08) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .footer-grid {
   display: grid;
   grid-template-columns: 1.5fr 1fr 1fr;
   gap: 40px;
-  margin-bottom: 36px;
+  margin-bottom: 40px;
 }
 
 .footer-brand h4 {
@@ -2326,15 +2681,17 @@ button, input, select, textarea {
 
 .footer-brand p {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.7);
-  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.65;
 }
 
 .footer-links h5 {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 800;
-  color: #fbbf24;
-  margin-bottom: 14px;
+  color: var(--gold-400);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .footer-links ul {
@@ -2342,21 +2699,28 @@ button, input, select, textarea {
 }
 
 .footer-links ul li {
-  margin-bottom: 8px;
-  font-size: 0.85rem;
+  margin-bottom: 10px;
+  font-size: 0.875rem;
+}
+
+.footer-links ul li a {
+  color: rgba(255, 255, 255, 0.7);
+  transition: color 0.2s, padding-left 0.2s;
+  display: inline-block;
 }
 
 .footer-links ul li a:hover {
   color: #ffffff;
-  text-decoration: underline;
+  padding-left: 4px;
 }
 
 .footer-bottom {
   text-align: center;
   padding-top: 24px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.3px;
 }
 
 /* Toast Notifications */
@@ -2400,9 +2764,12 @@ button, input, select, textarea {
   .radar-map-wrapper {
     grid-template-columns: 1fr;
   }
+  .radar-canvas-container {
+    min-height: 360px;
+  }
   .radar-sidebar-info {
     border-left: none;
-    border-top: 1px solid var(--neutral-200);
+    border-top: 3px solid var(--accent-500);
   }
   .bmc-grid-wrapper {
     grid-template-columns: repeat(2, 1fr);
@@ -2429,7 +2796,16 @@ button, input, select, textarea {
     display: block;
   }
   .hero-title {
-    font-size: 2.2rem;
+    font-size: 2rem;
+  }
+  .hero-banner {
+    padding: 28px 20px;
+  }
+  .hero-desc {
+    font-size: 0.95rem;
+  }
+  .section-title {
+    font-size: 1.75rem;
   }
   .team-grid {
     grid-template-columns: 1fr;
@@ -2439,13 +2815,35 @@ button, input, select, textarea {
   }
   .footer-grid {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 28px;
   }
   .planner-control-box {
     grid-template-columns: 1fr;
   }
   .planner-stats-result {
     grid-template-columns: 1fr;
+  }
+  .radar-canvas-container {
+    min-height: 300px;
+    max-height: 320px;
+  }
+  /* Mobile map canvas: allow horizontal scroll if needed */
+  .radar-map-wrapper {
+    overflow-x: auto;
+  }
+  /* Bigger tap targets on mobile */
+  .btn {
+    min-height: 44px;
+  }
+  .btn-quick-login {
+    min-height: 44px;
+  }
+  /* Toast full-width on mobile */
+  .toast-msg {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    width: auto;
   }
 }
 
@@ -2833,6 +3231,50 @@ button, input, select, textarea {
   .nav-user-name {
     display: none;
   }
+
+  /* Cards single column on small screens */
+  .culinary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Section header adjustments */
+  .section-title {
+    font-size: 1.55rem;
+  }
+
+  /* Hero stats 2 col on small */
+  .hero-stats-mini {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  /* Map canvas smaller */
+  .radar-canvas-container {
+    min-height: 260px;
+    max-height: 280px;
+  }
+
+  /* Map legend smaller */
+  .map-legend {
+    font-size: 0.65rem;
+    padding: 8px 10px;
+    gap: 4px;
+  }
+
+  /* Meal planner */
+  .meals-timeline-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .planner-container-card {
+    padding: 20px;
+  }
+
+  /* Section padding tighter */
+  .map-radar-section,
+  .meal-planner-section {
+    padding: 48px 0;
+  }
 }
 
 
@@ -3000,4 +3442,99 @@ button, input, select, textarea {
 
 .btn-wa-chat:active {
   transform: translateY(0);
+}
+
+/* ============================================================
+   SCROLL REVEAL ANIMATION
+   ============================================================ */
+.section-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.section-reveal.section-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered children inside reveal sections */
+.section-reveal.section-visible .meal-slot-card:nth-child(1) { transition-delay: 0.05s; }
+.section-reveal.section-visible .meal-slot-card:nth-child(2) { transition-delay: 0.12s; }
+.section-reveal.section-visible .meal-slot-card:nth-child(3) { transition-delay: 0.19s; }
+
+/* Smooth section separator gradients */
+.catalogue-section {
+  position: relative;
+}
+
+.catalogue-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--neutral-300), transparent);
+}
+
+/* Catalogue filter bar: sticky on desktop */
+@media (min-width: 769px) {
+  .filter-bar-card {
+    position: sticky;
+    top: 80px;
+    z-index: 50;
+  }
+}
+
+/* Culinary card: improved mobile */
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 1.75rem;
+  }
+  .hero-subtitle-tag {
+    font-size: 1.1rem;
+  }
+  .hero-banner {
+    padding: 22px 16px;
+  }
+  .hero-stats-mini {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+  .stat-mini-num {
+    font-size: 1.1rem;
+  }
+  .radar-canvas-container {
+    min-height: 240px;
+    max-height: 260px;
+  }
+  .campus-hub-marker {
+    font-size: 0.65rem;
+    padding: 5px 8px;
+  }
+  .fasilkom-hub-marker {
+    font-size: 0.6rem;
+    padding: 4px 7px;
+  }
+  .pin-bubble {
+    font-size: 0.65rem;
+    padding: 3px 7px;
+  }
+  .planner-container-card {
+    padding: 16px;
+  }
+  .modal-backdrop {
+    padding: 12px;
+  }
+  .modal-card {
+    max-height: 94vh;
+    border-radius: var(--radius-lg);
+  }
+  .modal-content-pad {
+    padding: 18px 14px;
+  }
+  .btn-quick-login {
+    font-size: 0.78rem;
+    padding: 7px 10px;
+  }
 }

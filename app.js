@@ -1960,5 +1960,24 @@ document.addEventListener('DOMContentLoaded', () => {
   selectRadarSpot(1);
   updateMealPlanner();
 
-  console.log('MUYANG Web App v2.2 Loaded - Kelompok 6 Universitas Jember');
+  // 21. Scroll-reveal entrance animation for sections
+  if ('IntersectionObserver' in window) {
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('section-visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08 });
+
+    document.querySelectorAll('.section-reveal').forEach(el => {
+      revealObserver.observe(el);
+    });
+  } else {
+    // Fallback: show all
+    document.querySelectorAll('.section-reveal').forEach(el => el.classList.add('section-visible'));
+  }
+
+  console.log('MUYANG Web App v2.3 Loaded - Tim MUYANG');
 });

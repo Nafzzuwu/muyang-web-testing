@@ -39,12 +39,13 @@
       </a>
 
       <!-- Desktop Nav -->
-      <nav class="nav-links" aria-label="Menu Navigasi Utama">
-        <li class="nav-item active"><a href="#katalog"><i class="fa-solid fa-magnifying-glass"></i> Cari Kuliner</a>
-        </li>
-        <li class="nav-item"><a href="#radar-map"><i class="fa-solid fa-map-location-dot"></i> Peta Kampus</a></li>
-        <li class="nav-item"><a href="#meal-planner"><i class="fa-solid fa-calculator"></i> Kalkulator Kos</a></li>
-        <li class="nav-item"><a href="#kemitraan-umkm"><i class="fa-solid fa-store"></i> Paket UMKM</a></li>
+      <nav aria-label="Menu Navigasi Utama">
+        <ul class="nav-links">
+          <li class="nav-item active"><a href="#katalog"><i class="fa-solid fa-magnifying-glass"></i> Cari Kuliner</a></li>
+          <li class="nav-item"><a href="#radar-map"><i class="fa-solid fa-map-location-dot"></i> Peta Kampus</a></li>
+          <li class="nav-item"><a href="#meal-planner"><i class="fa-solid fa-calculator"></i> Kalkulator Kos</a></li>
+          <li class="nav-item"><a href="#kemitraan-umkm"><i class="fa-solid fa-store"></i> Paket UMKM</a></li>
+        </ul>
       </nav>
 
       <!-- Nav Actions: Guest vs Logged In -->
@@ -508,7 +509,7 @@
     <!-- =============================================================
          SECTION: PETA KULINER KAMPUS UNEJ (Radar Peta)
          ============================================================= -->
-    <section class="map-radar-section" id="radar-map">
+    <section class="map-radar-section section-reveal" id="radar-map">
       <div class="container">
 
         <div class="section-header">
@@ -546,6 +547,27 @@
             <div id="radarPinsContainer">
               <!-- Pins dynamically placed here by app.js -->
             </div>
+
+            <!-- Map Compass -->
+            <div class="map-compass" title="Arah Utara">
+              <div class="compass-circle">
+                <i class="fa-solid fa-location-arrow"></i>
+              </div>
+              <span class="compass-label">U</span>
+            </div>
+
+            <!-- Map Legend -->
+            <div class="map-legend">
+              <div class="legend-item">
+                <span class="legend-dot campus"></span> Kampus UNEJ
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot featured"></span> UMKM Featured
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot regular"></span> Warung Biasa
+              </div>
+            </div>
           </div>
 
           <!-- Radar Sidebar Info -->
@@ -563,11 +585,11 @@
               </div>
             </div>
 
-            <div
-              style="background: var(--neutral-50); padding: 14px; border-radius: var(--radius-md); border: 1px dashed var(--neutral-300); font-size: 0.8rem; color: var(--neutral-600); margin-top: 20px;">
-              <i class="fa-solid fa-circle-info" style="color: var(--accent-500);"></i>
-              <strong>Tips Maba:</strong> Pin emas menandakan UMKM Featured Partner dengan porsi teruji dan harga menu
-              mahasiswa terjamin stabil.
+            <div class="radar-tips-card">
+              <i class="fa-solid fa-circle-info" style="color: var(--accent-500); font-size: 1rem; margin-top: 2px;"></i>
+              <div>
+                <strong>Tips Maba:</strong> Pin emas menandakan UMKM Featured Partner dengan porsi teruji dan harga menu mahasiswa terjamin stabil.
+              </div>
             </div>
           </div>
 
@@ -579,7 +601,7 @@
     <!-- =============================================================
          SECTION: KALKULATOR KENYANG ANAK KOS (MEAL PLANNER)
          ============================================================= -->
-    <section class="meal-planner-section" id="meal-planner">
+    <section class="meal-planner-section section-reveal" id="meal-planner">
       <div class="container">
 
         <div class="section-header">
