@@ -1151,6 +1151,8 @@ function renderCulinaryGrid() {
     `;
   }).join('');
 
+  culinaryGrid.scrollTo({ left: 0, behavior: 'smooth' });
+
   document.querySelectorAll('.view-detail-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
