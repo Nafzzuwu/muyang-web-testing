@@ -1474,13 +1474,13 @@ function detectArea(alamat) {
 }
 
 // Garis tengah jalan (lat,lng) hasil kalibrasi screenshot peta OSM - warung baru ditempatkan DI ATAS jalan, di luar kampus.
-// Jl. Karimata & Jl. Danau Toba masih sementara (belum terlihat di peta); ganti setelah koordinat aslinya diambil.
+// Jl. Karimata: titik acuan Unmuh Jember (arah jalan belum dicek). Jl. Danau Toba masih sementara; ganti setelah koordinat aslinya diambil.
 const AREA_ROADS = {
   'Jl. Kalimantan': [[-8.160706, 113.714258], [-8.162409, 113.713793], [-8.163907, 113.713139], [-8.164793, 113.712761], [-8.165474, 113.712434], [-8.166155, 113.712124], [-8.166836, 113.7119]],
   'Jl. Jawa': [[-8.168454, 113.711762], [-8.168675, 113.712451], [-8.16893, 113.713139], [-8.16922, 113.714516], [-8.169577, 113.715893], [-8.169952, 113.717271], [-8.17031, 113.718648], [-8.170548, 113.720025], [-8.170633, 113.720713], [-8.170786, 113.721574]],
   'Jl. Mastrip': [[-8.160825, 113.72209], [-8.161063, 113.722779], [-8.161387, 113.723381], [-8.162068, 113.72388], [-8.162749, 113.724207], [-8.16343, 113.7245], [-8.164111, 113.724707], [-8.165474, 113.725103], [-8.166155, 113.725223], [-8.166836, 113.725395], [-8.167517, 113.725653]],
   'Jl. Riau': [[-8.167449, 113.725533], [-8.167704, 113.724844], [-8.168011, 113.724156], [-8.168283, 113.723467], [-8.168879, 113.722727], [-8.16956, 113.722383], [-8.170242, 113.722056], [-8.171604, 113.721522], [-8.172285, 113.721178], [-8.173647, 113.719904]],
-  'Jl. Karimata': [[-8.1690, 113.7245], [-8.1698, 113.7255]],
+  'Jl. Karimata': [[-8.174833, 113.717661], [-8.174833, 113.717961]], // titik acuan: Unmuh Jember (Jl. Karimata No. 49)
   'Jl. Danau Toba': [[-8.1730, 113.7210], [-8.1738, 113.7220]]
 };
 const CAMPUS_RADIUS_M = 300; // perkiraan jari-jari kampus dari titik pusat
