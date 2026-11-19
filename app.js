@@ -1970,6 +1970,31 @@ const AREA_COORDINATES = {
   ...Object.fromEntries(Object.entries(AREA_ROADS).map(([name, line]) => [name, { center: pointAlongRoad(line, 0.5), zoom: 17 }]))
 };
 
+// Zoom peta mengikuti posisi pin warung di area terpilih (bukan titik/zoom tetap),
+// jadi selalu pas walau koordinat warung berubah. Cadangan: titik tengah jalan.
+function focusMapOnArea(area) {
+  if (!leafletMap) return;
+  const opts = { duration: 0.9, maxZoom: 17, paddingTopLeft: [70, 70], paddingBottomRight: [180, 90] };
+  const latlngs = getAllCulinaryData()
+    .filter(item => area === 'all' || item.area === area)
+    .map(item => leafletMarkers[item.id] && leafletMarkers[item.id].getLatLng())
+    .filter(Boolean);
+
+  if (area === 'all') {
+    latlngs.push(L.latLng(PUSAT_UNEJ_COORDS[0], PUSAT_UNEJ_COORDS[1]));
+    leafletMap.flyToBounds(L.latLngBounds(latlngs), opts);
+    return;
+  }
+  if (latlngs.length === 0) {
+    const target = AREA_COORDINATES[area] || AREA_COORDINATES['all'];
+    leafletMap.flyTo(target.center, 16.5, { duration: 0.9 });
+  } else if (latlngs.length === 1) {
+    leafletMap.flyTo(latlngs[0], 17, { duration: 0.9 });
+  } else {
+    leafletMap.flyToBounds(L.latLngBounds(latlngs), opts);
+  }
+}
+
 function initLeafletMap() {
   const container = document.getElementById('radarMapContainer');
   if (!container) return;
@@ -2032,9 +2057,7 @@ function initLeafletMap() {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.map-chip-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      const area = btn.getAttribute('data-area');
-      const target = AREA_COORDINATES[area] || AREA_COORDINATES['all'];
-      leafletMap.flyTo(target.center, target.zoom, { duration: 0.9 });
+      focusMapOnArea(btn.getAttribute('data-area'));
     });
   });
 
