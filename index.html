@@ -250,8 +250,27 @@
         <i class="fa-solid fa-circle-check"></i> Mitra Aktif - Listing Aktif di Platform Muyang
       </div>
 
-      <!-- Add Menu Form -->
+      <!-- Upload Foto Warung -->
       <div class="dash-section">
+        <h3 class="dash-section-title"><i class="fa-solid fa-camera"></i> Foto Profil Warung</h3>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <img id="warungPhotoPreview" src="" alt="Foto Warung" style="width:120px;height:90px;object-fit:cover;border-radius:var(--radius-lg);border:2px dashed var(--neutral-300);display:none;">
+          <div style="flex:1;min-width:200px;">
+            <label class="btn btn-outline btn-sm" for="warungPhotoInput" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;">
+              <i class="fa-solid fa-upload"></i> Pilih Foto Warung
+            </label>
+            <input type="file" id="warungPhotoInput" accept="image/*" style="display:none;">
+            <p style="font-size:0.78rem;color:var(--neutral-400);margin-top:6px;">Format: JPG/PNG/WebP, maks 2MB. Foto akan tampil di katalog publik.</p>
+            <button id="uploadWarungPhotoBtn" class="btn btn-primary btn-sm" style="margin-top:8px;display:none;">
+              <i class="fa-solid fa-cloud-upload-alt"></i> Simpan Foto Warung
+            </button>
+            <span id="uploadWarungStatus" style="font-size:0.8rem;margin-left:8px;"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Menu Form -->
+      <div class="dash-section" style="margin-top:16px;">
         <h3 class="dash-section-title"><i class="fa-solid fa-plus"></i> Tambah Menu Warung</h3>
         <form id="addMenuForm" class="add-menu-form">
           <div class="add-menu-fields">
@@ -259,6 +278,15 @@
             <input type="number" id="menuPriceInput" class="form-input" placeholder="Harga (Rp)" min="1000" required>
             <input type="text" id="menuPortionInput" class="form-input" placeholder="Keterangan porsi (cth: Porsi Jumbo)">
             <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Tambah</button>
+          </div>
+          <!-- Upload foto menu -->
+          <div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <label class="btn btn-outline btn-sm" for="menuPhotoInput" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;">
+              <i class="fa-solid fa-image"></i> Foto Menu (opsional)
+            </label>
+            <input type="file" id="menuPhotoInput" accept="image/*" style="display:none;">
+            <img id="menuPhotoPreview" src="" alt="Preview" style="width:60px;height:50px;object-fit:cover;border-radius:8px;border:1.5px solid var(--neutral-200);display:none;">
+            <span id="menuPhotoName" style="font-size:0.78rem;color:var(--neutral-500);"></span>
           </div>
         </form>
         <div id="umkmMenuList" class="dash-menu-list" style="margin-top: 16px;">

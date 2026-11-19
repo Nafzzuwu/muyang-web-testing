@@ -963,6 +963,12 @@ async function renderUmkmDashboard() {
     if (welcomeEl) welcomeEl.textContent = `${session.warungName} — ${paket ? paket.name : 'Mitra Aktif'}`;
 
     if (warung) {
+      // Tampilkan foto warung yang sudah ada di preview
+      const warungPreview = document.getElementById('warungPhotoPreview');
+      if (warungPreview && warung.image_url) {
+        warungPreview.src = warung.image_url;
+        warungPreview.style.display = 'block';
+      }
       await renderUmkmMenuList(warung);
       await renderUmkmIncomingReviews(warung.id);
     }
@@ -973,6 +979,14 @@ async function renderUmkmDashboard() {
 async function renderUmkmMenuList(warung) {
   const listEl = document.getElementById('umkmMenuList');
   if (!listEl) return;
+
+  // Tampilkan foto warung yang sudah ada di preview
+  const warungPreview = document.getElementById('warungPhotoPreview');
+  if (warungPreview && warung.image_url) {
+    warungPreview.src = warung.image_url;
+    warungPreview.style.display = 'block';
+  }
+
   const menus = warung.warung_menus || [];
   if (menus.length === 0) {
     listEl.innerHTML = '<p style="color:var(--neutral-400);font-size:0.85rem;">Belum ada menu warung. Tambahkan menu pertama Anda pada formulir di atas.</p>';
@@ -980,10 +994,16 @@ async function renderUmkmMenuList(warung) {
   }
   listEl.innerHTML = menus.map(m => `
     <div class="dash-menu-item">
-      <div>
-        <span class="dash-menu-name">${m.name}</span>
-        ${m.is_best_seller ? '<span style="background:var(--gold-100);color:var(--gold-600);font-size:0.68rem;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;">Favorit</span>' : ''}
-        <span class="dash-menu-portion">${m.portion || ''}</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        ${m.image_url
+          ? `<img src="${m.image_url}" alt="${m.name}" style="width:48px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--neutral-200);" onerror="this.style.display='none'">`
+          : `<div style="width:48px;height:40px;background:var(--neutral-100);border-radius:6px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--neutral-300);"><i class="fa-solid fa-utensils" style="color:var(--neutral-300);font-size:0.9rem;"></i></div>`
+        }
+        <div>
+          <span class="dash-menu-name">${m.name}</span>
+          ${m.is_best_seller ? '<span style="background:var(--gold-100);color:var(--gold-600);font-size:0.68rem;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;">Favorit</span>' : ''}
+          <span class="dash-menu-portion">${m.portion || ''}</span>
+        </div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
         <span class="dash-menu-price">${formatIDR(m.price)}</span>
@@ -1954,6 +1974,60 @@ function updateMealPlanner() {
 }
 
 // ============================================================
+// SUPABASE STORAGE — IMAGE UPLOAD HELPERS
+// ============================================================
+const STORAGE_BUCKET = 'muyang-uploads';
+
+async function uploadImageToStorage(file, folder) {
+  if (!supabaseClient) return null;
+  if (!file) return null;
+
+  // Validate file size (max 2MB)
+  if (file.size > 2 * 1024 * 1024) {
+    showToast('Ukuran file terlalu besar. Maksimal 2MB.', 'error');
+    return null;
+  }
+
+  // Validate file type
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  if (!allowedTypes.includes(file.type)) {
+    showToast('Format file tidak didukung. Gunakan JPG, PNG, atau WebP.', 'error');
+    return null;
+  }
+
+  const ext = file.name.split('.').pop().toLowerCase();
+  const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+
+  try {
+    const { data, error } = await supabaseClient.storage
+      .from(STORAGE_BUCKET)
+      .upload(fileName, file, { upsert: true, contentType: file.type });
+
+    if (error) {
+      console.warn('[Storage] Upload error:', error.message);
+      // Jika bucket belum ada, beri instruksi
+      if (error.message?.includes('Bucket not found') || error.message?.includes('bucket')) {
+        showToast('Storage bucket belum dibuat. Buat bucket "muyang-uploads" di Supabase.', 'error');
+      } else {
+        showToast('Gagal upload gambar: ' + error.message, 'error');
+      }
+      return null;
+    }
+
+    // Get public URL
+    const { data: urlData } = supabaseClient.storage
+      .from(STORAGE_BUCKET)
+      .getPublicUrl(fileName);
+
+    return urlData?.publicUrl || null;
+  } catch (err) {
+    console.warn('[Storage] Upload exception:', err);
+    showToast('Gagal upload gambar.', 'error');
+    return null;
+  }
+}
+
+// ============================================================
 // ADMIN SECRET TRIGGER
 // ============================================================
 function initAdminSecretTrigger() {
@@ -2184,7 +2258,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 15. Review Form
   document.getElementById('reviewForm')?.addEventListener('submit', handleReviewSubmit);
 
-  // 16. UMKM Add Menu Form (insert to warung_menus table)
+  // 16. UMKM Add Menu Form (insert to warung_menus table + foto opsional)
   document.getElementById('addMenuForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const session = LS.getSession();
@@ -2193,6 +2267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const name = document.getElementById('menuNameInput').value.trim();
     const price = parseInt(document.getElementById('menuPriceInput').value);
     const portion = document.getElementById('menuPortionInput').value.trim();
+    const photoFile = document.getElementById('menuPhotoInput')?.files?.[0] || null;
     if (!name || !price) return;
 
     // Get warung_id for this UMKM
@@ -2206,11 +2281,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btn) { btn.disabled = true; btn.textContent = 'Menyimpan...'; }
 
     try {
+      // Upload foto menu jika ada
+      let imageUrl = null;
+      if (photoFile) {
+        showToast('Mengupload foto menu...');
+        imageUrl = await uploadImageToStorage(photoFile, 'menus');
+      }
+
       const { error } = await DB.insertMenu({
         warung_id: warung.id,
         name,
         price,
         portion: portion || 'Porsi Standar',
+        image_url: imageUrl,
         is_best_seller: false,
         is_available: true
       });
@@ -2237,9 +2320,30 @@ document.addEventListener('DOMContentLoaded', async () => {
       await renderUmkmDashboard();
       renderCulinaryGrid();
       document.getElementById('addMenuForm')?.reset();
-      showToast(`Menu "${name}" berhasil ditambahkan dan langsung tampil di katalog publik!`);
+      // Reset preview foto menu
+      const menuPhotoPreview = document.getElementById('menuPhotoPreview');
+      const menuPhotoName = document.getElementById('menuPhotoName');
+      if (menuPhotoPreview) { menuPhotoPreview.style.display = 'none'; menuPhotoPreview.src = ''; }
+      if (menuPhotoName) menuPhotoName.textContent = '';
+      showToast(`Menu "${name}" berhasil ditambahkan${imageUrl ? ' dengan foto' : ''}!`);
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = 'Tambah Menu'; }
+    }
+  });
+
+  // Preview foto menu saat file dipilih
+  document.getElementById('menuPhotoInput')?.addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    const preview = document.getElementById('menuPhotoPreview');
+    const nameEl = document.getElementById('menuPhotoName');
+    if (file && preview) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        preview.src = ev.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+      if (nameEl) nameEl.textContent = file.name;
     }
   });
 
@@ -2250,6 +2354,52 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 18. Admin Secret Triggers
   initAdminSecretTrigger();
+
+  // 18b. UMKM Warung Photo Upload
+  document.getElementById('warungPhotoInput')?.addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    const preview = document.getElementById('warungPhotoPreview');
+    const uploadBtn = document.getElementById('uploadWarungPhotoBtn');
+    if (file && preview) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        preview.src = ev.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+      if (uploadBtn) uploadBtn.style.display = 'inline-flex';
+    }
+  });
+
+  document.getElementById('uploadWarungPhotoBtn')?.addEventListener('click', async () => {
+    const session = LS.getSession();
+    if (!session || session.role !== 'umkm') return;
+
+    const file = document.getElementById('warungPhotoInput')?.files?.[0];
+    if (!file) return;
+
+    const statusEl = document.getElementById('uploadWarungStatus');
+    const btn = document.getElementById('uploadWarungPhotoBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Mengupload...'; }
+    if (statusEl) statusEl.textContent = '';
+
+    try {
+      const imageUrl = await uploadImageToStorage(file, 'warungs');
+      if (!imageUrl) return;
+
+      // Update warung image_url di database
+      const warung = await DB.getWarungByOwnerId(session.id);
+      if (warung) {
+        await supabaseClient.from('warungs').update({ image_url: imageUrl }).eq('id', warung.id);
+        await refreshWarungsCache();
+        renderCulinaryGrid();
+        if (statusEl) statusEl.innerHTML = '<span style="color:var(--success-600);font-weight:700;"><i class="fa-solid fa-check-circle"></i> Foto berhasil disimpan!</span>';
+        showToast('Foto warung berhasil diupload dan tampil di katalog!');
+      }
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-upload-alt"></i> Simpan Foto Warung'; }
+    }
+  });
 
   // 19. Load data from Supabase Cloud, then render
   console.log('[MUYANG] Loading data from Supabase...');
