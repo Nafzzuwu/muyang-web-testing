@@ -4,24 +4,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MUYANG - Murah Kenyang</title>
-  <meta name="theme-color" content="#331310">
+  <title>MUYANG — Murah Kenyang | Panduan Kuliner Mahasiswa UNEJ</title>
+  <meta name="theme-color" content="#2B0F0D">
 
   <!-- Favicon / ikon tab -->
   <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="assets/icons/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="icon" href="assets/icons/favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
-  <meta property="og:title" content="MUYANG - Murah Kenyang">
+  <meta property="og:title" content="MUYANG — Murah Kenyang">
   <meta property="og:description"
-    content="Cari kuliner enak, murah, dan kenyang sesuai budget mahasiswa di sekitar kampus UNEJ.">
+    content="Cari tempat makan enak, harga jujur, dan porsi mengenyangkan sesuai sisa uang saku di sekitar kampus UNEJ.">
   <meta name="description"
-    content="Platform digital pencari makanan enak, murah, dan porsi kenyang sesuai budget mahasiswa di sekitar kampus Universitas Jember (UNEJ).">
+    content="Direktori kuliner hemat dan mengenyangkan sesuai budget mahasiswa di sekitar kampus Universitas Jember (UNEJ).">
 
-  <!-- Google Fonts: Plus Jakarta Sans -->
+  <!-- Google Fonts: Fraunces (Editorial Display) & Plus Jakarta Sans (UI) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
 
   <!-- FontAwesome 6 Icons -->
@@ -43,23 +44,39 @@
   <header class="main-header">
     <div class="container navbar">
       <a href="#home" class="brand-logo" id="headerBrandLogo" aria-label="Beranda Muyang">
-        <div class="brand-icon">
-          <i class="fa-solid fa-bowl-rice"></i>
-        </div>
-        <div class="brand-text">
-          <h1>MUYANG</h1>
-          <p>Murah Kenyang</p>
-        </div>
-      </a>
+      <div class="brand-icon" aria-hidden="true">
+        <svg class="muyang-emblem" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Kepulan Uap Hangat -->
+          <path class="steam-line steam-1" d="M17.5 15.5C16.5 13.5 19.5 12 18.5 9.5" stroke="#FBBF24" stroke-width="2.2" stroke-linecap="round"/>
+          <path class="steam-line steam-2" d="M23.5 14.5C22.5 12 25.5 10.5 24.5 7.5" stroke="#FBBF24" stroke-width="2.2" stroke-linecap="round"/>
+          <path class="steam-line steam-3" d="M29.5 15.5C28.5 13.5 31.5 12 30.5 9.5" stroke="#FBBF24" stroke-width="2.2" stroke-linecap="round"/>
+          <!-- Sumpit -->
+          <path d="M29 19.5L39.5 12.5" stroke="#FDBA74" stroke-width="2" stroke-linecap="round"/>
+          <path d="M31 21L40.5 16" stroke="#FB923C" stroke-width="2" stroke-linecap="round"/>
+          <!-- Gunungan Nasi Pulen -->
+          <path d="M12.5 23C13.5 17.5 18.5 15.5 24 15.5C29.5 15.5 34.5 17.5 35.5 23H12.5Z" fill="#FEF3C7"/>
+          <path d="M16.5 20.8C18 18.5 21.5 17.8 25 18" stroke="#F59E0B" stroke-width="1.6" stroke-linecap="round"/>
+          <!-- Bibir & Badan Mangkuk -->
+          <rect x="9.5" y="22.5" width="29" height="3" rx="1.5" fill="#F59E0B"/>
+          <path d="M11 25.5C11 32.8 16.5 36.5 24 36.5C31.5 36.5 37 32.8 37 25.5H11Z" fill="#EA580C"/>
+          <path d="M13.5 28.8Q24 30.8 34.5 28.8" stroke="#FDBA74" stroke-width="1.5" stroke-linecap="round" opacity="0.9"/>
+          <!-- Kaki Mangkuk -->
+          <path d="M18.5 36.5L19.5 39.2C19.7 39.7 20.2 40 20.8 40H27.2C27.8 40 28.3 39.7 28.5 39.2L29.5 36.5H18.5Z" fill="#D97706"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>MUYANG<span class="brand-dot">.</span></h1>
+        <p><span class="brand-accent-bar"></span>Murah Kenyang</p>
+      </div>
+    </a>
 
       <!-- Desktop Nav -->
       <nav aria-label="Menu Navigasi Utama">
         <ul class="nav-links">
-          <li class="nav-item active"><a href="#katalog"><i class="fa-solid fa-magnifying-glass"></i> Cari Kuliner</a>
-          </li>
+          <li class="nav-item active"><a href="#katalog"><i class="fa-solid fa-magnifying-glass"></i> Cari Makan</a></li>
           <li class="nav-item"><a href="#radar-map"><i class="fa-solid fa-map-location-dot"></i> Peta Kampus</a></li>
           <li class="nav-item"><a href="#meal-planner"><i class="fa-solid fa-calculator"></i> Kalkulator Kos</a></li>
-          <li class="nav-item"><a href="#kemitraan-umkm"><i class="fa-solid fa-store"></i> Paket UMKM</a></li>
+          <li class="nav-item"><a href="#kemitraan-umkm"><i class="fa-solid fa-store"></i> Gabung Warung</a></li>
         </ul>
       </nav>
 
@@ -76,16 +93,12 @@
 
     <!-- Mobile Drawer -->
     <div id="mobileNavDrawer">
-      <div style="display: flex; flex-direction: column; gap: 12px;">
-        <a href="#katalog" style="font-weight: 700; color: var(--primary-900); padding: 8px 0;"><i
-            class="fa-solid fa-magnifying-glass"></i> Cari Kuliner & Filter Budget</a>
-        <a href="#radar-map" style="font-weight: 700; color: var(--primary-900); padding: 8px 0;"><i
-            class="fa-solid fa-map-location-dot"></i> Peta Kuliner Kampus UNEJ</a>
-        <a href="#meal-planner" style="font-weight: 700; color: var(--primary-900); padding: 8px 0;"><i
-            class="fa-solid fa-calculator"></i> Kalkulator Kenyang Anak Kos</a>
-        <a href="#kemitraan-umkm" style="font-weight: 700; color: var(--primary-900); padding: 8px 0;"><i
-            class="fa-solid fa-store"></i> Paket Listing & Kemitraan UMKM</a>
-        <div id="mobileNavAuthArea" style="margin-top: 6px;">
+      <div class="mobile-drawer-links">
+        <a href="#katalog"><i class="fa-solid fa-magnifying-glass"></i> Cari Makan & Filter Budget</a>
+        <a href="#radar-map"><i class="fa-solid fa-map-location-dot"></i> Peta Kuliner Sekitar UNEJ</a>
+        <a href="#meal-planner"><i class="fa-solid fa-calculator"></i> Kalkulator Kenyang Seharian</a>
+        <a href="#kemitraan-umkm"><i class="fa-solid fa-store"></i> Daftarkan Warung UMKM</a>
+        <div id="mobileNavAuthArea" class="mobile-drawer-auth">
           <!-- Injected by app.js -->
         </div>
       </div>
@@ -98,13 +111,13 @@
 
   <!-- Dashboard: Mahasiswa -->
   <div id="viewDashboardMahasiswa" class="dashboard-view" style="display:none;">
-    <div class="container" style="padding-top: 100px; padding-bottom: 60px;">
+    <div class="container dash-container">
       <div class="dash-header">
         <div>
           <h2 class="dash-title"><i class="fa-solid fa-user-graduate"></i> Dashboard Mahasiswa</h2>
           <p class="dash-subtitle" id="dashMahasiswaWelcome">Selamat datang!</p>
         </div>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <div class="dash-header-actions">
           <button class="btn btn-primary btn-sm" onclick="window.showLanding()"><i class="fa-solid fa-utensils"></i>
             Jelajahi Kuliner</button>
           <button class="btn btn-outline btn-sm" onclick="window.logoutUser()"><i
@@ -112,25 +125,19 @@
         </div>
       </div>
 
-      <!-- Bookmarks -->
       <div class="dash-section">
         <h3 class="dash-section-title"><i class="fa-solid fa-bookmark"></i> Warung Tersimpan (Favorit)</h3>
         <div id="dashBookmarkList" class="dash-grid">
-          <p style="color: var(--neutral-500); font-size: 0.9rem;">Belum ada simpanan. Jelajahi katalog dan klik ikon
-            bookmark!</p>
+          <p class="dash-empty-text">Belum ada simpanan. Jelajahi katalog dan klik ikon bookmark!</p>
         </div>
       </div>
 
-      <!-- Riwayat Ulasan Mahasiswa -->
-      <div class="dash-section" style="margin-top: 24px;">
+      <div class="dash-section">
         <h3 class="dash-section-title"><i class="fa-solid fa-comments"></i> Ulasan Kuliner yang Pernah Kamu Tulis</h3>
-        <div id="dashReviewList" class="dash-grid">
-          <!-- Rendered by app.js -->
-        </div>
+        <div id="dashReviewList" class="dash-grid"></div>
       </div>
 
-      <!-- Back to Landing -->
-      <div style="margin-top: 32px;">
+      <div class="dash-bottom-action">
         <a href="#katalog" onclick="window.showLanding()" class="btn btn-primary">
           <i class="fa-solid fa-utensils"></i> Jelajahi Kuliner Lainnya
         </a>
@@ -140,20 +147,20 @@
 
   <!-- Dashboard: UMKM - Status Pending -->
   <div id="viewDashboardUmkmPending" class="dashboard-view" style="display:none;">
-    <div class="container" style="padding-top: 100px; padding-bottom: 60px; max-width: 640px;">
+    <div class="container dash-status-container">
       <div class="dash-status-card dash-status-pending">
         <div class="dash-status-icon"><i class="fa-solid fa-clock"></i></div>
         <h2>Pendaftaran Sedang Diproses</h2>
-        <p id="pendingUmkmName" style="font-weight: 700; font-size: 1.1rem; color: var(--primary-900);"></p>
+        <p id="pendingUmkmName" class="status-warung-name"></p>
         <p>Tim Muyang sedang meninjau pengajuan kemitraan warung Anda. Proses verifikasi biasanya membutuhkan
-          <strong>1-2 hari kerja</strong>.</p>
+          <strong>1–2 hari kerja</strong>.</p>
         <div class="dash-status-steps">
           <div class="step active"><span class="step-dot"></span> Pendaftaran Diterima</div>
           <div class="step"><span class="step-dot"></span> Verifikasi Admin</div>
           <div class="step"><span class="step-dot"></span> Konfirmasi Pembayaran</div>
           <div class="step"><span class="step-dot"></span> Aktif di Platform</div>
         </div>
-        <div style="display: flex; gap: 8px; justify-content: center; margin-top: 24px;">
+        <div class="status-card-actions">
           <button class="btn btn-primary btn-sm" onclick="window.showLanding()"><i class="fa-solid fa-globe"></i> Lihat
             Website</button>
           <button class="btn btn-outline btn-sm" onclick="window.logoutUser()"><i
@@ -165,13 +172,13 @@
 
   <!-- Dashboard: UMKM - Awaiting Payment -->
   <div id="viewDashboardUmkmPayment" class="dashboard-view" style="display:none;">
-    <div class="container" style="padding-top: 100px; padding-bottom: 60px; max-width: 640px;">
+    <div class="container dash-status-container">
       <div class="dash-status-card dash-status-payment">
         <div class="dash-status-icon"><i class="fa-solid fa-credit-card"></i></div>
         <h2>Disetujui! Lakukan Pembayaran</h2>
-        <p id="paymentUmkmName" style="font-weight: 700; font-size: 1.1rem; color: var(--primary-900);"></p>
-        <p>Selamat! Pendaftaran Anda telah disetujui admin. Silakan lakukan pembayaran paket kemitraan untuk
-          mengaktifkan listing.</p>
+        <p id="paymentUmkmName" class="status-warung-name"></p>
+        <p>Pendaftaran Anda telah disetujui admin. Silakan selesaikan pembayaran paket kemitraan untuk mengaktifkan
+          halaman warung Anda.</p>
 
         <div class="payment-info-box">
           <div class="payment-info-row">
@@ -180,7 +187,7 @@
           </div>
           <div class="payment-info-row">
             <span>Nominal Pembayaran</span>
-            <strong id="paymentNominal" style="color: var(--accent-600); font-size: 1.2rem;">-</strong>
+            <strong id="paymentNominal" class="payment-nominal-val">-</strong>
           </div>
           <div class="payment-info-row">
             <span>Rekening Tujuan</span>
@@ -188,14 +195,13 @@
           </div>
         </div>
 
-        <div
-          style="background: #fefce8; border: 1.5px solid #fbbf24; border-radius: var(--radius-lg); padding: 14px; margin: 16px 0; font-size: 0.85rem;">
-          <i class="fa-solid fa-circle-info" style="color: #d97706;"></i>
-          <strong>Tata Cara:</strong> Transfer nominal di atas ke rekening BRI tersebut, lalu kirim bukti transfer via
-          WhatsApp ke tim Muyang untuk konfirmasi aktivasi.
+        <div class="info-callout info-callout-warn">
+          <i class="fa-solid fa-circle-info"></i>
+          <div><strong>Tata Cara:</strong> Transfer nominal di atas ke rekening BRI tersebut, lalu kirim bukti
+            transfer via WhatsApp ke tim Muyang untuk konfirmasi aktivasi.</div>
         </div>
 
-        <a id="paymentWaLink" href="#" target="_blank" class="btn btn-accent" style="width: 100%; margin-bottom: 12px;">
+        <a id="paymentWaLink" href="#" target="_blank" class="btn btn-accent btn-block">
           <i class="fa-brands fa-whatsapp"></i> Kirim Bukti Pembayaran via WhatsApp
         </a>
 
@@ -205,7 +211,7 @@
           <div class="step active"><span class="step-dot"></span> Konfirmasi Pembayaran</div>
           <div class="step"><span class="step-dot"></span> Aktif di Platform</div>
         </div>
-        <div style="display: flex; gap: 8px; justify-content: center; margin-top: 24px;">
+        <div class="status-card-actions">
           <button class="btn btn-primary btn-sm" onclick="window.showLanding()"><i class="fa-solid fa-globe"></i> Lihat
             Website</button>
           <button class="btn btn-outline btn-sm" onclick="window.logoutUser()"><i
@@ -217,11 +223,11 @@
 
   <!-- Dashboard: UMKM - Verifying Payment -->
   <div id="viewDashboardUmkmVerifying" class="dashboard-view" style="display:none;">
-    <div class="container" style="padding-top: 100px; padding-bottom: 60px; max-width: 640px;">
+    <div class="container dash-status-container">
       <div class="dash-status-card dash-status-pending">
         <div class="dash-status-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
         <h2>Pembayaran Sedang Diverifikasi</h2>
-        <p id="verifyingUmkmName" style="font-weight: 700; font-size: 1.1rem; color: var(--primary-900);"></p>
+        <p id="verifyingUmkmName" class="status-warung-name"></p>
         <p>Bukti pembayaran Anda sedang diverifikasi tim Muyang. Mohon tunggu konfirmasi aktivasi dalam 1×24 jam.</p>
         <div class="dash-status-steps">
           <div class="step done"><span class="step-dot"></span> Pendaftaran Diterima</div>
@@ -229,7 +235,7 @@
           <div class="step done"><span class="step-dot"></span> Pembayaran Terkirim</div>
           <div class="step active"><span class="step-dot"></span> Verifikasi Pembayaran</div>
         </div>
-        <div style="display: flex; gap: 8px; justify-content: center; margin-top: 24px;">
+        <div class="status-card-actions">
           <button class="btn btn-primary btn-sm" onclick="window.showLanding()"><i class="fa-solid fa-globe"></i> Lihat
             Website</button>
           <button class="btn btn-outline btn-sm" onclick="window.logoutUser()"><i
@@ -241,18 +247,18 @@
 
   <!-- Dashboard: UMKM - Rejected -->
   <div id="viewDashboardUmkmRejected" class="dashboard-view" style="display:none;">
-    <div class="container" style="padding-top: 100px; padding-bottom: 60px; max-width: 640px;">
+    <div class="container dash-status-container">
       <div class="dash-status-card dash-status-rejected">
         <div class="dash-status-icon"><i class="fa-solid fa-times-circle"></i></div>
         <h2>Pendaftaran Ditolak</h2>
-        <p id="rejectedUmkmName" style="font-weight: 700; font-size: 1.1rem;"></p>
+        <p id="rejectedUmkmName" class="status-warung-name"></p>
         <p id="rejectedReason">Maaf, pendaftaran Anda belum dapat disetujui saat ini. Silakan hubungi tim Muyang untuk
           informasi lebih lanjut.</p>
         <a href="https://wa.me/6281234567890?text=Halo%20Tim%20Muyang%2C%20saya%20ingin%20menanyakan%20status%20penolakan%20pendaftaran%20UMKM%20saya."
-          target="_blank" class="btn btn-accent" style="margin-top: 16px; width: 100%;">
+          target="_blank" class="btn btn-accent btn-block">
           <i class="fa-brands fa-whatsapp"></i> Hubungi Tim Muyang
         </a>
-        <div style="display: flex; gap: 8px; justify-content: center; margin-top: 16px;">
+        <div class="status-card-actions">
           <button class="btn btn-primary btn-sm" onclick="window.showLanding()"><i class="fa-solid fa-globe"></i> Lihat
             Website</button>
           <button class="btn btn-outline btn-sm" onclick="window.logoutUser()"><i
@@ -264,13 +270,13 @@
 
   <!-- Dashboard: UMKM - Active -->
   <div id="viewDashboardUmkmActive" class="dashboard-view" style="display:none;">
-    <div class="container" style="padding-top: 100px; padding-bottom: 60px;">
+    <div class="container dash-container">
       <div class="dash-header">
         <div>
           <h2 class="dash-title"><i class="fa-solid fa-store"></i> Dashboard UMKM Mitra</h2>
           <p class="dash-subtitle" id="dashUmkmWelcome">Selamat datang!</p>
         </div>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <div class="dash-header-actions">
           <button class="btn btn-primary btn-sm" onclick="window.showLanding()"><i class="fa-solid fa-globe"></i> Lihat
             Website Publik</button>
           <button class="btn btn-outline btn-sm" onclick="window.logoutUser()"><i
@@ -278,53 +284,44 @@
         </div>
       </div>
 
-      <!-- Status Badge -->
-      <div
-        style="display: inline-flex; align-items: center; gap: 8px; background: #d1fae5; color: #065f46; padding: 8px 16px; border-radius: var(--radius-full); font-weight: 700; font-size: 0.85rem; margin-bottom: 24px;">
-        <i class="fa-solid fa-circle-check"></i> Mitra Aktif - Listing Aktif di Platform Muyang
+      <div class="active-partner-pill">
+        <i class="fa-solid fa-circle-check"></i> Mitra Aktif — Listing Tayang di Platform Muyang
       </div>
 
-      <!-- Expired Banner (shown only when status=expired) -->
-      <div id="umkmExpiredBanner"
-        style="display:none;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:20px;">
-        <div style="display:flex;align-items:flex-start;gap:12px;">
-          <i class="fa-solid fa-triangle-exclamation" style="color:#d97706;font-size:1.3rem;margin-top:2px;"></i>
+      <div id="umkmExpiredBanner" class="expired-banner" style="display:none;">
+        <div class="expired-banner-inner">
+          <i class="fa-solid fa-triangle-exclamation"></i>
           <div>
-            <div style="font-weight:800;color:#92400e;font-size:1rem;">Masa Kemitraan Telah Berakhir</div>
-            <div style="color:#78350f;font-size:0.85rem;margin-top:4px;">Warung Anda sudah tidak tampil di katalog
-              publik. Hubungi Tim Muyang untuk memperpanjang kemitraan dan mengaktifkan kembali listing Anda.</div>
+            <div class="expired-banner-title">Masa Kemitraan Telah Berakhir</div>
+            <div class="expired-banner-desc">Warung Anda sudah tidak tampil di katalog publik. Hubungi Tim Muyang untuk
+              memperpanjang kemitraan dan mengaktifkan kembali listing Anda.</div>
             <a href="https://wa.me/6282336669588?text=Halo%20Tim%20Muyang!%20Saya%20ingin%20memperpanjang%20kemitraan%20warung%20saya."
-              target="_blank" class="btn btn-sm" style="margin-top:10px;background:#d97706;color:white;border:none;">
+              target="_blank" class="btn btn-sm expired-renew-btn">
               <i class="fa-brands fa-whatsapp"></i> Hubungi Muyang untuk Perpanjang
             </a>
           </div>
         </div>
       </div>
 
-      <!-- Upload Foto Warung -->
       <div class="dash-section">
         <h3 class="dash-section-title"><i class="fa-solid fa-camera"></i> Foto Profil Warung</h3>
-        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-          <img id="warungPhotoPreview" src="" alt="Foto Warung"
-            style="width:120px;height:90px;object-fit:cover;border-radius:var(--radius-lg);border:2px dashed var(--neutral-300);display:none;">
-          <div style="flex:1;min-width:200px;">
-            <label class="btn btn-outline btn-sm" for="warungPhotoInput"
-              style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;">
+        <div class="photo-upload-row">
+          <img id="warungPhotoPreview" src="" alt="Foto Warung" class="warung-photo-preview" style="display:none;">
+          <div class="photo-upload-controls">
+            <label class="btn btn-outline btn-sm" for="warungPhotoInput">
               <i class="fa-solid fa-upload"></i> Pilih Foto Warung
             </label>
-            <input type="file" id="warungPhotoInput" accept="image/*" style="display:none;">
-            <p style="font-size:0.78rem;color:var(--neutral-400);margin-top:6px;">Format: JPG/PNG/WebP, maks 2MB. Foto
-              akan tampil di katalog publik.</p>
-            <button id="uploadWarungPhotoBtn" class="btn btn-primary btn-sm" style="margin-top:8px;display:none;">
+            <input type="file" id="warungPhotoInput" accept="image/*" hidden>
+            <p class="field-hint">Format: JPG/PNG/WebP, maks 2MB. Foto akan tampil di katalog publik.</p>
+            <button id="uploadWarungPhotoBtn" class="btn btn-primary btn-sm" style="display:none;">
               <i class="fa-solid fa-cloud-upload-alt"></i> Simpan Foto Warung
             </button>
-            <span id="uploadWarungStatus" style="font-size:0.8rem;margin-left:8px;"></span>
+            <span id="uploadWarungStatus" class="upload-status-text"></span>
           </div>
         </div>
       </div>
 
-      <!-- Lokasi Warung -->
-      <div class="dash-section" id="umkmLocationSection" style="margin-top:16px;display:none;">
+      <div class="dash-section" id="umkmLocationSection" style="display:none;">
         <h3 class="dash-section-title"><i class="fa-solid fa-map-location-dot"></i> Lokasi Warung di Peta</h3>
         <div id="umkmLocationMap" class="loc-picker-map" aria-label="Peta lokasi warung"></div>
         <div class="loc-picker-actions">
@@ -337,8 +334,7 @@
         <p class="loc-picker-hint">Geser pin ke lokasi warung yang benar, lalu klik Simpan Lokasi.</p>
       </div>
 
-      <!-- Add Menu Form -->
-      <div class="dash-section" style="margin-top:16px;">
+      <div class="dash-section">
         <h3 class="dash-section-title"><i class="fa-solid fa-plus"></i> Tambah Menu Warung</h3>
         <form id="addMenuForm" class="add-menu-form">
           <div class="add-menu-fields">
@@ -349,33 +345,24 @@
               placeholder="Keterangan porsi (cth: Porsi Jumbo)">
             <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Tambah</button>
           </div>
-          <!-- Upload foto menu -->
-          <div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-            <label class="btn btn-outline btn-sm" for="menuPhotoInput"
-              style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:0.82rem;">
+          <div class="menu-photo-row">
+            <label class="btn btn-outline btn-sm" for="menuPhotoInput">
               <i class="fa-solid fa-image"></i> Foto Menu (opsional)
             </label>
-            <input type="file" id="menuPhotoInput" accept="image/*" style="display:none;">
-            <img id="menuPhotoPreview" src="" alt="Preview"
-              style="width:60px;height:50px;object-fit:cover;border-radius:8px;border:1.5px solid var(--neutral-200);display:none;">
-            <span id="menuPhotoName" style="font-size:0.78rem;color:var(--neutral-500);"></span>
+            <input type="file" id="menuPhotoInput" accept="image/*" hidden>
+            <img id="menuPhotoPreview" src="" alt="Preview" class="menu-photo-preview" style="display:none;">
+            <span id="menuPhotoName" class="field-hint"></span>
           </div>
         </form>
-        <div id="umkmMenuList" class="dash-menu-list" style="margin-top: 16px;">
-          <!-- Rendered by app.js -->
-        </div>
+        <div id="umkmMenuList" class="dash-menu-list"></div>
       </div>
 
-      <!-- Ulasan Masuk dari Mahasiswa -->
-      <div class="dash-section" style="margin-top: 24px;">
+      <div class="dash-section">
         <h3 class="dash-section-title"><i class="fa-solid fa-comments"></i> Ulasan Masuk dari Mahasiswa UNEJ</h3>
-        <div id="umkmReviewsList" class="dash-grid">
-          <!-- Rendered by app.js -->
-        </div>
+        <div id="umkmReviewsList" class="dash-grid"></div>
       </div>
 
-      <!-- Back to Landing -->
-      <div style="margin-top: 32px;">
+      <div class="dash-bottom-action">
         <a href="#katalog" onclick="window.showLanding()" class="btn btn-outline">
           <i class="fa-solid fa-eye"></i> Lihat Tampilan Publik
         </a>
@@ -385,13 +372,13 @@
 
   <!-- Dashboard: Admin Panel -->
   <div id="viewDashboardAdmin" class="dashboard-view" style="display:none;">
-    <div class="container" style="padding-top: 100px; padding-bottom: 60px;">
+    <div class="container dash-container">
       <div class="dash-header">
         <div>
           <h2 class="dash-title"><i class="fa-solid fa-shield-halved"></i> Admin Panel MUYANG</h2>
-          <p class="dash-subtitle">Kelola pendaftar UMKM Mitra &amp; status listing</p>
+          <p class="dash-subtitle">Kelola pendaftar UMKM Mitra & status listing</p>
         </div>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <div class="dash-header-actions">
           <button class="btn btn-primary btn-sm" onclick="window.showLanding()"><i class="fa-solid fa-globe"></i> Lihat
             Website Publik</button>
           <button class="btn btn-outline btn-sm" onclick="window.logoutUser()"><i
@@ -399,25 +386,16 @@
         </div>
       </div>
 
-      <!-- Admin Summary Stats Cards -->
-      <div id="adminStatsContainer" class="admin-stats-grid" style="margin-bottom: 24px;">
-        <!-- Injected by app.js -->
-      </div>
+      <div id="adminStatsContainer" class="admin-stats-grid"></div>
 
-      <!-- UMKM Table -->
       <div class="dash-section">
         <h3 class="dash-section-title"><i class="fa-solid fa-list-check"></i> Daftar Pendaftaran UMKM</h3>
-        <div id="adminUmkmTable" class="admin-table-wrap">
-          <!-- Rendered by app.js -->
-        </div>
+        <div id="adminUmkmTable" class="admin-table-wrap"></div>
       </div>
 
-      <!-- Moderasi Ulasan Mahasiswa -->
-      <div class="dash-section" style="margin-top: 24px;">
+      <div class="dash-section">
         <h3 class="dash-section-title"><i class="fa-solid fa-comments"></i> Moderasi Ulasan Seluruh Mahasiswa</h3>
-        <div id="adminReviewsTable" class="admin-table-wrap">
-          <!-- Rendered by app.js -->
-        </div>
+        <div id="adminReviewsTable" class="admin-table-wrap"></div>
       </div>
     </div>
   </div>
@@ -432,82 +410,81 @@
       <div class="container">
         <div class="hero-banner">
 
-          <!-- Left Banner Content -->
+          <!-- Left Editorial Content -->
           <div class="hero-content">
-            <div class="hero-badge-row">
-              <span class="pitch-tag"><i class="fa-solid fa-utensils"></i> Panduan Kuliner Hemat</span>
-              <span class="location-tag"><i class="fa-solid fa-map-pin"></i> Area Kampus Universitas Jember
-                (UNEJ)</span>
+            <div class="hero-badge-row hero-anim-1">
+              <span class="pitch-tag"><i class="fa-solid fa-compass"></i> Panduan Makan Anak Kos</span>
+              <span class="location-tag"><i class="fa-solid fa-location-dot"></i> Tegalboto & Sekitar Kampus
+                UNEJ</span>
             </div>
 
-            <h1 class="hero-title">MUYANG</h1>
-            <span class="hero-subtitle-tag">(MURAH KENYANG)</span>
+            <h1 class="hero-title hero-anim-2">Makan kenyang tanpa bikin dompet menipis.</h1>
 
-            <p class="hero-desc">
-              Platform pencari kuliner terpadu berbasis <strong>filter budget nominal</strong>. Solusi cerdas bagi
-              mahasiswa baru dan anak kos menemukan hidden gem makanan enak &amp; porsi mengenyangkan di sekitar kampus,
-              sekaligus mendongkrak visibilitas UMKM kuliner lokal.
+            <p class="hero-desc hero-anim-3">
+              Cek harga menu asli, jarak jalan kaki dari fakultas, dan ulasan porsi jujur dari sesama mahasiswa
+              Universitas Jember sebelum melangkah keluar kos.
             </p>
 
-            <!-- Mini Stats Row -->
-            <div class="hero-stats-mini">
-              <div class="stat-mini-item">
-                <div class="stat-mini-num">38.995+</div>
-                <div class="stat-mini-label">Mahasiswa UNEJ</div>
-              </div>
-              <div class="stat-mini-item">
-                <div class="stat-mini-num">± 200</div>
-                <div class="stat-mini-label">UMKM Kuliner Sekitar</div>
-              </div>
-              <div class="stat-mini-item">
-                <div class="stat-mini-num">100%</div>
-                <div class="stat-mini-label">Gratis untuk Mahasiswa</div>
+            <!-- Quick Campus Street Shortcuts -->
+            <div class="hero-street-strip hero-anim-4">
+              <span class="street-strip-label">Kawasan populer:</span>
+              <div class="street-tags">
+                <button type="button" class="street-tag-btn" data-quick-area="Jl. Kalimantan">Jl. Kalimantan</button>
+                <button type="button" class="street-tag-btn" data-quick-area="Jl. Jawa">Jl. Jawa</button>
+                <button type="button" class="street-tag-btn" data-quick-area="Jl. Mastrip">Jl. Mastrip</button>
+                <button type="button" class="street-tag-btn" data-quick-area="Jl. Riau">Jl. Riau</button>
               </div>
             </div>
           </div>
 
           <!-- Right Quick Budget Finder Card -->
-          <div class="hero-interactive-card">
+          <div class="hero-interactive-card hero-anim-card">
             <div class="card-header-budget">
-              <h3><i class="fa-solid fa-wallet" style="color: var(--accent-500);"></i> Mau Makan Berapa?</h3>
-              <span class="budget-pulse"><i class="fa-solid fa-bolt"></i> Live Filter</span>
+              <div>
+                <span class="card-eyebrow">Filter Cepat</span>
+                <h3>Mau makan budget berapa?</h3>
+              </div>
+              <span class="budget-pulse"><span class="live-dot"></span> Langsung Update</span>
             </div>
 
-            <p style="font-size: 0.85rem; color: var(--neutral-600); margin-bottom: 14px;">
-              Geser budget saku kamu hari ini, kami carikan menu paling kenyang sekampus UNEJ!
-            </p>
-
             <div class="hero-quick-slider-label">
-              <span>Batas Uang Saku:</span>
+              <span>Batas maksimal per porsi</span>
               <span class="hero-current-budget-display" id="heroBudgetDisplay">Rp 25.000</span>
             </div>
 
             <input type="range" min="5000" max="30000" step="1000" value="25000" class="budget-slider"
               id="heroBudgetSlider" aria-label="Slider Budget Makanan">
 
+            <div class="slider-scale-marks" aria-hidden="true">
+              <span>Rp 5rb</span>
+              <span>Rp 15rb</span>
+              <span>Rp 30rb</span>
+            </div>
+
             <!-- Quick Budget Pills -->
             <div class="quick-budget-pills">
-              <button class="budget-pill hero-budget-pill" data-budget="8000">
-                <i class="fa-solid fa-coins"></i> &le; Rp 8.000<br><span
-                  style="font-size: 0.68rem; font-weight: normal;">Akhir Bulan</span>
+              <button type="button" class="budget-pill hero-budget-pill" data-budget="8000">
+                <span class="pill-price">≤ Rp 8.000</span>
+                <span class="pill-note">Mode Akhir Bulan</span>
               </button>
-              <button class="budget-pill hero-budget-pill" data-budget="12000">
-                <i class="fa-solid fa-wallet"></i> &le; Rp 12.000<br><span
-                  style="font-size: 0.68rem; font-weight: normal;">Kenyang Pas</span>
+              <button type="button" class="budget-pill hero-budget-pill" data-budget="12000">
+                <span class="pill-price">≤ Rp 12.000</span>
+                <span class="pill-note">Kenyang Harian</span>
               </button>
-              <button class="budget-pill hero-budget-pill" data-budget="16000">
-                <i class="fa-solid fa-crown"></i> &le; Rp 16.000<br><span
-                  style="font-size: 0.68rem; font-weight: normal;">Sultan Kos</span>
+              <button type="button" class="budget-pill hero-budget-pill" data-budget="16000">
+                <span class="pill-price">≤ Rp 16.000</span>
+                <span class="pill-note">Lauk Lengkap</span>
               </button>
             </div>
 
             <div class="quick-finder-preview">
-              <span>Ditemukan di Sekitar UNEJ:</span>
-              <span class="preview-count" id="heroResultCount">8 Tempat Makan</span>
+              <span>Pilihan warung yang masuk budget:</span>
+              <span class="preview-count" id="heroResultCount">8 Tempat</span>
             </div>
 
-            <a href="#katalog" class="btn btn-accent" style="width: 100%;">
-              <i class="fa-solid fa-utensils"></i> Lihat Rekomendasi Menu Sekarang
+            <a href="#katalog" class="btn btn-accent btn-block hero-cta-btn">
+              <span>Lihat Daftar Warung</span>
+              <i class="fa-solid fa-arrow-down"></i>
             </a>
           </div>
 
@@ -516,17 +493,17 @@
     </section>
 
     <!-- =============================================================
-         SECTION: KATALOG KULINER & FILTER BUDGET (CORE PRODUCT)
+         SECTION: KATALOG KULINER & FILTER BUDGET
          ============================================================= -->
     <section class="catalogue-section" id="katalog">
       <div class="container">
 
         <div class="section-header">
-          <span class="section-pill"><i class="fa-solid fa-filter"></i> Jelajahi Kuliner</span>
-          <h2 class="section-title">Eksplorasi Kuliner Sesuai Isi Dompet</h2>
+          <span class="section-pill">Direktori Warung & Menu</span>
+          <h2 class="section-title">Pilih makan sesuai isi dompet hari ini</h2>
           <p class="section-subtitle">
-            Tidak perlu lagi tebak-tebak harga atau takut kantong jebol. Semua menu, harga aktual, jam buka, dan porsi
-            kenyang terangkum rapi untuk mahasiswa.
+            Harga menu dicatat apa adanya lengkap dengan jam buka, jarak dari kampus, dan skor kekenyangan dari ulasan
+            mahasiswa.
           </p>
         </div>
 
@@ -535,67 +512,63 @@
 
           <!-- Top Row Filters -->
           <div class="filter-row-top">
-            <!-- Search input -->
             <div class="search-input-group">
               <i class="fa-solid fa-magnifying-glass search-icon"></i>
               <input type="text" id="catalogueSearch" class="search-field"
-                placeholder="Cari nama warung, nasi goreng, geprek, pecel, mie...">
+                placeholder="Cari warung, nasi goreng, geprek, pecel, mie...">
             </div>
 
-            <!-- Area Selector (Around UNEJ) -->
             <div>
-              <select id="areaSelect" class="filter-select" style="width: 100%;">
-                <option value="all">📍 Semua Area Sekitar Kampus UNEJ</option>
+              <select id="areaSelect" class="filter-select" aria-label="Pilih Area Kampus">
+                <option value="all">Semua Area Sekitar Kampus UNEJ</option>
                 <option value="Jl. Jawa">Jl. Jawa (Pintu Belakang UNEJ)</option>
-                <option value="Jl. Kalimantan">Jl. Kalimantan (Bundaran &amp; Rektorat)</option>
-                <option value="Jl. Mastrip">Jl. Mastrip (Area Kos &amp; Medis)</option>
-                <option value="Jl. Danau Toba">Jl. Danau Toba (Pusat Kuliner Malam)</option>
-                <option value="Jl. Riau">Jl. Riau (Dekat Fasilkom &amp; FIB)</option>
-                <option value="Jl. Karimata">Jl. Karimata (Area Kost Putra/Putri)</option>
+                <option value="Jl. Kalimantan">Jl. Kalimantan (Bundaran & Rektorat)</option>
+                <option value="Jl. Mastrip">Jl. Mastrip (Area Kos & Medis)</option>
+                <option value="Jl. Danau Toba">Jl. Danau Toba (Kuliner Malam)</option>
+                <option value="Jl. Riau">Jl. Riau (Dekat Fasilkom & FIB)</option>
+                <option value="Jl. Karimata">Jl. Karimata (Area Kos Putra/Putri)</option>
               </select>
             </div>
 
-            <!-- Sort selector -->
             <div>
-              <select id="sortSelect" class="filter-select" style="width: 100%;">
-                <option value="cheapest"> Harga: Termurah Dulu</option>
-                <option value="kenyang"> Paling Kenyang (Kenyang Score)</option>
-                <option value="rating"> Rating Tertinggi Mahasiswa</option>
-                <option value="priciest"> Harga: Tertinggi</option>
+              <select id="sortSelect" class="filter-select" aria-label="Urutkan Daftar">
+                <option value="cheapest">Urutkan: Harga Termurah</option>
+                <option value="kenyang">Urutkan: Paling Kenyang</option>
+                <option value="rating">Urutkan: Rating Mahasiswa</option>
+                <option value="priciest">Urutkan: Harga Tertinggi</option>
               </select>
             </div>
           </div>
 
           <!-- Category Chips -->
           <div class="category-chips-row">
-            <button class="chip-btn category-chip active" data-category="all">
+            <button type="button" class="chip-btn category-chip active" data-category="all">
               <i class="fa-solid fa-border-all"></i> Semua Menu
             </button>
-            <button class="chip-btn category-chip" data-category="warteg">
-              <i class="fa-solid fa-plate-wheat"></i> Warteg &amp; Prasmanan
+            <button type="button" class="chip-btn category-chip" data-category="warteg">
+              <i class="fa-solid fa-plate-wheat"></i> Warteg & Prasmanan
             </button>
-            <button class="chip-btn category-chip" data-category="ayam">
-              <i class="fa-solid fa-drumstick-bite"></i> Ayam &amp; Bebek
+            <button type="button" class="chip-btn category-chip" data-category="ayam">
+              <i class="fa-solid fa-drumstick-bite"></i> Ayam & Bebek
             </button>
-            <button class="chip-btn category-chip" data-category="mie">
-              <i class="fa-solid fa-bowl-food"></i> Mie &amp; Bakso / Warmindo
+            <button type="button" class="chip-btn category-chip" data-category="mie">
+              <i class="fa-solid fa-bowl-food"></i> Mie, Bakso & Warmindo
             </button>
-            <button class="chip-btn category-chip" data-category="nasi">
-              <i class="fa-solid fa-bowl-rice"></i> Nasi Lauk &amp; Masakan Daerah
+            <button type="button" class="chip-btn category-chip" data-category="nasi">
+              <i class="fa-solid fa-bowl-rice"></i> Nasi Lauk & Masakan Daerah
             </button>
-            <button class="chip-btn category-chip" data-category="hiddengem">
-              <i class="fa-solid fa-gem"></i> Hidden Gem Dalam Gang Kos
+            <button type="button" class="chip-btn category-chip" data-category="hiddengem">
+              <i class="fa-solid fa-gem"></i> Hidden Gem Dalam Gang
             </button>
           </div>
 
           <!-- Filter Summary & Reset -->
           <div class="filter-summary-row">
             <div>
-              Menampilkan <strong id="filteredCount" style="color: var(--primary-800);">8</strong> tempat makan ramah
-              kantong mahasiswa
+              Menampilkan <strong id="filteredCount" class="count-highlight">8</strong> warung yang masuk kriteria
             </div>
-            <button class="reset-filter-btn" id="resetFiltersBtn">
-              <i class="fa-solid fa-rotate-left"></i> Reset Semua Filter
+            <button type="button" class="reset-filter-btn" id="resetFiltersBtn">
+              <i class="fa-solid fa-rotate-left"></i> Reset Filter
             </button>
           </div>
 
@@ -603,7 +576,7 @@
 
         <!-- Mobile Horizontal Swipe Cue -->
         <div class="mobile-swipe-cue">
-          <span><i class="fa-solid fa-arrows-left-right"></i> Geser ke samping untuk jelajahi kuliner</span>
+          <span><i class="fa-solid fa-arrows-left-right"></i> Geser ke samping untuk melihat warung lainnya</span>
         </div>
 
         <!-- Culinary Grid -->
@@ -615,17 +588,17 @@
     </section>
 
     <!-- =============================================================
-         SECTION: PETA KULINER KAMPUS UNEJ (Radar Peta)
+         SECTION: PETA KULINER KAMPUS UNEJ
          ============================================================= -->
     <section class="map-radar-section section-reveal" id="radar-map">
       <div class="container">
 
         <div class="section-header">
-          <span class="section-pill"><i class="fa-solid fa-map"></i> Radar Peta Kampus</span>
-          <h2 class="section-title">Radar Kuliner Sekitar Kampus UNEJ</h2>
+          <span class="section-pill">Peta Lokasi</span>
+          <h2 class="section-title">Cari warung terdekat dari fakultasmu</h2>
           <p class="section-subtitle">
-            Khusus mahasiswa baru &amp; anak kos yang belum hafal seluk-beluk kampus. Temukan warung makan terdekat dari
-            fakultasmu hanya dalam hitungan langkah kaki.
+            Baru pindah kos atau belum hafal jalan tikus sekitar Tegalboto? Klik pin warung di peta untuk cek menu,
+            jarak jalan kaki, dan rute Google Maps.
           </p>
         </div>
 
@@ -633,7 +606,6 @@
 
           <!-- Interactive Leaflet Map Viewport -->
           <div class="radar-map-viewport">
-            <!-- Quick Area Switcher Header Bar -->
             <div class="map-quick-toolbar">
               <div class="map-area-chips" id="mapAreaChips">
                 <button class="map-chip-btn active" data-area="all" type="button">
@@ -651,11 +623,9 @@
               </button>
             </div>
 
-            <!-- Leaflet Map Container Element -->
             <div id="radarMapContainer" class="radar-leaflet-map" role="region"
               aria-label="Peta Interaktif Kuliner Kampus UNEJ"></div>
 
-            <!-- Floating Map Legend -->
             <div class="map-floating-legend">
               <div class="legend-chip">
                 <span class="legend-dot campus"></span> Pusat UNEJ
@@ -674,9 +644,9 @@
             <div>
               <div class="sidebar-top-meta">
                 <span class="topbar-badge">
-                  <i class="fa-solid fa-crosshairs"></i> Spot Terpilih
+                  <i class="fa-solid fa-crosshairs"></i> Warung Terpilih
                 </span>
-                <span class="sidebar-click-hint"><i class="fa-solid fa-arrow-pointer"></i> Klik pin di peta</span>
+                <span class="sidebar-click-hint"><i class="fa-solid fa-arrow-pointer"></i> Ketuk pin di peta</span>
               </div>
 
               <div id="radarDetailContainer">
@@ -685,11 +655,10 @@
             </div>
 
             <div class="radar-tips-card">
-              <i class="fa-solid fa-circle-info"
-                style="color: var(--accent-600); font-size: 1.1rem; margin-top: 2px; flex-shrink: 0;"></i>
+              <i class="fa-solid fa-circle-info"></i>
               <div>
-                <strong>Tips Maba:</strong> Klik pin warung di peta untuk melihat harga menu, rute jalan Google Maps,
-                dan hubungi langsung via WhatsApp.
+                <strong>Catatan Maba:</strong> Pilih nama jalan di bilah atas peta untuk langsung mengarahkan tampilan ke
+                kawasan kos terdekatmu.
               </div>
             </div>
           </div>
@@ -700,27 +669,26 @@
     </section>
 
     <!-- =============================================================
-         SECTION: KALKULATOR KENYANG ANAK KOS (MEAL PLANNER)
+         SECTION: KALKULATOR KENYANG SEHARIAN (MEAL PLANNER)
          ============================================================= -->
     <section class="meal-planner-section section-reveal" id="meal-planner">
       <div class="container">
 
         <div class="section-header">
-          <span class="section-pill"><i class="fa-solid fa-calculator"></i> Fitur Andalan Mahasiswa</span>
-          <h2 class="section-title">Kalkulator Kenyang Seharian</h2>
+          <span class="section-pill">Simulasi Jatah Makan</span>
+          <h2 class="section-title">Kalkulator kenyang seharian</h2>
           <p class="section-subtitle">
-            Berapa sisa jatah uang saku makan kamu hari ini? Masukkan nominalnya, Muyang susunkan menu sarapan, makan
-            siang, dan makan malam yang dijamin kenyang dan tidak melebihi budget!
+            Masukkan jatah uang makanmu hari ini. Muyang menyusun kombinasi sarapan, makan siang, dan makan malam yang
+            tetap masuk budget dan mengenyangkan.
           </p>
         </div>
 
         <div class="planner-container-card">
 
-          <!-- Controls & Results -->
           <div class="planner-control-box">
             <div class="planner-input-area">
-              <h4><i class="fa-solid fa-wallet" style="color: var(--accent-600);"></i> Budget Makan Hari Ini</h4>
-              <p>Masukkan nominal uang saku makan harianmu:</p>
+              <h4><i class="fa-solid fa-wallet"></i> Jatah Makan Hari Ini</h4>
+              <p>Ketik nominal atau pilih cepat di bawah:</p>
               <div class="budget-amount-field-wrapper">
                 <span class="currency-label">Rp</span>
                 <input type="number" id="plannerBudgetInput" class="planner-budget-input" value="25000" min="15000"
@@ -728,34 +696,31 @@
               </div>
 
               <div class="preset-planner-row">
-                <button class="preset-btn planner-preset-btn" data-value="20000">Rp 20.000</button>
-                <button class="preset-btn planner-preset-btn active" data-value="25000">Rp 25.000</button>
-                <button class="preset-btn planner-preset-btn" data-value="30000">Rp 30.000</button>
-                <button class="preset-btn planner-preset-btn" data-value="40000">Rp 40.000</button>
+                <button type="button" class="preset-btn planner-preset-btn" data-value="20000">Rp 20.000</button>
+                <button type="button" class="preset-btn planner-preset-btn active" data-value="25000">Rp 25.000</button>
+                <button type="button" class="preset-btn planner-preset-btn" data-value="30000">Rp 30.000</button>
+                <button type="button" class="preset-btn planner-preset-btn" data-value="40000">Rp 40.000</button>
               </div>
             </div>
 
-            <!-- Quick Stats -->
             <div class="planner-stats-result">
               <div class="planner-stat-card">
                 <div class="stat-val-highlight" id="plannerTotalCost">Rp 24.000</div>
-                <div class="stat-label-sub">Total Biaya 3x Makan</div>
+                <div class="stat-label-sub">Total 3x Makan</div>
               </div>
               <div class="planner-stat-card">
-                <div class="stat-val-highlight" id="plannerLeftover" style="color: var(--success-600);">Rp 1.000</div>
-                <div class="stat-label-sub">Sisa Uang Ditabung</div>
+                <div class="stat-val-highlight stat-val-success" id="plannerLeftover">Rp 1.000</div>
+                <div class="stat-label-sub">Sisa Uang Saku</div>
               </div>
               <div class="planner-stat-card">
-                <div class="stat-val-highlight" id="plannerKenyangScore" style="color: var(--gold-600);">9.6 / 10</div>
+                <div class="stat-val-highlight stat-val-gold" id="plannerKenyangScore">9.6 / 10</div>
                 <div class="stat-label-sub">Rata-Rata Kenyang</div>
               </div>
             </div>
           </div>
 
-          <!-- 3-Meal Timeline Plan -->
-          <h4 style="font-size: 1.1rem; font-weight: 800; color: var(--primary-900); margin-bottom: 16px;">
-            <i class="fa-solid fa-utensils" style="color: var(--accent-500);"></i> Rekomendasi 3 Waktu Makan Kamu Hari
-            Ini:
+          <h4 class="planner-timeline-heading">
+            <i class="fa-solid fa-utensils"></i> Susunan Menu 3 Waktu Makan
           </h4>
           <div class="meals-timeline-grid" id="plannerTimeline">
             <!-- Rendered dynamically by app.js -->
@@ -767,18 +732,17 @@
     </section>
 
     <!-- =============================================================
-         SECTION: MONETIZATION & PAKET UMKM MITRA
+         SECTION: GABUNG MITRA WARUNG UMKM
          ============================================================= -->
-    <section class="pricing-section" id="kemitraan-umkm">
+    <section class="pricing-section section-reveal" id="kemitraan-umkm">
       <div class="container">
 
         <div class="section-header">
-          <span class="section-pill"><i class="fa-solid fa-coins"></i> Monetisasi &amp; Kemitraan</span>
-          <h2 class="section-title">Solusi Promosi Digital Terjangkau bagi UMKM</h2>
+          <span class="section-pill">Untuk Pemilik Warung & UMKM</span>
+          <h2 class="section-title">Tampilkan warungmu di depan ribuan mahasiswa UNEJ</h2>
           <p class="section-subtitle">
-            Bantu warung kuliner lokal sekitar kampus UNEJ menjangkau 38.000+ mahasiswa tanpa biaya komisi komersial
-            yang
-            mencekik.
+            Tanpa potongan komisi per transaksi. Pilih paket listing yang sesuai kebutuhan promosi warung Anda di area
+            kampus.
           </p>
         </div>
 
@@ -786,77 +750,76 @@
 
           <!-- Mahasiswa (Gratis) -->
           <div class="pricing-card">
-            <h4 class="tier-name"><i class="fa-solid fa-user-graduate" style="color: var(--accent-500);"></i> Mahasiswa
-            </h4>
+            <div class="tier-tag">Untuk Mahasiswa</div>
+            <h4 class="tier-name">Akun Mahasiswa</h4>
             <div class="tier-price-box">
-              <span class="tier-price">GRATIS</span>
-              <div class="tier-period">Selamanya Tanpa Biaya</div>
+              <span class="tier-price">Gratis</span>
+              <div class="tier-period">Tanpa biaya selamanya</div>
             </div>
             <ul class="tier-features">
-              <li><i class="fa-solid fa-check"></i> Filter budget nominal uang saku</li>
-              <li><i class="fa-solid fa-check"></i> Radar peta kuliner sekitar kampus</li>
-              <li><i class="fa-solid fa-check"></i> Kalkulator Kenyang Seharian</li>
-              <li><i class="fa-solid fa-check"></i> Akses ulasan jujur &amp; Kenyang Score</li>
-              <li><i class="fa-solid fa-check"></i> Simpan bookmark tempat favorit</li>
+              <li><i class="fa-solid fa-check"></i> Filter warung sesuai batas uang saku</li>
+              <li><i class="fa-solid fa-check"></i> Peta interaktif jalan sekitar kampus</li>
+              <li><i class="fa-solid fa-check"></i> Kalkulator kenyang 3x makan</li>
+              <li><i class="fa-solid fa-check"></i> Simpan warung favorit & tulis ulasan</li>
             </ul>
-            <button class="btn btn-outline" style="width: 100%;" onclick="window.openLoginModal('mahasiswa')">
-              Daftar / Masuk Gratis
+            <button type="button" class="btn btn-outline btn-block" onclick="window.openLoginModal('mahasiswa')">
+              Masuk / Daftar Gratis
             </button>
           </div>
 
-          <!-- Featured Listing UMKM (Rp 50.000/bulan) -->
+          <!-- Featured Listing UMKM -->
           <div class="pricing-card featured">
-            <h4 class="tier-name"><i class="fa-solid fa-fire" style="color: var(--accent-500);"></i> Featured Listing
-            </h4>
+            <div class="tier-tag tier-tag-accent">Paling Banyak Dipilih</div>
+            <h4 class="tier-name">Featured Listing</h4>
             <div class="tier-price-box">
               <span class="tier-price">Rp 50.000</span>
-              <div class="tier-period">per bulan (Rp 1.600/hari)</div>
+              <div class="tier-period">per bulan (sekitar Rp 1.600/hari)</div>
             </div>
             <ul class="tier-features">
-              <li><i class="fa-solid fa-check"></i> <strong>Posisi teratas</strong> di hasil pencarian</li>
-              <li><i class="fa-solid fa-check"></i> Badge khusus "Featured UMKM Mitra"</li>
-              <li><i class="fa-solid fa-check"></i> Katalog foto menu HD tanpa batas</li>
-              <li><i class="fa-solid fa-check"></i> Jangkauan &plusmn;12.000 mahasiswa/bulan</li>
-              <li><i class="fa-solid fa-check"></i> Laporan analitik kunjungan profil</li>
+              <li><i class="fa-solid fa-check"></i> <strong>Posisi teratas</strong> di katalog pencarian</li>
+              <li><i class="fa-solid fa-check"></i> Penanda khusus <em>Featured UMKM</em> di peta</li>
+              <li><i class="fa-solid fa-check"></i> Kelola daftar menu & foto makanan sendiri</li>
+              <li><i class="fa-solid fa-check"></i> Tombol chat langsung ke WhatsApp warung</li>
             </ul>
-            <button class="btn btn-accent open-register-umkm-btn" style="width: 100%;">
-              Daftar Paket Featured
+            <button type="button" class="btn btn-accent open-register-umkm-btn btn-block">
+              Daftar Featured Listing
             </button>
           </div>
 
-          <!-- Promosi Berbayar Event (Rp 30.000/event) -->
+          <!-- Promosi Kilat -->
           <div class="pricing-card">
-            <h4 class="tier-name"><i class="fa-solid fa-bolt" style="color: var(--gold-500);"></i> Promosi Kilat</h4>
+            <div class="tier-tag">Promo Menu Baru</div>
+            <h4 class="tier-name">Promosi Kilat</h4>
             <div class="tier-price-box">
               <span class="tier-price">Rp 30.000</span>
-              <div class="tier-period">per event promosi (3 hari)</div>
+              <div class="tier-period">per 3 hari masa promo</div>
             </div>
             <ul class="tier-features">
-              <li><i class="fa-solid fa-check"></i> Banner pop-up kuliner diskon 3 hari</li>
-              <li><i class="fa-solid fa-check"></i> Tagging khusus "Promo Hari Ini" di peta</li>
-              <li><i class="fa-solid fa-check"></i> Sangat cocok untuk launching menu baru</li>
-              <li><i class="fa-solid fa-check"></i> Estimasi jangkauan &plusmn;5.000 mahasiswa</li>
+              <li><i class="fa-solid fa-check"></i> Sorotan promo selama 3 hari berturut-turut</li>
+              <li><i class="fa-solid fa-check"></i> Penanda promo khusus pada pin peta</li>
+              <li><i class="fa-solid fa-check"></i> Cocok untuk pembukaan warung atau menu baru</li>
+              <li><i class="fa-solid fa-check"></i> Tanpa potongan komisi penjualan</li>
             </ul>
-            <button class="btn btn-outline open-register-umkm-btn" style="width: 100%;">
+            <button type="button" class="btn btn-outline open-register-umkm-btn btn-block">
               Pilih Promosi Kilat
             </button>
           </div>
 
-          <!-- Kampanye Bersama (Rp 100.000/paket) -->
+          <!-- Kampanye Bersama -->
           <div class="pricing-card">
-            <h4 class="tier-name"><i class="fa-solid fa-rocket" style="color: var(--primary-700);"></i> Kampanye Bersama
-            </h4>
+            <div class="tier-tag">Promosi Lengkap</div>
+            <h4 class="tier-name">Kampanye Bersama</h4>
             <div class="tier-price-box">
               <span class="tier-price">Rp 100.000</span>
-              <div class="tier-period">per paket kampanye lengkap</div>
+              <div class="tier-period">per paket kampanye bulanan</div>
             </div>
             <ul class="tier-features">
-              <li><i class="fa-solid fa-check"></i> Featured listing 1 bulan penuh</li>
-              <li><i class="fa-solid fa-check"></i> Konten video Reels/TikTok promosi tim</li>
-              <li><i class="fa-solid fa-check"></i> Voucher potongan harga khusus maba</li>
-              <li><i class="fa-solid fa-check"></i> Jangkauan multi-channel 25.000+ maba</li>
+              <li><i class="fa-solid fa-check"></i> Termasuk Featured Listing 1 bulan penuh</li>
+              <li><i class="fa-solid fa-check"></i> Pembuatan konten video pendek ulasan menu</li>
+              <li><i class="fa-solid fa-check"></i> Publikasi di kanal media sosial Muyang</li>
+              <li><i class="fa-solid fa-check"></i> Dukungan pengaturan titik lokasi & menu</li>
             </ul>
-            <button class="btn btn-outline open-register-umkm-btn" style="width: 100%;">
+            <button type="button" class="btn btn-outline open-register-umkm-btn btn-block">
               Ambil Paket Lengkap
             </button>
           </div>
@@ -872,18 +835,17 @@
        MODAL: LOGIN
        ============================================================= -->
   <div class="modal-backdrop" id="loginModal">
-    <div class="modal-card" style="max-width: 460px;">
-      <button class="modal-close-btn" aria-label="Tutup Login">&times;</button>
+    <div class="modal-card modal-sm">
+      <button class="modal-close-btn" aria-label="Tutup Login">×</button>
       <div class="modal-content-pad">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <div class="brand-icon" style="margin: 0 auto 10px; width: 48px; height: 48px; font-size: 1.3rem;">
+        <div class="modal-auth-head">
+          <div class="brand-icon modal-brand-badge">
             <i class="fa-solid fa-bowl-rice"></i>
           </div>
-          <h3 style="font-size: 1.4rem; font-weight: 800; color: var(--primary-900);">Masuk ke MUYANG</h3>
-          <p style="font-size: 0.85rem; color: var(--neutral-500);">Akses fitur bookmark &amp; ulasan</p>
+          <h3>Masuk ke MUYANG</h3>
+          <p>Simpan warung favorit, tulis ulasan jujur, atau kelola menu warungmu.</p>
         </div>
 
-        <!-- Role Tabs -->
         <div class="auth-tabs">
           <button class="auth-tab active" data-tab="mahasiswa">
             <i class="fa-solid fa-user-graduate"></i> Mahasiswa
@@ -893,7 +855,6 @@
           </button>
         </div>
 
-        <!-- Mahasiswa Login -->
         <div class="auth-tab-panel active" id="loginPanelMahasiswa">
           <form id="loginFormMahasiswa">
             <div class="form-group">
@@ -903,22 +864,19 @@
             <div class="form-group">
               <label class="form-label" for="loginPasswordMhs">Password</label>
               <input type="password" id="loginPasswordMhs" class="form-input" placeholder="Password kamu" required>
-              <div style="text-align: right; margin-top: 6px;">
-                <a href="#" onclick="event.preventDefault(); window.openForgotPassword('mahasiswa');"
-                  style="font-size: 0.8rem; color: var(--primary-700); font-weight: 700;">Lupa password?</a>
+              <div class="forgot-link-row">
+                <a href="#" onclick="event.preventDefault(); window.openForgotPassword('mahasiswa');">Lupa password?</a>
               </div>
             </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">
+            <button type="submit" class="btn btn-primary btn-block btn-lg">
               <i class="fa-solid fa-right-to-bracket"></i> Masuk sebagai Mahasiswa
             </button>
           </form>
-          <p style="text-align: center; margin-top: 14px; font-size: 0.85rem; color: var(--neutral-500);">
-            Belum punya akun? <a href="#" id="switchToRegisterMhs"
-              style="color: var(--primary-700); font-weight: 700;">Daftar Mahasiswa</a>
+          <p class="modal-switch-text">
+            Belum punya akun? <a href="#" id="switchToRegisterMhs">Daftar Mahasiswa</a>
           </p>
         </div>
 
-        <!-- UMKM Login -->
         <div class="auth-tab-panel" id="loginPanelUmkm">
           <form id="loginFormUmkm">
             <div class="form-group">
@@ -929,18 +887,16 @@
               <label class="form-label" for="loginPasswordUmkm">Password</label>
               <input type="password" id="loginPasswordUmkm" class="form-input" placeholder="Password akun UMKM"
                 required>
-              <div style="text-align: right; margin-top: 6px;">
-                <a href="#" onclick="event.preventDefault(); window.openForgotPassword('umkm');"
-                  style="font-size: 0.8rem; color: var(--primary-700); font-weight: 700;">Lupa password?</a>
+              <div class="forgot-link-row">
+                <a href="#" onclick="event.preventDefault(); window.openForgotPassword('umkm');">Lupa password?</a>
               </div>
             </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">
+            <button type="submit" class="btn btn-primary btn-block btn-lg">
               <i class="fa-solid fa-right-to-bracket"></i> Masuk sebagai Mitra UMKM
             </button>
           </form>
-          <p style="text-align: center; margin-top: 14px; font-size: 0.85rem; color: var(--neutral-500);">
-            Belum daftar? <a href="#" id="switchToRegisterUmkm"
-              style="color: var(--primary-700); font-weight: 700;">Daftar Mitra UMKM</a>
+          <p class="modal-switch-text">
+            Belum daftar? <a href="#" id="switchToRegisterUmkm">Daftar Mitra UMKM</a>
           </p>
         </div>
       </div>
@@ -951,18 +907,17 @@
        MODAL: REGISTER
        ============================================================= -->
   <div class="modal-backdrop" id="registerModal">
-    <div class="modal-card" style="max-width: 480px;">
-      <button class="modal-close-btn" aria-label="Tutup Register">&times;</button>
+    <div class="modal-card modal-md">
+      <button class="modal-close-btn" aria-label="Tutup Register">×</button>
       <div class="modal-content-pad">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <div class="brand-icon" style="margin: 0 auto 10px; width: 48px; height: 48px; font-size: 1.3rem;">
+        <div class="modal-auth-head">
+          <div class="brand-icon modal-brand-badge">
             <i class="fa-solid fa-bowl-rice"></i>
           </div>
-          <h3 style="font-size: 1.4rem; font-weight: 800; color: var(--primary-900);">Daftar di MUYANG</h3>
-          <p style="font-size: 0.85rem; color: var(--neutral-500);">Buat akun gratis sekarang</p>
+          <h3>Daftar di MUYANG</h3>
+          <p>Pilih peran akun untuk mulai menjelajah atau mendaftarkan warung.</p>
         </div>
 
-        <!-- Role Tabs -->
         <div class="auth-tabs">
           <button class="auth-tab active" data-tab="mahasiswa">
             <i class="fa-solid fa-user-graduate"></i> Mahasiswa
@@ -972,7 +927,6 @@
           </button>
         </div>
 
-        <!-- Mahasiswa Register -->
         <div class="auth-tab-panel active" id="registerPanelMahasiswa">
           <form id="registerFormMahasiswa">
             <div class="form-group">
@@ -984,7 +938,7 @@
               <input type="text" id="regNim" class="form-input" placeholder="242410102XXX" required>
             </div>
             <div class="form-group">
-              <label class="form-label" for="regFakultas">Fakultas &amp; Jurusan *</label>
+              <label class="form-label" for="regFakultas">Fakultas & Jurusan *</label>
               <input type="text" id="regFakultas" class="form-input" placeholder="Contoh: Fasilkom - Informatika '24"
                 required>
             </div>
@@ -993,17 +947,15 @@
               <input type="password" id="regPasswordMhs" class="form-input" placeholder="Min. 6 karakter" required
                 minlength="6">
             </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">
+            <button type="submit" class="btn btn-primary btn-block btn-lg">
               <i class="fa-solid fa-user-plus"></i> Daftar sebagai Mahasiswa
             </button>
           </form>
-          <p style="text-align: center; margin-top: 14px; font-size: 0.85rem; color: var(--neutral-500);">
-            Sudah punya akun? <a href="#" id="switchToLoginMhs"
-              style="color: var(--primary-700); font-weight: 700;">Masuk</a>
+          <p class="modal-switch-text">
+            Sudah punya akun? <a href="#" id="switchToLoginMhs">Masuk</a>
           </p>
         </div>
 
-        <!-- UMKM Register -->
         <div class="auth-tab-panel" id="registerPanelUmkm">
           <form id="registerFormUmkm">
             <div class="form-group">
@@ -1051,19 +1003,17 @@
               <input type="password" id="regPasswordUmkm" class="form-input" placeholder="Min. 6 karakter" required
                 minlength="6">
             </div>
-            <button type="submit" class="btn btn-accent" style="width: 100%; padding: 12px;">
+            <button type="submit" class="btn btn-accent btn-block btn-lg">
               <i class="fa-solid fa-store"></i> Ajukan Pendaftaran UMKM
             </button>
           </form>
-          <div
-            style="background: #fefce8; border: 1.5px solid #fbbf24; border-radius: var(--radius-md); padding: 10px 14px; margin-top: 12px; font-size: 0.8rem;">
-            <i class="fa-solid fa-circle-info" style="color: #d97706;"></i>
-            Pendaftaran akan ditinjau admin. Setelah disetujui, Anda akan diminta melakukan pembayaran via WhatsApp
-            untuk aktivasi listing.
+          <div class="info-callout info-callout-warn">
+            <i class="fa-solid fa-circle-info"></i>
+            <div>Pendaftaran akan ditinjau admin. Setelah disetujui, Anda akan diarahkan untuk konfirmasi pembayaran
+              via WhatsApp sebelum listing tayang.</div>
           </div>
-          <p style="text-align: center; margin-top: 14px; font-size: 0.85rem; color: var(--neutral-500);">
-            Sudah punya akun? <a href="#" id="switchToLoginUmkm"
-              style="color: var(--primary-700); font-weight: 700;">Masuk</a>
+          <p class="modal-switch-text">
+            Sudah punya akun? <a href="#" id="switchToLoginUmkm">Masuk</a>
           </p>
         </div>
       </div>
@@ -1074,16 +1024,15 @@
        MODAL: ADMIN LOGIN (Hidden)
        ============================================================= -->
   <div class="modal-backdrop" id="adminLoginModal">
-    <div class="modal-card" style="max-width: 400px;">
-      <button class="modal-close-btn" aria-label="Tutup">&times;</button>
+    <div class="modal-card modal-xs">
+      <button class="modal-close-btn" aria-label="Tutup">×</button>
       <div class="modal-content-pad">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <div
-            style="width: 48px; height: 48px; background: var(--primary-900); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 1.3rem;">
+        <div class="modal-auth-head">
+          <div class="admin-shield-badge">
             <i class="fa-solid fa-shield-halved"></i>
           </div>
-          <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--primary-900);">Admin Access</h3>
-          <p style="font-size: 0.8rem; color: var(--neutral-400);">Restricted area</p>
+          <h3>Admin Access</h3>
+          <p>Restricted area</p>
         </div>
         <form id="adminLoginForm">
           <div class="form-group">
@@ -1094,7 +1043,7 @@
             <label class="form-label" for="adminPassword">Password</label>
             <input type="password" id="adminPassword" class="form-input" placeholder="Password" required>
           </div>
-          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">
+          <button type="submit" class="btn btn-primary btn-block btn-lg">
             <i class="fa-solid fa-right-to-bracket"></i> Masuk Admin
           </button>
         </form>
@@ -1106,18 +1055,17 @@
        MODAL: LUPA PASSWORD
        ============================================================= -->
   <div class="modal-backdrop" id="forgotPasswordModal">
-    <div class="modal-card" style="max-width: 460px;">
-      <button class="modal-close-btn" aria-label="Tutup Lupa Password">&times;</button>
+    <div class="modal-card modal-sm">
+      <button class="modal-close-btn" aria-label="Tutup Lupa Password">×</button>
       <div class="modal-content-pad">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <div class="brand-icon" style="margin: 0 auto 10px; width: 48px; height: 48px; font-size: 1.3rem;">
+        <div class="modal-auth-head">
+          <div class="brand-icon modal-brand-badge">
             <i class="fa-solid fa-key"></i>
           </div>
-          <h3 style="font-size: 1.4rem; font-weight: 800; color: var(--primary-900);">Lupa Password</h3>
-          <p id="forgotSubtitle" style="font-size: 0.85rem; color: var(--neutral-500);"></p>
+          <h3>Lupa Password</h3>
+          <p id="forgotSubtitle"></p>
         </div>
 
-        <!-- Mahasiswa -->
         <form id="forgotFormMahasiswa" style="display: none;">
           <div class="form-group">
             <label class="form-label" for="forgotNim">NIM *</label>
@@ -1137,12 +1085,11 @@
             <input type="password" id="forgotConfirmPassMhs" class="form-input" placeholder="Ketik ulang password baru"
               required minlength="6">
           </div>
-          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">
+          <button type="submit" class="btn btn-primary btn-block btn-lg">
             <i class="fa-solid fa-key"></i> Atur Password Baru
           </button>
         </form>
 
-        <!-- UMKM -->
         <form id="forgotFormUmkm" style="display: none;">
           <div class="form-group">
             <label class="form-label" for="forgotEmailUmkm">Email UMKM *</label>
@@ -1162,14 +1109,13 @@
             <input type="password" id="forgotConfirmPassUmkm" class="form-input" placeholder="Ketik ulang password baru"
               required minlength="6">
           </div>
-          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">
+          <button type="submit" class="btn btn-primary btn-block btn-lg">
             <i class="fa-solid fa-key"></i> Atur Password Baru
           </button>
         </form>
 
-        <p style="text-align: center; margin-top: 14px; font-size: 0.85rem; color: var(--neutral-500);">
-          Ingat password? <a href="#" id="forgotBackBtn" onclick="event.preventDefault();"
-            style="color: var(--primary-700); font-weight: 700;">Kembali ke Masuk</a>
+        <p class="modal-switch-text">
+          Ingat password? <a href="#" id="forgotBackBtn" onclick="event.preventDefault();">Kembali ke Masuk</a>
         </p>
       </div>
     </div>
@@ -1179,26 +1125,24 @@
        MODAL: ADMIN - ISI / KOREKSI TITIK LOKASI WARUNG
        ============================================================= -->
   <div class="modal-backdrop" id="adminLocationModal">
-    <div class="modal-card" style="max-width: 560px;">
-      <button class="modal-close-btn" aria-label="Tutup Lokasi">&times;</button>
+    <div class="modal-card modal-lg">
+      <button class="modal-close-btn" aria-label="Tutup Lokasi">×</button>
       <div class="modal-content-pad">
-        <h3 style="font-weight: 800; color: var(--neutral-900); margin-bottom: 4px;"><i
-            class="fa-solid fa-map-location-dot"></i> Titik Lokasi Warung</h3>
-        <div id="adminLocName" style="font-weight: 700; color: var(--primary-900);"></div>
-        <div id="adminLocAddress" style="font-size: 0.82rem; color: var(--neutral-500); margin: 2px 0 6px;"></div>
-        <a id="adminLocSearchLink" href="#" target="_blank" rel="noopener"
-          style="font-size: 0.8rem; color: var(--primary-700); font-weight: 700; text-decoration: none;">
+        <h3 class="modal-heading"><i class="fa-solid fa-map-location-dot"></i> Titik Lokasi Warung</h3>
+        <div id="adminLocName" class="admin-loc-title"></div>
+        <div id="adminLocAddress" class="admin-loc-address"></div>
+        <a id="adminLocSearchLink" href="#" target="_blank" rel="noopener" class="admin-loc-link">
           <i class="fa-solid fa-up-right-from-square"></i> Cari alamat ini di Google Maps
         </a>
-        <div id="adminLocationMap" class="loc-picker-map" style="margin-top: 12px;"
+        <div id="adminLocationMap" class="loc-picker-map loc-picker-map-spaced"
           aria-label="Peta koreksi lokasi warung"></div>
         <p class="loc-picker-hint">Ketuk peta atau geser pin ke lokasi warung yang benar. Bisa juga tempel koordinat
           dari Google Maps di kolom bawah.</p>
-        <div class="form-group" style="margin-top: 10px;">
+        <div class="form-group loc-coord-group">
           <label class="form-label" for="adminLocInput">Koordinat (lat, lng)</label>
           <input type="text" id="adminLocInput" class="form-input" placeholder="-8.170684, 113.721057">
         </div>
-        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px;">
+        <div class="modal-footer-actions">
           <button type="button" class="btn btn-outline btn-sm" onclick="closeAllModals()">Batal</button>
           <button type="button" class="btn btn-primary btn-sm" id="adminLocSaveBtn"
             onclick="window.saveAdminLocation()"><i class="fa-solid fa-floppy-disk"></i> Simpan Titik</button>
@@ -1208,16 +1152,18 @@
   </div>
 
   <!-- Popup konfirmasi aksi -->
-  <div class="modal-backdrop" id="confirmActionModal" role="dialog" aria-modal="true" aria-labelledby="confirmActionTitle">
-    <div class="modal-card" style="max-width: 440px;">
-      <button class="modal-close-btn" type="button" aria-label="Tutup konfirmasi" onclick="window.cancelConfirmAction()">&times;</button>
+  <div class="modal-backdrop" id="confirmActionModal" role="dialog" aria-modal="true"
+    aria-labelledby="confirmActionTitle">
+    <div class="modal-card modal-sm">
+      <button class="modal-close-btn" type="button" aria-label="Tutup konfirmasi"
+        onclick="window.cancelConfirmAction()">×</button>
       <div class="modal-content-pad">
-        <div style="width: 52px; height: 52px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 16px; background: var(--success-100); color: var(--success-600); font-size: 1.35rem;">
+        <div class="confirm-icon-box">
           <i id="confirmActionIcon" class="fa-solid fa-circle-question"></i>
         </div>
-        <h3 id="confirmActionTitle" style="font-size: 1.2rem; font-weight: 800; color: var(--primary-900);"></h3>
-        <p id="confirmActionMessage" style="margin-top: 8px; color: var(--neutral-600); font-size: 0.9rem;"></p>
-        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+        <h3 id="confirmActionTitle" class="modal-heading"></h3>
+        <p id="confirmActionMessage" class="confirm-message"></p>
+        <div class="modal-footer-actions">
           <button type="button" class="btn btn-outline" onclick="window.cancelConfirmAction()">Batal</button>
           <button type="button" class="btn btn-primary" id="confirmActionBtn" onclick="window.confirmAction()"></button>
         </div>
@@ -1230,7 +1176,7 @@
        ============================================================= -->
   <div class="modal-backdrop" id="detailModal">
     <div class="modal-card">
-      <button class="modal-close-btn" aria-label="Tutup Detail">&times;</button>
+      <button class="modal-close-btn" aria-label="Tutup Detail">×</button>
       <div id="detailModalContent">
         <!-- Injected dynamically by app.js -->
       </div>
@@ -1241,44 +1187,42 @@
        MODAL: FORM TULIS REVIEW MAHASISWA
        ============================================================= -->
   <div class="modal-backdrop" id="reviewModal">
-    <div class="modal-card" style="max-width: 520px;">
-      <button class="modal-close-btn" aria-label="Tutup Review">&times;</button>
+    <div class="modal-card modal-md">
+      <button class="modal-close-btn" aria-label="Tutup Review">×</button>
       <div class="modal-content-pad">
-        <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--primary-900); margin-bottom: 4px;">
-          Tulis Ulasan &amp; Kenyang Score
-        </h3>
-        <p style="font-size: 0.85rem; color: var(--neutral-500); margin-bottom: 16px;">
-          Bantu sesama anak kos UNEJ menemukan makanan jujur untuk: <strong id="reviewModalSpotName"
-            style="color: var(--accent-600);">Warung</strong>
+        <h3 class="modal-heading">Tulis Ulasan & Kenyang Score</h3>
+        <p class="modal-subtext">
+          Bagikan pengalaman makanmu di <strong id="reviewModalSpotName">Warung</strong> agar teman kos lainnya punya
+          gambaran porsi & rasa yang jujur.
         </p>
 
         <form id="reviewForm">
           <input type="hidden" id="reviewSpotIdInput">
 
           <div class="form-group">
-            <label class="form-label" for="reviewerFaculty">Fakultas &amp; Angkatan *</label>
+            <label class="form-label" for="reviewerFaculty">Fakultas & Angkatan *</label>
             <input type="text" id="reviewerFaculty" class="form-input" placeholder="Contoh: Fasilkom '24 / FEB '23"
               required>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+          <div class="review-select-grid">
             <div class="form-group">
               <label class="form-label" for="reviewRating">Rating Rasa *</label>
               <select id="reviewRating" class="form-select-ctrl">
-                <option value="5">⭐⭐⭐⭐⭐ 5 (Juara)</option>
-                <option value="4">⭐⭐⭐⭐ 4 (Enak)</option>
-                <option value="3">⭐⭐⭐ 3 (Lumayan)</option>
-                <option value="2">⭐⭐ 2 (Kurang)</option>
-                <option value="1">⭐ 1 (Kecewa)</option>
+                <option value="5">5 / 5 — Sangat Enak</option>
+                <option value="4">4 / 5 — Enak</option>
+                <option value="3">3 / 5 — Lumayan</option>
+                <option value="2">2 / 5 — Kurang</option>
+                <option value="1">1 / 5 — Tidak Cocok</option>
               </select>
             </div>
             <div class="form-group">
               <label class="form-label" for="reviewKenyangScore">Kenyang Meter *</label>
               <select id="reviewKenyangScore" class="form-select-ctrl">
-                <option value="5">🥣 5/5 (Porsi Kuli)</option>
-                <option value="4">🥣 4/5 (Kenyang Pas)</option>
-                <option value="3">🥣 3/5 (Standar)</option>
-                <option value="2">🥣 2/5 (Porsi Sedikit)</option>
+                <option value="5">5 / 5 — Porsi Jumbo</option>
+                <option value="4">4 / 5 — Kenyang Pas</option>
+                <option value="3">3 / 5 — Standar</option>
+                <option value="2">2 / 5 — Porsi Sedikit</option>
               </select>
             </div>
           </div>
@@ -1286,10 +1230,10 @@
           <div class="form-group">
             <label class="form-label" for="reviewComment">Ulasan Jujur Kamu *</label>
             <textarea id="reviewComment" class="form-textarea" rows="3"
-              placeholder="Ceritakan porsi, rasa, sambal, atau tips hemat di sini..." required></textarea>
+              placeholder="Ceritakan porsi nasi, lauk, sambal, atau jam ramai di sini..." required></textarea>
           </div>
 
-          <button type="submit" class="btn btn-primary" style="width: 100%;">
+          <button type="submit" class="btn btn-primary btn-block">
             <i class="fa-solid fa-paper-plane"></i> Kirim Ulasan Mahasiswa
           </button>
         </form>
@@ -1297,7 +1241,7 @@
     </div>
   </div>
 
-  <!-- Toast Notification -->
+  <!-- Global Loading Overlay -->
   <div class="global-loading" id="globalLoading" aria-live="polite" aria-busy="false" hidden>
     <div class="global-loading-card">
       <span class="loading-spinner" aria-hidden="true"></span>
@@ -1305,56 +1249,90 @@
     </div>
   </div>
 
+  <!-- Toast Notification -->
   <div class="toast-msg" id="toastMsg" role="alert">
-    <i class="fa-solid fa-circle-check" style="color: var(--success-500); font-size: 1.2rem;"></i>
+    <i class="fa-solid fa-circle-check toast-icon"></i>
     <span id="toastText">Aksi berhasil dilakukan</span>
   </div>
 
-  <!-- Footer -->
+  <!-- =============================================================
+       FOOTER
+       ============================================================= -->
   <footer class="main-footer" id="mainFooter">
     <div class="container">
       <div class="footer-grid">
 
-        <!-- Col 1: Brand Info -->
+        <!-- Col 1: Brand & Deskripsi Natural -->
         <div class="footer-brand">
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-            <div class="brand-icon" id="footerBrandIcon"
-              style="width: 38px; height: 38px; font-size: 1.2rem; background: #fff; color: var(--primary-900);">
-              <i class="fa-solid fa-bowl-rice"></i>
-            </div>
-            <h4 style="margin-bottom: 0;">MUYANG (Murah Kenyang)</h4>
+        <div class="footer-brand-head">
+          <div class="brand-icon footer-brand-icon" id="footerBrandIcon" aria-hidden="true">
+            <svg class="muyang-emblem" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.5 15.5C16.5 13.5 19.5 12 18.5 9.5" stroke="#FBBF24" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M23.5 14.5C22.5 12 25.5 10.5 24.5 7.5" stroke="#FBBF24" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M29.5 15.5C28.5 13.5 31.5 12 30.5 9.5" stroke="#FBBF24" stroke-width="2.2" stroke-linecap="round"/>
+              <path d="M29 19.5L39.5 12.5" stroke="#FDBA74" stroke-width="2" stroke-linecap="round"/>
+              <path d="M31 21L40.5 16" stroke="#FB923C" stroke-width="2" stroke-linecap="round"/>
+              <path d="M12.5 23C13.5 17.5 18.5 15.5 24 15.5C29.5 15.5 34.5 17.5 35.5 23H12.5Z" fill="#FEF3C7"/>
+              <rect x="9.5" y="22.5" width="29" height="3" rx="1.5" fill="#F59E0B"/>
+              <path d="M11 25.5C11 32.8 16.5 36.5 24 36.5C31.5 36.5 37 32.8 37 25.5H11Z" fill="#EA580C"/>
+              <path d="M18.5 36.5L19.5 39.2C19.7 39.7 20.2 40 20.8 40H27.2C27.8 40 28.3 39.7 28.5 39.2L29.5 36.5H18.5Z" fill="#D97706"/>
+            </svg>
           </div>
+          <div>
+            <h4>MUYANG<span class="brand-dot">.</span></h4>
+            <span class="footer-tagline">Murah Kenyang · Area Kampus UNEJ</span>
+          </div>
+        </div>
           <p>
-            Platform digital terpadu pencari kuliner hemat dan mengenyangkan untuk mahasiswa serta
-            wadah promosi berdaya saing tinggi bagi UMKM kuliner lokal sekitar kampus.
+            Catatan kuliner harian untuk anak kos dan mahasiswa Universitas Jember. Cek harga menu asli, jarak jalan
+            kaki dari fakultas, dan ulasan porsi jujur sebelum berangkat makan.
           </p>
+          <div class="footer-meta-note">
+            <i class="fa-solid fa-location-dot"></i> Kawasan Tegalboto, Sumbersari, Jember
+          </div>
         </div>
 
-        <!-- Col 2: Fitur -->
+        <!-- Col 2: Navigasi Fitur -->
         <div class="footer-links">
-          <h5>Fitur Utama</h5>
+          <h5>Menu Utama</h5>
           <ul>
-            <li><a href="#katalog">Filter Budget Nominal Saku</a></li>
-            <li><a href="#radar-map">Radar Peta Kuliner Kampus</a></li>
-            <li><a href="#meal-planner">Kalkulator Kenyang Anak Kos</a></li>
-            <li><a href="#kemitraan-umkm">Featured Listing UMKM (Rp 50rb)</a></li>
+            <li><a href="#katalog">Cari Warung & Filter Budget</a></li>
+            <li><a href="#radar-map">Peta Kuliner Sekitar Kampus</a></li>
+            <li><a href="#meal-planner">Kalkulator Kenyang Seharian</a></li>
+            <li><a href="#kemitraan-umkm">Daftarkan Warung UMKM</a></li>
           </ul>
         </div>
 
-        <!-- Col 3: Tim Pengembang -->
+        <!-- Col 3: Pintasan Kawasan Kos -->
+        <div class="footer-links">
+          <h5>Area Populer Kampus</h5>
+          <ul>
+            <li><a href="#katalog" data-footer-area="Jl. Kalimantan">Jl. Kalimantan & Bundaran</a></li>
+            <li><a href="#katalog" data-footer-area="Jl. Jawa">Jl. Jawa (Pintu Belakang)</a></li>
+            <li><a href="#katalog" data-footer-area="Jl. Mastrip">Jl. Mastrip & Sekitar Kos</a></li>
+            <li><a href="#katalog" data-footer-area="Jl. Riau">Jl. Riau (Fasilkom & FIB)</a></li>
+            <li><a href="#katalog" data-footer-area="Jl. Danau Toba">Jl. Danau Toba (Kuliner Malam)</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 4: Tim & Kontak -->
         <div class="footer-links">
           <h5>Tim Pengembang</h5>
-          <ul>
-            <li><strong>Fressy Ravalino F.</strong></li>
-            <li><strong>Maulana Irfanhaqi</strong></li>
-            <li><strong>Nafariel Dwi A.</strong></li>
+          <ul class="footer-team-list">
+            <li>Fressy Ravalino F.</li>
+            <li>Maulana Irfanhaqi</li>
+            <li>Nafariel Dwi A.</li>
           </ul>
+          <a href="https://wa.me/6282336669588?text=Halo%20Tim%20MUYANG%2C%20saya%20ingin%20bertanya%20seputar%20website%20kuliner%20UNEJ."
+            target="_blank" rel="noopener" class="footer-wa-link">
+            <i class="fa-brands fa-whatsapp"></i> Hubungi Tim Muyang
+          </a>
         </div>
 
       </div>
 
       <div class="footer-bottom">
-        <p>&copy; 2026 Tim MUYANG (Murah Kenyang). Hak Cipta Dilindungi.</p>
+        <p>© 2026 MUYANG. All rights reserved.</p>
       </div>
     </div>
   </footer>
@@ -1364,8 +1342,52 @@
   <!-- Leaflet Map JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <!-- Scripts -->
+  <!-- Main Application Script -->
   <script src="js/app.js"></script>
+
+  <!-- UI Polish Helper: Slider Track Fill & Quick Area Links -->
+  <script>
+    (function () {
+      const slider = document.getElementById('heroBudgetSlider');
+      function syncSliderTrack() {
+        if (!slider) return;
+        const min = Number(slider.min) || 5000;
+        const max = Number(slider.max) || 30000;
+        const val = Number(slider.value) || 25000;
+        const pct = ((val - min) / (max - min)) * 100;
+        slider.style.setProperty('--slider-pct', pct + '%');
+      }
+      if (slider) {
+        syncSliderTrack();
+        slider.addEventListener('input', syncSliderTrack);
+        document.querySelectorAll('.hero-budget-pill').forEach(btn => {
+          btn.addEventListener('click', () => setTimeout(syncSliderTrack, 0));
+        });
+        document.getElementById('resetFiltersBtn')?.addEventListener('click', () => setTimeout(syncSliderTrack, 0));
+      }
+
+      // Quick area buttons in Hero & Footer -> sync #areaSelect and scroll smoothly to #katalog
+      function applyQuickArea(area) {
+        const areaSelect = document.getElementById('areaSelect');
+        if (areaSelect) {
+          areaSelect.value = area;
+          areaSelect.dispatchEvent(new Event('change'));
+        }
+        const katalog = document.getElementById('katalog');
+        if (katalog) {
+          katalog.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+
+      document.querySelectorAll('[data-quick-area], [data-footer-area]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.preventDefault();
+          const area = el.getAttribute('data-quick-area') || el.getAttribute('data-footer-area');
+          if (area) applyQuickArea(area);
+        });
+      });
+    })();
+  </script>
 </body>
 
 </html>
