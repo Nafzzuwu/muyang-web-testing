@@ -330,9 +330,21 @@ function normalizeWarung(w) {
   const minPrice = prices.length > 0 ? Math.min(...prices) : (w.min_price || 0);
   const maxPrice = prices.length > 0 ? Math.max(...prices) : (w.max_price || 0);
 
-  // Safe parse: JSONB bisa datang sebagai array atau string — pastikan selalu array/object
+  // Safe parse: JSONB bisa datang sebagai array, JSON string, atau Postgres text[] {val1,val2}
   let features = w.features || [];
-  if (typeof features === 'string') { try { features = JSON.parse(features); } catch { features = []; } }
+  if (typeof features === 'string') {
+    if (features.startsWith('{') && features.endsWith('}')) {
+      // Postgres text[] format: {"val1","val2"} → parse manually
+      try {
+        features = JSON.parse('[' + features.slice(1, -1).replace(/"([^"]*)"/g, '"$1"') + ']');
+      } catch {
+        // fallback: strip braces and split by comma
+        features = features.slice(1, -1).split(',').map(s => s.replace(/^"(.*)"$/, '$1').trim()).filter(Boolean);
+      }
+    } else {
+      try { features = JSON.parse(features); } catch { features = []; }
+    }
+  }
   if (!Array.isArray(features)) features = [];
 
   let coordinates = w.coordinates || { x: 50, y: 50 };
@@ -973,6 +985,28 @@ async function renderUmkmDashboard() {
       await renderUmkmIncomingReviews(warung.id);
     }
     showDashboard('viewDashboardUmkmActive');
+  } else if (status === 'expired') {
+    // Masa kemitraan berakhir — tampilkan view aktif tapi dengan banner expired
+    const welcomeEl = document.getElementById('dashUmkmWelcome');
+    if (welcomeEl) welcomeEl.textContent = `${session.warungName} — Masa Kemitraan Berakhir`;
+
+    // Show expired banner if exists, else reuse active view
+    const expiredBanner = document.getElementById('umkmExpiredBanner');
+    if (expiredBanner) expiredBanner.style.display = '';
+    // Disable add menu and photo upload
+    const addMenuForm = document.getElementById('addMenuForm');
+    if (addMenuForm) {
+      addMenuForm.style.opacity = '0.5';
+      addMenuForm.style.pointerEvents = 'none';
+    }
+    const uploadBtn = document.getElementById('uploadWarungPhotoBtn');
+    if (uploadBtn) { uploadBtn.disabled = true; uploadBtn.title = 'Perpanjang kemitraan untuk mengupload foto.'; }
+
+    if (warung) {
+      await renderUmkmMenuList(warung);
+      await renderUmkmIncomingReviews(warung.id);
+    }
+    showDashboard('viewDashboardUmkmActive');
   }
 }
 
@@ -1079,7 +1113,8 @@ async function renderAdminDashboard() {
     awaiting_payment: '<span class="status-badge status-payment">Menunggu Bayar</span>',
     verifying: '<span class="status-badge status-verifying">Verifikasi Bayar</span>',
     active: '<span class="status-badge status-active">Mitra Aktif</span>',
-    rejected: '<span class="status-badge status-rejected">Ditolak</span>'
+    rejected: '<span class="status-badge status-rejected">Ditolak</span>',
+    expired: '<span class="status-badge" style="background:#f3f4f6;color:#6b7280;border:1px solid #d1d5db;font-weight:800;font-size:0.72rem;padding:3px 10px;border-radius:999px;">Kemitraan Berakhir</span>'
   };
 
   // Stats Grid
@@ -1088,6 +1123,7 @@ async function renderAdminDashboard() {
     const pending = registrations.filter(u => u.status === 'pending').length;
     const payment = registrations.filter(u => u.status === 'awaiting_payment' || u.status === 'verifying').length;
     const active = registrations.filter(u => u.status === 'active').length;
+    const expired = registrations.filter(u => u.status === 'expired').length;
 
     statsEl.innerHTML = `
       <div class="admin-stat-card">
@@ -1106,6 +1142,11 @@ async function renderAdminDashboard() {
         <div class="admin-stat-icon active"><i class="fa-solid fa-circle-check"></i></div>
         <div><div class="admin-stat-val">${active}</div><div class="admin-stat-label">Mitra Aktif</div></div>
       </div>
+      ${expired > 0 ? `
+      <div class="admin-stat-card" style="border-left:3px solid #9ca3af;">
+        <div class="admin-stat-icon" style="background:#f3f4f6;color:#6b7280;"><i class="fa-solid fa-ban"></i></div>
+        <div><div class="admin-stat-val" style="color:#6b7280;">${expired}</div><div class="admin-stat-label">Kemitraan Berakhir</div></div>
+      </div>` : ''}
     `;
   }
 
@@ -1159,8 +1200,19 @@ async function renderAdminDashboard() {
                       <i class="fa-solid fa-bolt"></i> Konfirmasi &amp; Aktifkan
                     </button>
                   ` : ''}
-                  ${u.status === 'active' ? `<span style="color:var(--success-600);font-size:0.82rem;font-weight:800;"><i class="fa-solid fa-circle-check"></i> Tayang Publik</span>` : ''}
+                  ${u.status === 'active' ? `
+                    <span style="color:var(--success-600);font-size:0.82rem;font-weight:800;"><i class="fa-solid fa-circle-check"></i> Tayang Publik</span>
+                    <button class="btn btn-outline btn-xs" onclick="window.adminDeactivateUmkm(${u.id}, '${u.business_name.replace(/'/g, "\\'")}', '${u.user_id}')" style="color:#dc2626;border-color:#dc2626;margin-top:4px;">
+                      <i class="fa-solid fa-ban"></i> Nonaktifkan
+                    </button>
+                  ` : ''}
                   ${u.status === 'rejected' ? `<span style="color:var(--neutral-400);font-size:0.82rem;">Ditolak</span>` : ''}
+                  ${u.status === 'expired' ? `
+                    <span style="color:#9ca3af;font-size:0.82rem;font-weight:700;"><i class="fa-solid fa-clock"></i> Nonaktif</span>
+                    <button class="btn btn-primary btn-xs" onclick="window.adminReactivateUmkm(${u.id}, '${u.business_name.replace(/'/g, "\\'")}', '${u.user_id}')" style="margin-top:4px;">
+                      <i class="fa-solid fa-rotate-right"></i> Aktifkan Kembali
+                    </button>
+                  ` : ''}
                 </td>
               </tr>
             `).join('')}
@@ -1276,7 +1328,8 @@ window.adminActivateUmkm = async function (regId, warungName, userId) {
       const area = detectArea(reg.address);
       const coords = assignCoordinates(area, Math.floor(Math.random() * 10));
 
-      await supabaseClient.from('warungs').insert([{
+      const defaultFeatures = ['Mitra Terverifikasi Muyang', 'Porsi Kenyang Terjamin', 'Bisa QRIS / Tunai', 'Harga Ramah Mahasiswa'];
+      const { data: newWarung, error: insertErr } = await supabaseClient.from('warungs').insert([{
         owner_id: userId,
         name: reg.business_name,
         category: cat.key,
@@ -1298,12 +1351,16 @@ window.adminActivateUmkm = async function (regId, warungName, userId) {
         promo_badge: 'Mitra Baru Muyang',
         image_url: cat.image,
         hours: '08.00 - 21.00 WIB',
-        features: ['Mitra Terverifikasi Muyang', 'Porsi Kenyang Terjamin', 'Bisa QRIS / Tunai', 'Harga Ramah Mahasiswa'],
+        features: defaultFeatures,
         description: `Warung mitra resmi Muyang di area ${area}. Menyajikan menu lezat dan porsi mengenyangkan khusus mahasiswa UNEJ.`,
         coordinates: coords.canvas
-      }]);
+      }]).select().single();
+      if (insertErr) {
+        console.warn('[Admin] Insert warung error:', insertErr.message);
+        throw insertErr;
+      }
     } else if (existingWarung) {
-      // Activate existing warung
+      // Re-activate existing warung
       await supabaseClient.from('warungs').update({ is_active: true }).eq('id', existingWarung.id);
     }
 
@@ -1316,7 +1373,61 @@ window.adminActivateUmkm = async function (regId, warungName, userId) {
     showToast(`Pembayaran diverifikasi! Warung "${warungName}" kini resmi AKTIF dan tampil di website publik!`);
   } catch (err) {
     console.warn('[Admin] Activate error:', err);
-    showToast('Gagal mengaktifkan. Coba lagi.', 'error');
+    showToast('Gagal mengaktifkan: ' + (err?.message || 'Coba lagi.'), 'error');
+  }
+};
+
+// ============================================================
+// ADMIN: DEACTIVATE UMKM (Nonaktifkan / Masa Kemitraan Berakhir)
+// ============================================================
+window.adminDeactivateUmkm = async function (regId, warungName, userId) {
+  if (!supabaseClient) return;
+  if (!confirm(`Nonaktifkan kemitraan "${warungName}"?\n\nWarung akan hilang dari katalog publik, namun semua data (menu, ulasan, riwayat) tetap tersimpan di database.\n\nAdmin dapat mengaktifkan kembali jika UMKM memperpanjang kemitraan.`)) return;
+  try {
+    // 1. Set registration status = expired
+    await DB.updateRegistrationStatus(regId, 'expired');
+
+    // 2. Set warung is_active = false (hilang dari katalog publik)
+    const warung = await DB.getWarungByOwnerId(userId);
+    if (warung) {
+      await supabaseClient.from('warungs').update({ is_active: false, promo_badge: null }).eq('id', warung.id);
+    }
+
+    // 3. Refresh
+    await refreshWarungsCache();
+    renderCulinaryGrid();
+    renderRadarMapPins();
+    await renderAdminDashboard();
+    showToast(`Kemitraan "${warungName}" telah dinonaktifkan. Data tetap tersimpan.`);
+  } catch (err) {
+    console.warn('[Admin] Deactivate error:', err);
+    showToast('Gagal menonaktifkan. Coba lagi.', 'error');
+  }
+};
+
+// ADMIN: RE-ACTIVATE UMKM (Perpanjang Kemitraan)
+window.adminReactivateUmkm = async function (regId, warungName, userId) {
+  if (!supabaseClient) return;
+  if (!confirm(`Aktifkan kembali kemitraan "${warungName}"?\n\nWarung akan kembali tampil di katalog publik.`)) return;
+  try {
+    // 1. Set registration status = active
+    await DB.updateRegistrationStatus(regId, 'active');
+
+    // 2. Re-activate warung
+    const warung = await DB.getWarungByOwnerId(userId);
+    if (warung) {
+      await supabaseClient.from('warungs').update({ is_active: true, promo_badge: 'Mitra Perpanjang' }).eq('id', warung.id);
+    }
+
+    // 3. Refresh
+    await refreshWarungsCache();
+    renderCulinaryGrid();
+    renderRadarMapPins();
+    await renderAdminDashboard();
+    showToast(`Kemitraan "${warungName}" berhasil diaktifkan kembali!`);
+  } catch (err) {
+    console.warn('[Admin] Reactivate error:', err);
+    showToast('Gagal mengaktifkan kembali. Coba lagi.', 'error');
   }
 };
 
@@ -1492,7 +1603,7 @@ function renderCulinaryGrid() {
           </div>
 
           <div class="card-features-list">
-            ${(item.features || []).slice(0, 3).map(feat => `
+            ${(Array.isArray(item.features) ? item.features : []).slice(0, 3).map(feat => `
               <span class="feature-tag"><i class="fa-solid fa-check"></i> ${feat}</span>
             `).join('')}
           </div>
@@ -1663,7 +1774,7 @@ window.openDetailModal = async function (id) {
         <i class="fa-solid fa-circle-check" style="color: var(--accent-500);"></i> Fasilitas Ramah Mahasiswa
       </h4>
       <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;">
-        ${(normalized.features || []).map(f => `
+        ${(Array.isArray(normalized.features) ? normalized.features : []).map(f => `
           <span style="background: var(--neutral-100); border: 1px solid var(--neutral-300); padding: 5px 12px; border-radius: var(--radius-full); font-size: 0.8rem; font-weight: 600; color: var(--neutral-800);">
             <i class="fa-solid fa-check" style="color: var(--success-600);"></i> ${f}
           </span>
