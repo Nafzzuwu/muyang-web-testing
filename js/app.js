@@ -242,6 +242,11 @@ const DB = {
     return data;
   },
 
+  async updateUserPassword(id, password) {
+    if (!supabaseClient) return { error: 'No DB' };
+    const { error } = await supabaseClient.from('users').update({ password }).eq('id', id);
+    return { error };
+  },
   async insertUser(user) {
     if (!supabaseClient) return { error: 'No DB' };
     const { data, error } = await supabaseClient.from('users').insert([user]).select().single();
@@ -569,6 +574,7 @@ function openModal(id) {
 function closeAllModals() {
   document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
 }
+window.closeAllModals = closeAllModals;
 
 window.openLoginModal = function (tab) {
   openModal('loginModal');
@@ -680,6 +686,124 @@ async function handleLoginAdmin(e) {
     console.warn('[AUTH] Login admin error:', err);
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Masuk'; }
+  }
+}
+
+// ============================================================
+// AUTH: LUPA PASSWORD (verifikasi data akun, lalu atur password baru)
+// Mahasiswa: NIM + nama lengkap + fakultas.  UMKM: email + nama pemilik + WhatsApp.
+// ============================================================
+const RESET_LOCK_KEY = 'muyang_reset_lock';
+const RESET_MAX_ATTEMPTS = 5;
+const RESET_LOCK_MS = 5 * 60 * 1000;
+
+function normText(v) { return (v || '').toString().trim().toLowerCase().replace(/\s+/g, ' '); }
+function normPhone(v) {
+  let d = (v || '').toString().replace(/\D/g, '');
+  if (d.startsWith('62')) d = '0' + d.slice(2);
+  return d;
+}
+
+function resetLockRemainingMs() {
+  try {
+    const r = JSON.parse(localStorage.getItem(RESET_LOCK_KEY) || '{}');
+    return Math.max(0, (r.until || 0) - Date.now());
+  } catch (_) { return 0; }
+}
+function registerResetFailure() {
+  try {
+    const r = JSON.parse(localStorage.getItem(RESET_LOCK_KEY) || '{}');
+    const count = (r.count || 0) + 1;
+    localStorage.setItem(RESET_LOCK_KEY, JSON.stringify(
+      count >= RESET_MAX_ATTEMPTS ? { count: 0, until: Date.now() + RESET_LOCK_MS } : { count, until: 0 }
+    ));
+  } catch (_) { }
+}
+function clearResetFailures() {
+  try { localStorage.removeItem(RESET_LOCK_KEY); } catch (_) { }
+}
+
+window.openForgotPassword = function (role) {
+  const isMhs = role === 'mahasiswa';
+  openModal('forgotPasswordModal');
+  document.getElementById('forgotFormMahasiswa').style.display = isMhs ? '' : 'none';
+  document.getElementById('forgotFormUmkm').style.display = isMhs ? 'none' : '';
+  document.getElementById('forgotSubtitle').textContent = isMhs
+    ? 'Isi NIM dan data akun kamu untuk membuat password baru.'
+    : 'Isi email dan data pendaftaran UMKM kamu untuk membuat password baru.';
+  document.getElementById('forgotBackBtn').dataset.role = role;
+  // Bawa isian dari form login supaya tidak mengetik ulang
+  const typed = document.getElementById(isMhs ? 'loginNim' : 'loginEmailUmkm')?.value.trim();
+  const target = document.getElementById(isMhs ? 'forgotNim' : 'forgotEmailUmkm');
+  if (typed && target && !target.value) target.value = typed;
+};
+
+async function handleForgotPassword(e, role) {
+  e.preventDefault();
+  if (!supabaseClient) { showToast('Database tidak tersedia.', 'error'); return; }
+
+  const lockMs = resetLockRemainingMs();
+  if (lockMs > 0) {
+    showToast(`Terlalu banyak percobaan. Coba lagi dalam ${Math.ceil(lockMs / 60000)} menit.`, 'error');
+    return;
+  }
+
+  const isMhs = role === 'mahasiswa';
+  const newPass = document.getElementById(isMhs ? 'forgotNewPassMhs' : 'forgotNewPassUmkm').value;
+  const confirmPass = document.getElementById(isMhs ? 'forgotConfirmPassMhs' : 'forgotConfirmPassUmkm').value;
+  if (newPass.length < 6) { showToast('Password baru minimal 6 karakter.', 'error'); return; }
+  if (newPass !== confirmPass) { showToast('Konfirmasi password tidak sama.', 'error'); return; }
+
+  const btn = e.target.querySelector('[type=submit]');
+  const btnLabel = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Memverifikasi...'; }
+
+  try {
+    const identifier = isMhs
+      ? document.getElementById('forgotNim').value.trim()
+      : document.getElementById('forgotEmailUmkm').value.trim().toLowerCase();
+    const user = await DB.getUserByIdentifier(identifier, role);
+
+    let verified = false;
+    if (user) {
+      if (isMhs) {
+        verified =
+          normText(user.name) === normText(document.getElementById('forgotNama').value) &&
+          normText(user.extra_data?.fakultas) === normText(document.getElementById('forgotFakultas').value);
+      } else {
+        const reg = await DB.getRegistrationByUserId(user.id);
+        const ownerName = reg?.owner_name || user.extra_data?.ownerName;
+        const wa = normPhone(document.getElementById('forgotWa').value);
+        verified =
+          normText(ownerName) === normText(document.getElementById('forgotOwner').value) &&
+          wa.length > 0 && wa === normPhone(user.phone);
+      }
+    }
+
+    // Pesan sengaja sama untuk "akun tidak ada" dan "data salah" agar akun orang lain tidak bisa ditebak
+    if (!verified) {
+      registerResetFailure();
+      showToast('Data tidak cocok dengan akun terdaftar. Periksa lagi isian kamu.', 'error');
+      return;
+    }
+
+    const { error } = await DB.updateUserPassword(user.id, newPass);
+    if (error) {
+      showToast('Gagal mengubah password: ' + (error.message || 'Coba lagi.'), 'error');
+      return;
+    }
+
+    clearResetFailures();
+    document.getElementById(isMhs ? 'forgotFormMahasiswa' : 'forgotFormUmkm')?.reset();
+    window.openLoginModal(role);
+    const loginInput = document.getElementById(isMhs ? 'loginNim' : 'loginEmailUmkm');
+    if (loginInput) loginInput.value = identifier;
+    showToast('Password berhasil diubah. Silakan masuk dengan password baru.');
+  } catch (err) {
+    showToast('Terjadi kesalahan. Coba lagi.', 'error');
+    console.warn('[AUTH] Forgot password error:', err);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
   }
 }
 
@@ -1674,25 +1798,90 @@ window.saveUmkmLocation = async function () {
   }
 };
 
-// ---- Admin: isi / koreksi titik (tempel "lat, lng" dari Google Maps) ----
+// ---- Admin: isi / koreksi titik lewat modal (peta + pin, atau tempel "lat, lng") ----
+let adminLocPicker = null;
+let adminLocTarget = null; // { regId, userId, initial: [lat, lng] | null }
+let adminLocObserverSet = false;
+
+function parseLatLngText(text) {
+  const m = (text || '').match(/(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)/);
+  return m ? { lat: parseFloat(m[1]), lng: parseFloat(m[2]) } : null;
+}
+
+function applyAdminLocInitial() {
+  if (!adminLocPicker || !adminLocTarget) return;
+  adminLocPicker.invalidate();
+  if (adminLocTarget.initial) adminLocPicker.setLatLng(adminLocTarget.initial[0], adminLocTarget.initial[1]);
+  else adminLocPicker.clear();
+}
+
 window.adminEditCoords = async function (regId, userId) {
   if (!supabaseClient) return;
-  const input = prompt('Tempel koordinat warung dalam format: lat, lng\nContoh: -8.170684, 113.721057\n\nTips: di Google Maps, klik kanan titik warung lalu klik angka koordinat untuk menyalin.');
-  if (input === null) return;
-  const m = input.match(/(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)/);
-  if (!m) { showToast('Format salah. Contoh: -8.170684, 113.721057', 'error'); return; }
-  const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
-  const err = validateCoords(lat, lng);
+  const { data: reg } = await supabaseClient
+    .from('umkm_registrations')
+    .select('id, user_id, business_name, address, lat, lng')
+    .eq('id', regId)
+    .maybeSingle();
+  if (!reg) { showToast('Data pendaftaran tidak ditemukan.', 'error'); return; }
+
+  adminLocTarget = {
+    regId, userId,
+    initial: (reg.lat != null && reg.lng != null) ? [Number(reg.lat), Number(reg.lng)] : null
+  };
+
+  document.getElementById('adminLocName').textContent = reg.business_name || '';
+  document.getElementById('adminLocAddress').textContent = reg.address || '';
+  document.getElementById('adminLocSearchLink').href =
+    'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(reg.address || reg.business_name || '');
+  const input = document.getElementById('adminLocInput');
+  input.value = adminLocTarget.initial ? `${adminLocTarget.initial[0].toFixed(6)}, ${adminLocTarget.initial[1].toFixed(6)}` : '';
+
+  openModal('adminLocationModal');
+
+  const el = document.getElementById('adminLocationMap');
+  if (!adminLocObserverSet) {
+    adminLocObserverSet = true;
+    lazyInitWhenVisible(el, () => {
+      adminLocPicker = createLocationPicker('adminLocationMap', {
+        onChange: (ll) => { input.value = ll ? `${ll.lat.toFixed(6)}, ${ll.lng.toFixed(6)}` : ''; }
+      });
+      applyAdminLocInitial();
+    }, () => adminLocPicker && adminLocPicker.invalidate());
+    input.addEventListener('change', () => {
+      const pt = parseLatLngText(input.value);
+      if (!pt) { showToast('Format salah. Contoh: -8.170684, 113.721057', 'error'); return; }
+      const err = validateCoords(pt.lat, pt.lng);
+      if (err) { showToast(err, 'error'); return; }
+      if (adminLocPicker) adminLocPicker.setLatLng(pt.lat, pt.lng);
+    });
+  } else {
+    setTimeout(applyAdminLocInitial, 80); // tunggu modal terlihat dulu
+  }
+};
+
+window.saveAdminLocation = async function () {
+  if (!supabaseClient || !adminLocTarget) return;
+  const ll = adminLocPicker ? adminLocPicker.getLatLng() : null;
+  const pt = ll ? { lat: ll.lat, lng: ll.lng } : parseLatLngText(document.getElementById('adminLocInput').value);
+  if (!pt) { showToast('Tentukan titik di peta atau tempel koordinat dulu.', 'error'); return; }
+  const err = validateCoords(pt.lat, pt.lng);
   if (err) { showToast(err, 'error'); return; }
+  const btn = document.getElementById('adminLocSaveBtn');
+  if (btn) btn.disabled = true;
   try {
+    const { regId, userId } = adminLocTarget;
+    const lat = +pt.lat.toFixed(6), lng = +pt.lng.toFixed(6);
     await supabaseClient.from('umkm_registrations').update({ lat, lng }).eq('id', regId);
     const warung = await DB.getWarungByOwnerId(userId);
     if (warung) await saveWarungLocation(warung.id, userId, lat, lng);
+    closeAllModals();
     await renderAdminDashboard();
     showToast('Titik lokasi diperbarui.');
   } catch (e) {
-    console.warn('[Admin] Edit coords error:', e);
+    console.warn('[Admin] Save coords error:', e);
     showToast('Gagal menyimpan titik: ' + (e?.message || 'Coba lagi.'), 'error');
+  } finally {
+    if (btn) btn.disabled = false;
   }
 };
 
@@ -2899,6 +3088,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('loginFormMahasiswa')?.addEventListener('submit', handleLoginMahasiswa);
   document.getElementById('loginFormUmkm')?.addEventListener('submit', handleLoginUmkm);
   document.getElementById('adminLoginForm')?.addEventListener('submit', handleLoginAdmin);
+  document.getElementById('forgotFormMahasiswa')?.addEventListener('submit', (e) => handleForgotPassword(e, 'mahasiswa'));
+  document.getElementById('forgotFormUmkm')?.addEventListener('submit', (e) => handleForgotPassword(e, 'umkm'));
+  document.getElementById('forgotBackBtn')?.addEventListener('click', (e) => window.openLoginModal(e.currentTarget.dataset.role || 'mahasiswa'));
 
   // 14. Register Forms
   document.getElementById('registerFormMahasiswa')?.addEventListener('submit', handleRegisterMahasiswa);
