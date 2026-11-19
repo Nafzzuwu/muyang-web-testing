@@ -2162,66 +2162,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('loginFormUmkm')?.addEventListener('submit', handleLoginUmkm);
   document.getElementById('adminLoginForm')?.addEventListener('submit', handleLoginAdmin);
 
-  // 14.5 Quick-Login Demo Buttons (Tester Shortcuts)
-  const triggerFormSubmit = (form) => {
-    if (!form) return;
-    if (typeof form.requestSubmit === 'function') {
-      form.requestSubmit();
-    } else {
-      form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-    }
-  };
-
-  document.getElementById('btnQuickMhs')?.addEventListener('click', () => {
-    const nimInput = document.getElementById('loginNim');
-    const pwdInput = document.getElementById('loginPasswordMhs');
-    if (nimInput && pwdInput) {
-      nimInput.value = '242410102001';
-      pwdInput.value = 'demo123';
-      triggerFormSubmit(document.getElementById('loginFormMahasiswa'));
-    }
-  });
-
-  document.getElementById('btnQuickUmkmActive')?.addEventListener('click', () => {
-    const emailInput = document.getElementById('loginEmailUmkm');
-    const pwdInput = document.getElementById('loginPasswordUmkm');
-    if (emailInput && pwdInput) {
-      emailInput.value = 'busiti@demo.id';
-      pwdInput.value = 'demo123';
-      triggerFormSubmit(document.getElementById('loginFormUmkm'));
-    }
-  });
-
-  document.getElementById('btnQuickUmkmPending')?.addEventListener('click', () => {
-    const emailInput = document.getElementById('loginEmailUmkm');
-    const pwdInput = document.getElementById('loginPasswordUmkm');
-    if (emailInput && pwdInput) {
-      emailInput.value = 'pakbudi@demo.id';
-      pwdInput.value = 'demo123';
-      triggerFormSubmit(document.getElementById('loginFormUmkm'));
-    }
-  });
-
-  document.getElementById('btnQuickUmkmPayment')?.addEventListener('click', () => {
-    const emailInput = document.getElementById('loginEmailUmkm');
-    const pwdInput = document.getElementById('loginPasswordUmkm');
-    if (emailInput && pwdInput) {
-      emailInput.value = 'mieayam@demo.id';
-      pwdInput.value = 'demo123';
-      triggerFormSubmit(document.getElementById('loginFormUmkm'));
-    }
-  });
-
-  document.getElementById('btnQuickAdmin')?.addEventListener('click', () => {
-    const userInput = document.getElementById('adminUsername');
-    const pwdInput = document.getElementById('adminPassword');
-    if (userInput && pwdInput) {
-      userInput.value = ADMIN_CREDS.username;
-      pwdInput.value = ADMIN_CREDS.password;
-      triggerFormSubmit(document.getElementById('adminLoginForm'));
-    }
-  });
-
   // 15. Register Forms Submission
   document.getElementById('registerFormMahasiswa')?.addEventListener('submit', handleRegisterMahasiswa);
   document.getElementById('registerFormUmkm')?.addEventListener('submit', handleRegisterUmkm);
