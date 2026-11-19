@@ -1,5 +1,5 @@
 /* ===================================================================
-   MUYANG (MURAH KENYANG) - Editorial Culinary Directory Stylesheet v6
+   MUYANG (MURAH KENYANG) - Editorial Culinary Directory Stylesheet v7
    Warm Parchment, Roasted Burgundy & Terracotta + Ambient Motion
    =================================================================== */
 
@@ -239,9 +239,10 @@ textarea {
 }
 
 .navbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
   align-items: center;
-  justify-content: space-between;
+  gap: 16px;
   height: 76px;
   width: 100%;
 }
@@ -253,6 +254,7 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 14px;
+  justify-self: start;
   user-select: none;
   text-decoration: none;
 }
@@ -326,7 +328,7 @@ textarea {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-width: 8.9rem;
+  min-width: 10rem;
 }
 
 .brand-text h1 {
@@ -420,6 +422,7 @@ textarea {
 .nav-actions {
   display: flex;
   align-items: center;
+  justify-self: end;
   gap: 10px;
 }
 
@@ -3167,6 +3170,8 @@ textarea {
   }
 
   .navbar {
+    display: flex;
+    justify-content: space-between;
     height: 74px;
   }
 
