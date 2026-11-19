@@ -53,7 +53,7 @@ const LS = {
 
 // Clear any old legacy localStorage keys on load
 (function purgeLegacy() {
-  ['muyang_users_mhs', 'muyang_users_umkm', 'muyang_seeded_v2', 'muyang_user_reviews'].forEach(k => localStorage.removeItem(k));
+  ['muyang_users_mhs','muyang_users_umkm','muyang_seeded_v2','muyang_user_reviews'].forEach(k => localStorage.removeItem(k));
 })();
 
 // ============================================================
@@ -1033,9 +1033,9 @@ async function renderUmkmMenuList(warung) {
     <div class="dash-menu-item">
       <div style="display:flex;align-items:center;gap:10px;">
         ${m.image_url
-      ? `<img src="${m.image_url}" alt="${m.name}" style="width:48px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--neutral-200);" onerror="this.style.display='none'">`
-      : `<div style="width:48px;height:40px;background:var(--neutral-100);border-radius:6px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--neutral-300);"><i class="fa-solid fa-utensils" style="color:var(--neutral-300);font-size:0.9rem;"></i></div>`
-    }
+          ? `<img src="${m.image_url}" alt="${m.name}" style="width:48px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--neutral-200);" onerror="this.style.display='none'">`
+          : `<div style="width:48px;height:40px;background:var(--neutral-100);border-radius:6px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--neutral-300);"><i class="fa-solid fa-utensils" style="color:var(--neutral-300);font-size:0.9rem;"></i></div>`
+        }
         <div>
           <span class="dash-menu-name">${m.name}</span>
           ${m.is_best_seller ? '<span style="background:var(--gold-100);color:var(--gold-600);font-size:0.68rem;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;">Favorit</span>' : ''}
@@ -1055,7 +1055,7 @@ async function renderUmkmMenuList(warung) {
   `).join('');
 }
 
-window.toggleMenuAvailability = async function (menuId, isAvailable) {
+window.toggleMenuAvailability = async function(menuId, isAvailable) {
   await DB.updateMenuAvailability(menuId, isAvailable);
   await refreshWarungsCache();
   renderCulinaryGrid();
@@ -1830,8 +1830,8 @@ window.openDetailModal = async function (id) {
       </h4>
       <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px;">
         ${normalized.popularMenus.length === 0
-      ? '<p style="color:var(--neutral-400);font-size:0.85rem;">Belum ada menu yang ditambahkan.</p>'
-      : normalized.popularMenus.map(menu => `
+          ? '<p style="color:var(--neutral-400);font-size:0.85rem;">Belum ada menu yang ditambahkan.</p>'
+          : normalized.popularMenus.map(menu => `
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #fff; border: 1.5px solid var(--neutral-200); border-radius: var(--radius-md);">
             <div>
               <div style="font-size: 0.95rem; font-weight: 800; color: var(--neutral-900);">
@@ -1851,11 +1851,11 @@ window.openDetailModal = async function (id) {
           <i class="fa-solid fa-comments" style="color: var(--accent-500);"></i> Ulasan Mahasiswa (${reviews.length})
         </h4>
         ${isMahasiswa
-      ? (hasReviewed
-        ? `<span style="font-size:0.8rem;color:var(--success-600);font-weight:700;"><i class="fa-solid fa-check-circle"></i> Sudah Diulas</span>`
-        : `<button class="btn btn-primary btn-sm open-review-form-btn" data-id="${item.id}"><i class="fa-solid fa-pen"></i> Tulis Ulasan</button>`)
-      : `<button class="btn btn-outline btn-sm" onclick="window.openLoginModal('mahasiswa')"><i class="fa-solid fa-lock"></i> Login untuk Ulasan</button>`
-    }
+          ? (hasReviewed
+            ? `<span style="font-size:0.8rem;color:var(--success-600);font-weight:700;"><i class="fa-solid fa-check-circle"></i> Sudah Diulas</span>`
+            : `<button class="btn btn-primary btn-sm open-review-form-btn" data-id="${item.id}"><i class="fa-solid fa-pen"></i> Tulis Ulasan</button>`)
+          : `<button class="btn btn-outline btn-sm" onclick="window.openLoginModal('mahasiswa')"><i class="fa-solid fa-lock"></i> Login untuk Ulasan</button>`
+        }
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px;">
@@ -2027,7 +2027,7 @@ function initLeafletMap() {
     leafletMap.on('click', (e) => {
       const txt = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
       console.log('[MUYANG] koordinat:', txt);
-      try { navigator.clipboard && navigator.clipboard.writeText(txt); } catch (_) { }
+      try { navigator.clipboard && navigator.clipboard.writeText(txt); } catch (_) {}
       showToast('Koordinat: ' + txt);
     });
   }
@@ -2422,7 +2422,7 @@ function initAdminSecretTrigger() {
   // 2. Secret Keyboard Shortcut: Ctrl + Shift + A atau Ctrl + Alt + A
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) ||
-      (e.ctrlKey && e.altKey && (e.key === 'A' || e.key === 'a'))) {
+        (e.ctrlKey && e.altKey && (e.key === 'A' || e.key === 'a'))) {
       e.preventDefault();
       const session = LS.getSession();
       if (session && session.role === 'admin') {

@@ -1,5 +1,10 @@
 {
   "cleanUrls": true,
-  "framework": null
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/favicon.ico",
+      "destination": "/assets/icons/favicon.ico"
+    }
+  ]
 }
-

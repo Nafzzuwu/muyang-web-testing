@@ -48,12 +48,17 @@
 ## 📂 Struktur File
 
 ```
-MUYANG_WEB PAGE/
-├── index.html       # Halaman utama aplikasi & hub pitch deck
-├── styles.css       # Desain responsif, tema pitch deck burgundy & parchment
-├── app.js           # Logika interaktif filter, radar peta, kalkulator, & modal
-├── data.js          # Database kuliner autentik kawasan UNEJ & data pitch deck
-└── README.md        # Dokumentasi lengkap proyek
+MUYANG_WEBPAGE/
+├── index.html            # Halaman utama aplikasi
+├── vercel.json           # Konfigurasi deploy Vercel
+├── README.md             # Dokumentasi proyek
+├── css/
+│   └── styles.css        # Desain responsif, tema burgundy & parchment
+├── js/
+│   ├── app.js            # Logika filter, radar peta, kalkulator, & modal
+│   └── data.js           # Konstanta statis (data warung di Supabase)
+└── assets/
+    └── icons/            # Favicon & ikon aplikasi
 ```
 
 ---
