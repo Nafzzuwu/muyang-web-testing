@@ -3132,7 +3132,7 @@ textarea {
   }
 
   .radar-map-wrapper {
-    overflow: hidden;
+    overflow: visible;
     border-radius: var(--radius-lg);
   }
 
