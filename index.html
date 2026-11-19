@@ -1207,6 +1207,24 @@
     </div>
   </div>
 
+  <!-- Popup konfirmasi aksi -->
+  <div class="modal-backdrop" id="confirmActionModal" role="dialog" aria-modal="true" aria-labelledby="confirmActionTitle">
+    <div class="modal-card" style="max-width: 440px;">
+      <button class="modal-close-btn" type="button" aria-label="Tutup konfirmasi" onclick="window.cancelConfirmAction()">&times;</button>
+      <div class="modal-content-pad">
+        <div style="width: 52px; height: 52px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 16px; background: var(--success-100); color: var(--success-600); font-size: 1.35rem;">
+          <i id="confirmActionIcon" class="fa-solid fa-circle-question"></i>
+        </div>
+        <h3 id="confirmActionTitle" style="font-size: 1.2rem; font-weight: 800; color: var(--primary-900);"></h3>
+        <p id="confirmActionMessage" style="margin-top: 8px; color: var(--neutral-600); font-size: 0.9rem;"></p>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+          <button type="button" class="btn btn-outline" onclick="window.cancelConfirmAction()">Batal</button>
+          <button type="button" class="btn btn-primary" id="confirmActionBtn" onclick="window.confirmAction()"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- =============================================================
        MODAL: DETAIL WARUNG & MENU LENGKAP
        ============================================================= -->
@@ -1280,6 +1298,13 @@
   </div>
 
   <!-- Toast Notification -->
+  <div class="global-loading" id="globalLoading" aria-live="polite" aria-busy="false" hidden>
+    <div class="global-loading-card">
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <span id="globalLoadingText">Memproses...</span>
+    </div>
+  </div>
+
   <div class="toast-msg" id="toastMsg" role="alert">
     <i class="fa-solid fa-circle-check" style="color: var(--success-500); font-size: 1.2rem;"></i>
     <span id="toastText">Aksi berhasil dilakukan</span>

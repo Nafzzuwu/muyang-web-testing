@@ -29,6 +29,22 @@ function showToast(message, type) {
   setTimeout(() => toastMsg.classList.remove('show', 'toast-error'), 4000);
 }
 
+let loadingDepth = 0;
+function setLoading(isLoading, message = 'Memproses...') {
+  const loadingEl = document.getElementById('globalLoading');
+  const textEl = document.getElementById('globalLoadingText');
+  if (!loadingEl) return;
+  loadingDepth = Math.max(0, loadingDepth + (isLoading ? 1 : -1));
+  if (isLoading && textEl) textEl.textContent = message;
+  loadingEl.hidden = loadingDepth === 0;
+  loadingEl.setAttribute('aria-busy', loadingDepth > 0 ? 'true' : 'false');
+}
+
+async function withLoading(task, message = 'Memproses...') {
+  setLoading(true, message);
+  try { return await task(); } finally { setLoading(false); }
+}
+
 function timeAgo(isoString) {
   if (!isoString) return 'Baru saja';
   const diff = Date.now() - new Date(isoString).getTime();
@@ -657,16 +673,18 @@ function updateNavbarState() {
 async function routeToDashboard() {
   const session = LS.getSession();
   if (!session) { openModal('loginModal'); return; }
-  history.replaceState(null, '', '#dashboard');
-  if (session.role === 'admin') {
-    showDashboard('viewDashboardAdmin');
-    await renderAdminDashboard();
-  } else if (session.role === 'mahasiswa') {
-    showDashboard('viewDashboardMahasiswa');
-    await renderMahasiswaDashboard();
-  } else if (session.role === 'umkm') {
-    await renderUmkmDashboard();
-  }
+  await withLoading(async () => {
+    history.replaceState(null, '', '#dashboard');
+    if (session.role === 'admin') {
+      showDashboard('viewDashboardAdmin');
+      await renderAdminDashboard();
+    } else if (session.role === 'mahasiswa') {
+      showDashboard('viewDashboardMahasiswa');
+      await renderMahasiswaDashboard();
+    } else if (session.role === 'umkm') {
+      await renderUmkmDashboard();
+    }
+  }, 'Memuat dashboard...');
 }
 window.routeToDashboard = routeToDashboard;
 
@@ -936,12 +954,14 @@ async function handleRegisterUmkm(e) {
 // ============================================================
 window.logoutUser = function () {
   const session = LS.getSession();
-  if (session?.token) DB.rpc('app_logout', { p_token: session.token });
-  LS.clearSession();
-  updateNavbarState();
-  showLanding();
-  history.replaceState(null, '', '#home');
-  showToast('Berhasil keluar. Sampai jumpa!');
+  withLoading(async () => {
+    if (session?.token) await DB.rpc('app_logout', { p_token: session.token });
+    LS.clearSession();
+    updateNavbarState();
+    showLanding();
+    history.replaceState(null, '', '#home');
+    showToast('Berhasil keluar. Sampai jumpa!');
+  }, 'Keluar dari akun...');
 };
 
 // ============================================================
@@ -1494,50 +1514,76 @@ window.adminActivateUmkm = async function (regId, warungName, userId) {
   }
 };
 
-// ============================================================
-// ADMIN: DEACTIVATE UMKM (Nonaktifkan / Masa Kemitraan Berakhir)
-// ============================================================
-window.adminDeactivateUmkm = async function (regId, warungName, userId) {
-  if (!supabaseClient) return;
-  if (!confirm(`Nonaktifkan kemitraan "${warungName}"?\n\nWarung akan hilang dari katalog publik, namun semua data (menu, ulasan, riwayat) tetap tersimpan di database.\n\nAdmin dapat mengaktifkan kembali jika UMKM memperpanjang kemitraan.`)) return;
+let pendingConfirmAction = null;
+
+function openConfirmAction({ title, message, buttonLabel, icon = 'fa-circle-question', onConfirm }) {
+  pendingConfirmAction = onConfirm;
+  document.getElementById('confirmActionTitle').textContent = title;
+  document.getElementById('confirmActionMessage').textContent = message;
+  document.getElementById('confirmActionIcon').className = `fa-solid ${icon}`;
+  document.getElementById('confirmActionBtn').innerHTML = buttonLabel;
+  openModal('confirmActionModal');
+}
+
+window.cancelConfirmAction = function () {
+  pendingConfirmAction = null;
+  closeAllModals();
+};
+
+window.confirmAction = async function () {
+  if (!pendingConfirmAction) return;
+  const action = pendingConfirmAction;
+  const button = document.getElementById('confirmActionBtn');
+  if (button) button.disabled = true;
   try {
-    // 1. Set registration status = expired
-    await DB.runAdminAction('deactivate', regId);
-
-    // 2. Set warung is_active = false (hilang dari katalog publik)
-
-    // 3. Refresh
-    await refreshWarungsCache();
-    renderCulinaryGrid();
-    renderRadarMapPins();
-    await renderAdminDashboard();
-    showToast(`Kemitraan "${warungName}" telah dinonaktifkan. Data tetap tersimpan.`);
+    pendingConfirmAction = null;
+    closeAllModals();
+    await action();
   } catch (err) {
-    console.warn('[Admin] Deactivate error:', err);
-    showToast('Gagal menonaktifkan: ' + (err?.message || 'Coba lagi.'), 'error');
+    console.warn('[Confirm action] Error:', err);
+    showToast(err?.message || 'Aksi gagal. Coba lagi.', 'error');
+  } finally {
+    if (button) button.disabled = false;
   }
 };
 
-// ADMIN: RE-ACTIVATE UMKM (Perpanjang Kemitraan)
-window.adminReactivateUmkm = async function (regId, warungName, userId) {
+// ============================================================
+// ADMIN: DEACTIVATE UMKM (Nonaktifkan / Masa Kemitraan Berakhir)
+// ============================================================
+window.adminDeactivateUmkm = function (regId, warungName) {
   if (!supabaseClient) return;
-  if (!confirm(`Aktifkan kembali kemitraan "${warungName}"?\n\nWarung akan kembali tampil di katalog publik.`)) return;
-  try {
-    // 1. Set registration status = active
-    await DB.runAdminAction('reactivate', regId);
+  openConfirmAction({
+    title: 'Nonaktifkan kemitraan?',
+    message: `Warung ${warungName} akan hilang dari katalog publik, namun data, menu, dan ulasan tetap tersimpan.`,
+    buttonLabel: '<i class="fa-solid fa-ban"></i> Nonaktifkan',
+    icon: 'fa-store-slash',
+    onConfirm: async () => {
+      await DB.runAdminAction('deactivate', regId);
+      await refreshWarungsCache();
+      renderCulinaryGrid();
+      renderRadarMapPins();
+      await renderAdminDashboard();
+      showToast(`Kemitraan "${warungName}" telah dinonaktifkan.`);
+    }
+  });
+};
 
-    // 2. Re-activate warung
-
-    // 3. Refresh
-    await refreshWarungsCache();
-    renderCulinaryGrid();
-    renderRadarMapPins();
-    await renderAdminDashboard();
-    showToast(`Kemitraan "${warungName}" berhasil diaktifkan kembali!`);
-  } catch (err) {
-    console.warn('[Admin] Reactivate error:', err);
-    showToast('Gagal mengaktifkan kembali: ' + (err?.message || 'Coba lagi.'), 'error');
-  }
+window.adminReactivateUmkm = function (regId, warungName) {
+  if (!supabaseClient) return;
+  openConfirmAction({
+    title: 'Aktifkan kembali mitra?',
+    message: `Warung ${warungName} akan kembali tampil di katalog publik.`,
+    buttonLabel: '<i class="fa-solid fa-rotate-right"></i> Aktifkan Kembali',
+    icon: 'fa-store-circle-check',
+    onConfirm: async () => {
+      await DB.runAdminAction('reactivate', regId);
+      await refreshWarungsCache();
+      renderCulinaryGrid();
+      renderRadarMapPins();
+      await renderAdminDashboard();
+      showToast(`Kemitraan "${warungName}" berhasil diaktifkan kembali!`);
+    }
+  });
 };
 
 window.adminDeleteReview = async function (reviewId) {
