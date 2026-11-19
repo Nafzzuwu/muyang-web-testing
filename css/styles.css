@@ -3092,11 +3092,48 @@ textarea {
   .radar-map-viewport,
   .radar-leaflet-map {
     min-height: 320px;
-    height: 320px;
+  }
+
+  .radar-map-viewport {
+    height: auto;
+  }
+
+  .radar-leaflet-map {
+    height: 360px;
+    flex: none;
+  }
+
+  .map-quick-toolbar {
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .map-area-chips {
+    flex: 1 1 auto;
+    min-width: 0;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .map-recenter-btn {
+    flex: 0 0 auto;
+    margin-left: 0;
+  }
+
+  .map-floating-legend {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    justify-content: center;
+    gap: 8px;
+    padding: 7px 8px;
+    font-size: 0.62rem;
   }
 
   .radar-map-wrapper {
-    overflow: visible;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
   }
 
   /* Mobile Swipe Cue */
