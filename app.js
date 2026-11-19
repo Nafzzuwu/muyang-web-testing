@@ -53,7 +53,7 @@ const LS = {
 
 // Clear any old legacy localStorage keys on load
 (function purgeLegacy() {
-  ['muyang_users_mhs','muyang_users_umkm','muyang_seeded_v2','muyang_user_reviews'].forEach(k => localStorage.removeItem(k));
+  ['muyang_users_mhs', 'muyang_users_umkm', 'muyang_seeded_v2', 'muyang_user_reviews'].forEach(k => localStorage.removeItem(k));
 })();
 
 // ============================================================
@@ -1033,9 +1033,9 @@ async function renderUmkmMenuList(warung) {
     <div class="dash-menu-item">
       <div style="display:flex;align-items:center;gap:10px;">
         ${m.image_url
-          ? `<img src="${m.image_url}" alt="${m.name}" style="width:48px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--neutral-200);" onerror="this.style.display='none'">`
-          : `<div style="width:48px;height:40px;background:var(--neutral-100);border-radius:6px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--neutral-300);"><i class="fa-solid fa-utensils" style="color:var(--neutral-300);font-size:0.9rem;"></i></div>`
-        }
+      ? `<img src="${m.image_url}" alt="${m.name}" style="width:48px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--neutral-200);" onerror="this.style.display='none'">`
+      : `<div style="width:48px;height:40px;background:var(--neutral-100);border-radius:6px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--neutral-300);"><i class="fa-solid fa-utensils" style="color:var(--neutral-300);font-size:0.9rem;"></i></div>`
+    }
         <div>
           <span class="dash-menu-name">${m.name}</span>
           ${m.is_best_seller ? '<span style="background:var(--gold-100);color:var(--gold-600);font-size:0.68rem;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;">Favorit</span>' : ''}
@@ -1055,7 +1055,7 @@ async function renderUmkmMenuList(warung) {
   `).join('');
 }
 
-window.toggleMenuAvailability = async function(menuId, isAvailable) {
+window.toggleMenuAvailability = async function (menuId, isAvailable) {
   await DB.updateMenuAvailability(menuId, isAvailable);
   await refreshWarungsCache();
   renderCulinaryGrid();
@@ -1473,17 +1473,37 @@ function detectArea(alamat) {
   return 'Jl. Kalimantan';
 }
 
+// Offset perkiraan (meter) tiap area dari titik pusat kampus: [utara, timur]
+// Perkiraan kasar - ganti dengan koordinat asli dari Google Maps bila sudah ada.
+const AREA_OFFSETS_M = {
+  'Jl. Kalimantan': [40, -90],
+  'Jl. Jawa': [-170, 70],
+  'Jl. Mastrip': [210, 60],
+  'Jl. Riau': [120, -240],
+  'Jl. Karimata': [-260, -140],
+  'Jl. Danau Toba': [-340, 190]
+};
+
+function offsetFromCampus(northM, eastM) {
+  const [hubLat, hubLng] = PUSAT_UNEJ_COORDS;
+  return {
+    lat: +(hubLat + northM / 111320).toFixed(6),
+    lng: +(hubLng + eastM / (111320 * Math.cos(hubLat * Math.PI / 180))).toFixed(6)
+  };
+}
+
 function assignCoordinates(area, idx) {
-  const offset = (idx % 4) * 0.0012;
   const co = (idx % 3) * 6;
-  switch (area) {
-    case 'Jl. Jawa': return { lat: -8.1730 - offset, lng: 113.7200 + offset, distance: 220 + (idx * 30), canvas: { x: 38 + co, y: 46 + co } };
-    case 'Jl. Mastrip': return { lat: -8.1755 - offset, lng: 113.7245 + offset, distance: 380 + (idx * 30), canvas: { x: 64 - co, y: 62 + co } };
-    case 'Jl. Danau Toba': return { lat: -8.1788 - offset, lng: 113.7268 + offset, distance: 520 + (idx * 30), canvas: { x: 74 - co, y: 68 + co } };
-    case 'Jl. Riau': return { lat: -8.1672 + offset, lng: 113.7190 - offset, distance: 310 + (idx * 30), canvas: { x: 28 + co, y: 24 + co } };
-    case 'Jl. Karimata': return { lat: -8.1742 - offset, lng: 113.7252 + offset, distance: 360 + (idx * 30), canvas: { x: 54 + co, y: 78 - co } };
-    default: return { lat: -8.1702 + offset, lng: 113.7220 + offset, distance: 180 + (idx * 30), canvas: { x: 48 + co, y: 32 + co } };
-  }
+  const k = idx % 4; // geser sedikit agar pin tidak menumpuk
+  const [n0, e0] = AREA_OFFSETS_M[area] || AREA_OFFSETS_M['Jl. Kalimantan'];
+  const n = n0 + k * 55, e = e0 + k * 45;
+  const { lat, lng } = offsetFromCampus(n, e);
+  const distance = Math.round(Math.hypot(n, e) / 10) * 10;
+  const canvasBase = {
+    'Jl. Jawa': [38, 46], 'Jl. Mastrip': [64, 62], 'Jl. Danau Toba': [74, 68],
+    'Jl. Riau': [28, 24], 'Jl. Karimata': [54, 78]
+  }[area] || [48, 32];
+  return { lat, lng, distance, canvas: { x: canvasBase[0] + co, y: canvasBase[1] + co } };
 }
 
 // ============================================================
@@ -1791,8 +1811,8 @@ window.openDetailModal = async function (id) {
       </h4>
       <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px;">
         ${normalized.popularMenus.length === 0
-          ? '<p style="color:var(--neutral-400);font-size:0.85rem;">Belum ada menu yang ditambahkan.</p>'
-          : normalized.popularMenus.map(menu => `
+      ? '<p style="color:var(--neutral-400);font-size:0.85rem;">Belum ada menu yang ditambahkan.</p>'
+      : normalized.popularMenus.map(menu => `
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #fff; border: 1.5px solid var(--neutral-200); border-radius: var(--radius-md);">
             <div>
               <div style="font-size: 0.95rem; font-weight: 800; color: var(--neutral-900);">
@@ -1812,11 +1832,11 @@ window.openDetailModal = async function (id) {
           <i class="fa-solid fa-comments" style="color: var(--accent-500);"></i> Ulasan Mahasiswa (${reviews.length})
         </h4>
         ${isMahasiswa
-          ? (hasReviewed
-            ? `<span style="font-size:0.8rem;color:var(--success-600);font-weight:700;"><i class="fa-solid fa-check-circle"></i> Sudah Diulas</span>`
-            : `<button class="btn btn-primary btn-sm open-review-form-btn" data-id="${item.id}"><i class="fa-solid fa-pen"></i> Tulis Ulasan</button>`)
-          : `<button class="btn btn-outline btn-sm" onclick="window.openLoginModal('mahasiswa')"><i class="fa-solid fa-lock"></i> Login untuk Ulasan</button>`
-        }
+      ? (hasReviewed
+        ? `<span style="font-size:0.8rem;color:var(--success-600);font-weight:700;"><i class="fa-solid fa-check-circle"></i> Sudah Diulas</span>`
+        : `<button class="btn btn-primary btn-sm open-review-form-btn" data-id="${item.id}"><i class="fa-solid fa-pen"></i> Tulis Ulasan</button>`)
+      : `<button class="btn btn-outline btn-sm" onclick="window.openLoginModal('mahasiswa')"><i class="fa-solid fa-lock"></i> Login untuk Ulasan</button>`
+    }
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px;">
@@ -1920,20 +1940,18 @@ async function handleReviewSubmit(e) {
 // REAL CAMPUS RADAR MAP (Leaflet.js + OpenStreetMap - 100% Free / No API Key)
 // ============================================================
 const PUSAT_UNEJ_COORDS = [-8.164297126393304, 113.71661967155912];
-const UNEJ_CENTER = [-8.1690, 113.7198];
+const UNEJ_CENTER = [-8.1650, 113.7166];
 const DEFAULT_MAP_ZOOM = 15.8;
 let leafletMap = null;
 let leafletMarkers = {};
 let campusHubMarker = null;
 
 const AREA_COORDINATES = {
-  'all': { center: [-8.1690, 113.7198], zoom: 15.8 },
-  'Jl. Kalimantan': { center: [-8.1698, 113.7220], zoom: 17 },
-  'Jl. Jawa': { center: [-8.1732, 113.7202], zoom: 17 },
-  'Jl. Mastrip': { center: [-8.1758, 113.7248], zoom: 17 },
-  'Jl. Riau': { center: [-8.1672, 113.7190], zoom: 17 },
-  'Jl. Karimata': { center: [-8.1742, 113.7252], zoom: 17 },
-  'Jl. Danau Toba': { center: [-8.1788, 113.7268], zoom: 17 }
+  'all': { center: [-8.1650, 113.7166], zoom: 15.8 },
+  ...Object.fromEntries(Object.entries(AREA_OFFSETS_M).map(([name, [n, e]]) => {
+    const p = offsetFromCampus(n, e);
+    return [name, { center: [p.lat, p.lng], zoom: 17 }];
+  }))
 };
 
 function initLeafletMap() {
@@ -2355,7 +2373,7 @@ function initAdminSecretTrigger() {
   // 2. Secret Keyboard Shortcut: Ctrl + Shift + A atau Ctrl + Alt + A
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) ||
-        (e.ctrlKey && e.altKey && (e.key === 'A' || e.key === 'a'))) {
+      (e.ctrlKey && e.altKey && (e.key === 'A' || e.key === 'a'))) {
       e.preventDefault();
       const session = LS.getSession();
       if (session && session.role === 'admin') {
