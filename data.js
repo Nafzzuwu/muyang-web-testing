@@ -502,7 +502,8 @@ const PITCH_DECK_DATA = {
 
 
 // ============================================================
-// AUTH SEED DATA - Demo Accounts for Testing
+// AUTH CREDENTIALS & INITIAL USER REPOSITORIES
+// Catatan: Seluruh data pengguna & warung live diambil dari Supabase Cloud
 // ============================================================
 
 const ADMIN_CREDS = {
@@ -510,86 +511,8 @@ const ADMIN_CREDS = {
   password: 'muyang2026'
 };
 
-// Demo mahasiswa accounts (stored in localStorage as MUYANG_USERS_MHS)
-const DEMO_MAHASISWA = [
-  {
-    nim: '242410102001',
-    password: 'demo123',
-    nama: 'Budi Santoso',
-    fakultas: "Fasilkom - Informatika '24",
-    bookmarks: [1, 2],
-    reviewedSpots: []
-  },
-  {
-    nim: '242410102002',
-    password: 'demo123',
-    nama: 'Siti Rahma',
-    fakultas: "FEB - Manajemen '24",
-    bookmarks: [],
-    reviewedSpots: []
-  }
-];
+// Data pengguna kosong secara default, 100% tersinkronkan ke Supabase Database
+const DEMO_MAHASISWA = [];
 
-// Demo UMKM accounts (stored in localStorage as MUYANG_USERS_UMKM)
-// Status: pending | awaiting_payment | verifying | active | rejected
-const DEMO_UMKM = [
-  {
-    id: 'UMKM-001',
-    linkedCulinaryId: 8,
-    email: 'busiti@demo.id',
-    password: 'demo123',
-    warungName: 'Lalapan Tahu Tempe & Telur Penyet Bu Siti',
-    ownerName: 'Bu Siti Rahayu',
-    whatsapp: '081234567890',
-    alamat: 'Gang Buntu Jl. Jawa VII No. 3 (Dalam Gang Kosan)',
-    paket: 'Featured Listing',
-    paketPrice: 50000,
-    status: 'active',
-    hours: '11.00 - 20.30 WIB',
-    description: 'Hidden gem sejati di dalam gang Jl. Jawa! Tempatnya sederhana tapi antrean anak kos selalu ramai karena cuma 8 ribu sudah dapet tempe goreng tepung renyah + telur dadar + nasi banyak.',
-    menus: [
-      { id: 1, name: 'Nasi + Tempe Goreng Tepung Crispy + Sambal', price: 5000, portion: 'Paling Hemat' },
-      { id: 2, name: 'Nasi + Tahu Tempe Penyet + Terong Goreng', price: 7000, portion: 'Porsi Kenyang' },
-      { id: 3, name: 'Nasi + Telur Penyet Sambal Bajak Pedas', price: 8000, portion: 'Porsi Kenyang' },
-      { id: 4, name: 'Es Teh Manis Jumbo Segar', price: 2500, portion: 'Minuman' }
-    ]
-  },
-  {
-    id: 'UMKM-002',
-    email: 'pakbudi@demo.id',
-    password: 'demo123',
-    warungName: 'Depot Nasi Goreng Pak Budi',
-    ownerName: 'Pak Budi Hartono',
-    whatsapp: '081298765432',
-    alamat: 'Jl. Kalimantan No. 55 (Dekat Rektorat UNEJ)',
-    paket: 'Promosi Kilat',
-    paketPrice: 30000,
-    status: 'pending',
-    hours: '17.00 - 23.30 WIB',
-    description: 'Nasi goreng dan mie goreng gerobakan legendaris bumbu medok gurih dengan porsi meluap khas mahasiswa UNEJ.',
-    menus: [
-      { id: 101, name: 'Nasi Goreng Mawut Spesial Telur', price: 10000, portion: 'Porsi Meluap' },
-      { id: 102, name: 'Mie Goreng Bumbu Medok Gurih', price: 10000, portion: 'Porsi Jumbo' },
-      { id: 103, name: 'Nasi Goreng Sosis & Bakso Dobel', price: 12000, portion: 'Porsi Sultan Kos' }
-    ]
-  },
-  {
-    id: 'UMKM-003',
-    email: 'mieayam@demo.id',
-    password: 'demo123',
-    warungName: 'Mie Ayam Mas Joko',
-    ownerName: 'Joko Susanto',
-    whatsapp: '085712345678',
-    alamat: 'Jl. Mastrip No. 7 (Depan FKG UNEJ)',
-    paket: 'Kampanye Bersama',
-    paketPrice: 100000,
-    status: 'awaiting_payment',
-    hours: '10.00 - 21.00 WIB',
-    description: 'Mie ayam kenyal kuah rempah kental dengan topping daging ayam melimpah dan pangsit krispi mekar.',
-    menus: [
-      { id: 201, name: 'Mie Ayam Pangsit Gurih', price: 9000, portion: 'Porsi Kenyang' },
-      { id: 202, name: 'Mie Ayam + Bakso Urat Jumbo', price: 12000, portion: 'Porsi Jumbo' },
-      { id: 203, name: 'Es Jeruk Peras Alami', price: 3000, portion: 'Minuman' }
-    ]
-  }
-];
+// Data pendaftaran UMKM kosong secara default, 100% tersinkronkan ke Supabase Database
+const DEMO_UMKM = [];

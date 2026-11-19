@@ -120,14 +120,13 @@ async function syncWarungsFromSupabase() {
 }
 
 // ============================================================
-// SEED DEMO DATA (only on first load)
+// PURGE LEGACY LOCALSTORAGE DUMMY DATA
+// Memastikan semua data akun dan registrasi murni dari Supabase Cloud
 // ============================================================
-function initSeedData() {
-  if (!localStorage.getItem('muyang_seeded_v2')) {
-    LS.setMhs(DEMO_MAHASISWA);
-    LS.setUmkm(DEMO_UMKM);
-    localStorage.setItem('muyang_seeded_v2', '1');
-  }
+function purgeLegacyDummyData() {
+  localStorage.removeItem('muyang_seeded_v2');
+  localStorage.removeItem('muyang_users_mhs');
+  localStorage.removeItem('muyang_users_umkm');
 }
 
 // ============================================================
@@ -451,7 +450,7 @@ function updateNavbarState() {
   }
 }
 
-function routeToDashboard() {
+async function routeToDashboard() {
   const session = LS.getSession();
   if (!session) {
     openModal('loginModal');
@@ -459,13 +458,13 @@ function routeToDashboard() {
   }
   history.replaceState(null, '', '#dashboard');
   if (session.role === 'admin') {
-    renderAdminDashboard();
     showDashboard('viewDashboardAdmin');
+    await renderAdminDashboard();
   } else if (session.role === 'mahasiswa') {
     renderMahasiswaDashboard();
     showDashboard('viewDashboardMahasiswa');
   } else if (session.role === 'umkm') {
-    renderUmkmDashboard();
+    await renderUmkmDashboard();
   }
 }
 
@@ -848,7 +847,7 @@ window.logoutUser = function () {
 };
 
 // ============================================================
-// DASHBOARD: MAHASISWA
+// DASHBOARD: MAHASISWA (bookmarks dari session/cloud)
 // ============================================================
 function renderMahasiswaDashboard() {
   const session = LS.getSession();
@@ -857,9 +856,7 @@ function renderMahasiswaDashboard() {
   const welcomeEl = document.getElementById('dashMahasiswaWelcome');
   if (welcomeEl) welcomeEl.textContent = `Halo, ${session.nama} (${session.nim}) — ${session.fakultas}`;
 
-  const users = LS.getMhs();
-  const user = users.find(u => u.nim === session.nim);
-  const bookmarks = user ? user.bookmarks : [];
+  const bookmarks = session.bookmarks || [];
   const culinaryList = getAllCulinaryData();
 
   // 1. Render Bookmarks
@@ -938,11 +935,27 @@ function renderMahasiswaDashboard() {
 window.removeDashBookmark = function (id) {
   const session = LS.getSession();
   if (!session || session.role !== 'mahasiswa') return;
+  if (!session.bookmarks) session.bookmarks = [];
+  session.bookmarks = session.bookmarks.filter(b => String(b) !== String(id));
+  LS.setSession(session);
+
+  // Sync to Supabase
+  if (supabaseClient) {
+    supabaseClient.from('app_users').select('extra_data').eq('identifier', session.nim).maybeSingle().then(({ data }) => {
+      if (data) {
+        const extra = data.extra_data || {};
+        supabaseClient.from('app_users').update({
+          extra_data: { ...extra, bookmarks: session.bookmarks }
+        }).eq('identifier', session.nim);
+      }
+    });
+  }
+
+  // Sync local cache too
   const users = LS.getMhs();
   const idx = users.findIndex(u => u.nim === session.nim);
-  if (idx === -1) return;
-  users[idx].bookmarks = users[idx].bookmarks.filter(b => String(b) !== String(id));
-  LS.setMhs(users);
+  if (idx !== -1) { users[idx].bookmarks = session.bookmarks; LS.setMhs(users); }
+
   renderMahasiswaDashboard();
   renderCulinaryGrid();
   showToast('Warung dihapus dari simpanan favorit.');
@@ -957,7 +970,13 @@ window.deleteMahasiswaReview = function (spotId) {
   reviews[spotId] = reviews[spotId].filter(r => r.nim !== session.nim);
   LS.setReviews(reviews);
 
-  // Remove from user reviewedSpots
+  // Remove from session reviewedSpots
+  if (session.reviewedSpots) {
+    session.reviewedSpots = session.reviewedSpots.filter(s => String(s) !== String(spotId));
+    LS.setSession(session);
+  }
+
+  // Also update localStorage cache
   const users = LS.getMhs();
   const idx = users.findIndex(u => u.nim === session.nim);
   if (idx !== -1 && users[idx].reviewedSpots) {
@@ -970,19 +989,56 @@ window.deleteMahasiswaReview = function (spotId) {
 };
 
 // ============================================================
-// DASHBOARD: UMKM
+// DASHBOARD: UMKM (100% dari Supabase Cloud)
 // ============================================================
-function renderUmkmDashboard() {
+async function renderUmkmDashboard() {
   const session = LS.getSession();
   if (!session || session.role !== 'umkm') return;
 
-  const users = LS.getUmkm();
-  const user = users.find(u => u.id === session.id);
-  if (!user) return;
+  // Ambil data live dari Supabase
+  let user = null;
+  if (supabaseClient) {
+    try {
+      const { data } = await supabaseClient
+        .from('app_users')
+        .select('*')
+        .eq('id', session.id)
+        .maybeSingle();
+      if (data) {
+        const extra = data.extra_data || {};
+        user = {
+          id: data.id,
+          email: data.identifier,
+          warungName: data.name,
+          ownerName: extra.ownerName || data.name,
+          whatsapp: extra.whatsapp || '',
+          alamat: extra.alamat || '',
+          paket: extra.paket || 'Featured Listing',
+          paketPrice: extra.paketPrice || 50000,
+          status: extra.status || 'pending',
+          menus: extra.menus || [],
+          linkedCulinaryId: extra.linkedCulinaryId || null
+        };
+        // Update session status agar sinkron
+        if (session.status !== user.status) {
+          session.status = user.status;
+          session.warungName = user.warungName;
+          LS.setSession(session);
+        }
+      }
+    } catch (err) {
+      console.warn('[MUYANG] Gagal fetch UMKM dashboard dari cloud:', err);
+    }
+  }
 
-  if (user.status !== session.status) {
-    session.status = user.status;
-    LS.setSession(session);
+  // Fallback ke localStorage jika cloud gagal
+  if (!user) {
+    const localUsers = LS.getUmkm();
+    user = localUsers.find(u => u.id === session.id);
+    if (!user) {
+      showToast('Gagal memuat data dashboard. Coba refresh halaman.', 'error');
+      return;
+    }
   }
 
   const status = user.status;
@@ -1075,35 +1131,84 @@ function renderUmkmIncomingReviews(user) {
   `).join('');
 }
 
-window.deleteUmkmMenu = function (menuId) {
+window.deleteUmkmMenu = async function (menuId) {
   const session = LS.getSession();
   if (!session || session.role !== 'umkm') return;
+
+  if (supabaseClient) {
+    try {
+      const { data } = await supabaseClient
+        .from('app_users').select('*').eq('id', session.id).maybeSingle();
+      if (data) {
+        const extra = data.extra_data || {};
+        const menus = (extra.menus || []).filter(m => m.id !== menuId);
+        await supabaseClient.from('app_users').update({
+          extra_data: { ...extra, menus }
+        }).eq('id', session.id);
+        // Refresh dashboard
+        await renderUmkmDashboard();
+        renderCulinaryGrid();
+        showToast('Menu berhasil dihapus dari cloud.');
+        return;
+      }
+    } catch (err) {
+      console.warn('[MUYANG] Error deleting menu from cloud:', err);
+    }
+  }
+
+  // Fallback lokal
   const users = LS.getUmkm();
   const idx = users.findIndex(u => u.id === session.id);
   if (idx === -1) return;
   users[idx].menus = users[idx].menus.filter(m => m.id !== menuId);
   LS.setUmkm(users);
   renderUmkmMenuList(users[idx]);
-  renderCulinaryGrid(); // Sync to public catalogue
+  renderCulinaryGrid();
   showToast('Menu berhasil dihapus.');
 };
 
 // ============================================================
-// DASHBOARD: ADMIN
+// DASHBOARD: ADMIN (100% dari Supabase Cloud)
 // ============================================================
-function renderAdminDashboard() {
+async function renderAdminDashboard() {
   const tableEl = document.getElementById('adminUmkmTable');
   const statsEl = document.getElementById('adminStatsContainer');
   const reviewsTableEl = document.getElementById('adminReviewsTable');
-  const users = LS.getUmkm();
-  const culinaryList = getAllCulinaryData();
+
+  // Loading state
+  if (tableEl) tableEl.innerHTML = '<p style="color:var(--neutral-400);padding:16px;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat data dari database...</p>';
+  if (statsEl) statsEl.innerHTML = '';
+
+  let registrations = [];
+
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('umkm_registrations')
+        .select('*')
+        .order('id', { ascending: false });
+      if (!error && data) {
+        registrations = data;
+      }
+    } catch (err) {
+      console.warn('[MUYANG] Gagal fetch umkm_registrations dari Supabase:', err);
+    }
+  }
+
+  const statusLabel = {
+    pending: '<span class="status-badge status-pending">Pending Review</span>',
+    awaiting_payment: '<span class="status-badge status-payment">Menunggu Bayar</span>',
+    verifying: '<span class="status-badge status-verifying">Verifikasi Bayar</span>',
+    active: '<span class="status-badge status-active">Mitra Aktif</span>',
+    rejected: '<span class="status-badge status-rejected">Ditolak</span>'
+  };
 
   // 1. Stats Grid
   if (statsEl) {
-    const total = users.length;
-    const pending = users.filter(u => u.status === 'pending').length;
-    const payment = users.filter(u => u.status === 'awaiting_payment' || u.status === 'verifying').length;
-    const active = users.filter(u => u.status === 'active').length;
+    const total = registrations.length;
+    const pending = registrations.filter(u => u.status === 'pending').length;
+    const payment = registrations.filter(u => u.status === 'awaiting_payment' || u.status === 'verifying').length;
+    const active = registrations.filter(u => u.status === 'active').length;
 
     statsEl.innerHTML = `
       <div class="admin-stat-card">
@@ -1137,19 +1242,11 @@ function renderAdminDashboard() {
     `;
   }
 
-  // 2. UMKM Table
+  // 2. UMKM Registrations Table (dari Supabase)
   if (tableEl) {
-    if (users.length === 0) {
-      tableEl.innerHTML = '<p style="color:var(--neutral-500);padding:16px;">Belum ada pendaftar UMKM.</p>';
+    if (registrations.length === 0) {
+      tableEl.innerHTML = '<p style="color:var(--neutral-500);padding:16px;">Belum ada pendaftar UMKM di database.</p>';
     } else {
-      const statusLabel = {
-        pending: '<span class="status-badge status-pending">Pending Review</span>',
-        awaiting_payment: '<span class="status-badge status-payment">Menunggu Bayar</span>',
-        verifying: '<span class="status-badge status-verifying">Verifikasi Bayar</span>',
-        active: '<span class="status-badge status-active">Mitra Aktif</span>',
-        rejected: '<span class="status-badge status-rejected">Ditolak</span>'
-      };
-
       tableEl.innerHTML = `
         <table class="admin-table">
           <thead>
@@ -1162,39 +1259,42 @@ function renderAdminDashboard() {
             </tr>
           </thead>
           <tbody>
-            ${users.map(u => `
+            ${registrations.map(u => `
               <tr>
                 <td>
-                  <div style="font-weight:800;color:var(--neutral-900);">${u.warungName}</div>
+                  <div style="font-weight:800;color:var(--neutral-900);">${u.business_name}</div>
                   <div style="font-size:0.75rem;color:var(--neutral-500);margin-top:2px;">
-                    <span style="font-weight:600;">${u.id}</span> • ${u.email}
+                    <span style="font-weight:600;">ID#${u.id}</span>
                   </div>
                   <div style="font-size:0.75rem;color:var(--neutral-400);margin-top:2px;">
-                    <i class="fa-solid fa-location-dot"></i> ${u.alamat}
+                    <i class="fa-solid fa-location-dot"></i> ${u.address}
+                  </div>
+                  <div style="font-size:0.72rem;color:var(--neutral-400);">
+                    <i class="fa-regular fa-clock"></i> ${new Date(u.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </div>
                 </td>
                 <td>
-                  <div style="font-weight:700;">${u.ownerName}</div>
-                  <a href="https://wa.me/62${u.whatsapp.replace(/^0/, '')}" target="_blank" style="font-size:0.8rem;color:var(--success-600);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:2px;">
-                    <i class="fa-brands fa-whatsapp"></i> ${u.whatsapp}
+                  <div style="font-weight:700;">${u.owner_name}</div>
+                  <a href="https://wa.me/62${u.phone.replace(/^0/, '')}" target="_blank" style="font-size:0.8rem;color:var(--success-600);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:2px;">
+                    <i class="fa-brands fa-whatsapp"></i> ${u.phone}
                   </a>
                 </td>
                 <td>
-                  <div style="font-weight:700;color:var(--primary-900);">${u.paket}</div>
-                  <div style="font-weight:800;color:var(--accent-600);font-size:0.9rem;">${formatIDR(u.paketPrice)}</div>
+                  <div style="font-weight:700;color:var(--primary-900);">${u.category}</div>
+                  <div style="font-weight:800;color:var(--accent-600);font-size:0.9rem;">${formatIDR(parseInt(u.price_range) || 0)}</div>
                 </td>
                 <td>${statusLabel[u.status] || u.status}</td>
                 <td class="admin-actions-cell">
                   ${u.status === 'pending' ? `
-                    <button class="btn btn-primary btn-xs" onclick="window.adminApproveUmkm('${u.id}')" title="Setujui pendaftaran dan minta bukti transfer">
+                    <button class="btn btn-primary btn-xs" onclick="window.adminApproveUmkm(${u.id}, '${u.business_name.replace(/'/g, "\\'")}')" title="Setujui dan minta bukti transfer">
                       <i class="fa-solid fa-check"></i> Setujui
                     </button>
-                    <button class="btn btn-outline btn-xs" onclick="window.adminRejectUmkm('${u.id}')" style="color:#dc2626;border-color:#dc2626;" title="Tolak pendaftaran">
+                    <button class="btn btn-outline btn-xs" onclick="window.adminRejectUmkm(${u.id}, '${u.business_name.replace(/'/g, "\\'")}')" style="color:#dc2626;border-color:#dc2626;" title="Tolak pendaftaran">
                       <i class="fa-solid fa-times"></i> Tolak
                     </button>
                   ` : ''}
                   ${u.status === 'awaiting_payment' || u.status === 'verifying' ? `
-                    <button class="btn btn-accent btn-xs" onclick="window.adminActivateUmkm('${u.id}')" title="Konfirmasi bukti bayar dan aktifkan warung ke publik">
+                    <button class="btn btn-accent btn-xs" onclick="window.adminActivateUmkm(${u.id}, '${u.business_name.replace(/'/g, "\\'")}')" title="Konfirmasi bayar dan aktifkan warung">
                       <i class="fa-solid fa-bolt"></i> Konfirmasi &amp; Aktifkan
                     </button>
                   ` : ''}
@@ -1209,8 +1309,9 @@ function renderAdminDashboard() {
     }
   }
 
-  // 3. Admin Reviews Moderation Table
+  // 3. Reviews Moderation Table (dari localStorage + Supabase warungs.reviews)
   if (reviewsTableEl) {
+    const culinaryList = getAllCulinaryData();
     const allReviews = LS.getReviews();
     const flattened = [];
     Object.entries(allReviews).forEach(([spotId, reviews]) => {
@@ -1262,49 +1363,126 @@ function renderAdminDashboard() {
   }
 }
 
-window.adminApproveUmkm = function (id) {
-  const users = LS.getUmkm();
-  const idx = users.findIndex(u => u.id === id);
-  if (idx === -1) return;
-  users[idx].status = 'awaiting_payment';
-  LS.setUmkm(users);
-  renderAdminDashboard();
-  showToast(`UMKM "${users[idx].warungName}" disetujui. Menunggu bukti transfer.`);
+window.adminApproveUmkm = async function (id, warungName) {
+  if (!supabaseClient) return;
+  try {
+    await supabaseClient
+      .from('umkm_registrations')
+      .update({ status: 'awaiting_payment' })
+      .eq('id', id);
+
+    // Juga update app_users jika ada yang cocok (berdasarkan nama warung)
+    const { data: appUser } = await supabaseClient
+      .from('app_users')
+      .select('id, extra_data')
+      .eq('name', warungName)
+      .eq('role', 'umkm')
+      .maybeSingle();
+    if (appUser) {
+      const extra = appUser.extra_data || {};
+      await supabaseClient.from('app_users').update({
+        extra_data: { ...extra, status: 'awaiting_payment' }
+      }).eq('id', appUser.id);
+    }
+
+    await renderAdminDashboard();
+    showToast(`UMKM "${warungName}" disetujui. Menunggu bukti transfer.`);
+  } catch (err) {
+    console.warn('[MUYANG] Error approving UMKM:', err);
+    showToast('Gagal menyetujui. Coba lagi.', 'error');
+  }
 };
 
-window.adminRejectUmkm = function (id) {
-  const users = LS.getUmkm();
-  const idx = users.findIndex(u => u.id === id);
-  if (idx === -1) return;
-  users[idx].status = 'rejected';
-  LS.setUmkm(users);
-  renderAdminDashboard();
-  showToast(`Pendaftaran "${users[idx].warungName}" ditolak.`);
+window.adminRejectUmkm = async function (id, warungName) {
+  if (!supabaseClient) return;
+  try {
+    await supabaseClient
+      .from('umkm_registrations')
+      .update({ status: 'rejected' })
+      .eq('id', id);
+
+    const { data: appUser } = await supabaseClient
+      .from('app_users')
+      .select('id, extra_data')
+      .eq('name', warungName)
+      .eq('role', 'umkm')
+      .maybeSingle();
+    if (appUser) {
+      const extra = appUser.extra_data || {};
+      await supabaseClient.from('app_users').update({
+        extra_data: { ...extra, status: 'rejected' }
+      }).eq('id', appUser.id);
+    }
+
+    await renderAdminDashboard();
+    showToast(`Pendaftaran "${warungName}" ditolak.`);
+  } catch (err) {
+    console.warn('[MUYANG] Error rejecting UMKM:', err);
+    showToast('Gagal menolak. Coba lagi.', 'error');
+  }
 };
 
-window.adminActivateUmkm = function (id) {
-  const users = LS.getUmkm();
-  const idx = users.findIndex(u => u.id === id);
-  if (idx === -1) return;
-  users[idx].status = 'active';
-  LS.setUmkm(users);
-  renderAdminDashboard();
+window.adminActivateUmkm = async function (id, warungName) {
+  if (!supabaseClient) return;
+  try {
+    // 1. Update status di umkm_registrations
+    const { data: regData } = await supabaseClient
+      .from('umkm_registrations')
+      .update({ status: 'active' })
+      .eq('id', id)
+      .select()
+      .single();
 
-  // Real-time synchronization to public catalogue and campus map!
-  renderCulinaryGrid();
-  renderRadarMapPins();
+    // 2. Update status di app_users agar UMKM bisa login dan lihat dashboard active
+    const { data: appUser } = await supabaseClient
+      .from('app_users')
+      .select('id, extra_data')
+      .eq('name', warungName)
+      .eq('role', 'umkm')
+      .maybeSingle();
 
-  showToast(`Pembayaran diverifikasi! Warung "${users[idx].warungName}" kini resmi AKTIF dan tampil di website publik Muyang!`);
+    if (appUser) {
+      const extra = appUser.extra_data || {};
+      await supabaseClient.from('app_users').update({
+        extra_data: { ...extra, status: 'active' }
+      }).eq('id', appUser.id);
+    }
+
+    // 3. Sync ke katalog publik (refresh warungs dari DB)
+    await syncWarungsFromSupabase();
+    renderCulinaryGrid();
+    renderRadarMapPins();
+
+    await renderAdminDashboard();
+    showToast(`Pembayaran diverifikasi! Warung "${warungName}" kini resmi AKTIF dan tampil di website publik Muyang!`);
+  } catch (err) {
+    console.warn('[MUYANG] Error activating UMKM:', err);
+    showToast('Gagal mengaktifkan. Coba lagi.', 'error');
+  }
 };
 
-window.adminDeleteReview = function (spotId, reviewIdx) {
+window.adminDeleteReview = async function (spotId, reviewIdx) {
   const reviews = LS.getReviews();
   if (!reviews[spotId]) return;
 
   const deleted = reviews[spotId].splice(reviewIdx, 1);
   LS.setReviews(reviews);
 
-  renderAdminDashboard();
+  // Sync hapus review dari Supabase warungs.reviews juga
+  if (supabaseClient) {
+    try {
+      const { data } = await supabaseClient
+        .from('warungs').select('reviews').eq('id', spotId).maybeSingle();
+      if (data && deleted[0]) {
+        const cloudReviews = (data.reviews || []).filter(r => r.id !== deleted[0].id);
+        await supabaseClient.from('warungs').update({ reviews: cloudReviews }).eq('id', spotId);
+      }
+    } catch (err) {
+      console.warn('[MUYANG] Error syncing review delete to cloud:', err);
+    }
+  }
+
+  await renderAdminDashboard();
   renderCulinaryGrid();
   showToast('Ulasan berhasil dimoderasi dan dihapus dari platform.');
 };
@@ -1325,9 +1503,11 @@ const state = {
 function getBookmarksForCurrentUser() {
   const session = LS.getSession();
   if (!session || session.role !== 'mahasiswa') return [];
+  // Prioritaskan bookmarks dari session (synced saat login)
+  if (session.bookmarks) return session.bookmarks;
   const users = LS.getMhs();
   const user = users.find(u => u.nim === session.nim);
-  return user ? user.bookmarks : [];
+  return user ? (user.bookmarks || []) : [];
 }
 
 function filterCulinaryData() {
@@ -1467,18 +1647,41 @@ function toggleBookmark(id) {
     openModal('loginModal');
     return;
   }
-  const users = LS.getMhs();
-  const idx = users.findIndex(u => u.nim === session.nim);
-  if (idx === -1) return;
-  const exists = users[idx].bookmarks.some(b => String(b) === String(id));
+
+  // Update bookmarks di session langsung
+  if (!session.bookmarks) session.bookmarks = [];
+  const exists = session.bookmarks.some(b => String(b) === String(id));
   if (exists) {
-    users[idx].bookmarks = users[idx].bookmarks.filter(b => String(b) !== String(id));
+    session.bookmarks = session.bookmarks.filter(b => String(b) !== String(id));
     showToast('Warung dihapus dari simpanan.');
   } else {
-    users[idx].bookmarks.push(id);
+    session.bookmarks.push(id);
     showToast('Berhasil disimpan ke favorit anak kos!');
   }
-  LS.setMhs(users);
+  LS.setSession(session);
+
+  // Sync ke Supabase (best-effort)
+  if (supabaseClient) {
+    supabaseClient.from('app_users').select('extra_data').eq('identifier', session.nim).maybeSingle().then(({ data }) => {
+      if (data) {
+        const extra = data.extra_data || {};
+        supabaseClient.from('app_users').update({
+          extra_data: { ...extra, bookmarks: session.bookmarks }
+        }).eq('identifier', session.nim).then(() => {
+          console.log('[MUYANG] Bookmarks synced to cloud.');
+        });
+      }
+    });
+  }
+
+  // Also update localStorage cache
+  const users = LS.getMhs();
+  const idx = users.findIndex(u => u.nim === session.nim);
+  if (idx !== -1) {
+    users[idx].bookmarks = session.bookmarks;
+    LS.setMhs(users);
+  }
+
   renderCulinaryGrid();
 }
 
@@ -1683,11 +1886,9 @@ function handleReviewSubmit(e) {
   const rating = parseInt(document.getElementById('reviewRating').value);
   const comment = document.getElementById('reviewComment').value.trim();
 
-  // Anti-spam validation: 1 NIM = 1 review per warung
-  const users = LS.getMhs();
-  const idx = users.findIndex(u => u.nim === session.nim);
-  if (idx === -1) return;
-  if (users[idx].reviewedSpots && users[idx].reviewedSpots.some(s => String(s) === String(spotId))) {
+  // Anti-spam validation: 1 NIM = 1 review per warung (cek dari session)
+  if (!session.reviewedSpots) session.reviewedSpots = [];
+  if (session.reviewedSpots.some(s => String(s) === String(spotId))) {
     showToast('Kamu sudah pernah memberi ulasan untuk tempat makan ini.', 'error');
     return;
   }
@@ -1720,9 +1921,16 @@ function handleReviewSubmit(e) {
     }).catch(err => console.warn('[MUYANG] Error syncing review to cloud:', err));
   }
 
-  if (!users[idx].reviewedSpots) users[idx].reviewedSpots = [];
-  users[idx].reviewedSpots.push(spotId);
-  LS.setMhs(users);
+  // Tandai sudah review di session dan localStorage cache
+  session.reviewedSpots.push(spotId);
+  LS.setSession(session);
+  const users = LS.getMhs();
+  const idx = users.findIndex(u => u.nim === session.nim);
+  if (idx !== -1) {
+    if (!users[idx].reviewedSpots) users[idx].reviewedSpots = [];
+    users[idx].reviewedSpots.push(spotId);
+    LS.setMhs(users);
+  }
 
   document.getElementById('reviewForm').reset();
   document.getElementById('reviewModal').classList.remove('active');
@@ -1960,8 +2168,8 @@ function initAdminSecretTrigger() {
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
 
-  // 1. Seed demo data
-  initSeedData();
+  // 1. Bersihkan data dummy legacy dari localStorage agar murni dari Supabase Cloud
+  purgeLegacyDummyData();
 
   // 2. Navbar State
   updateNavbarState();
@@ -2169,8 +2377,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // 16. Review Form Submission
   document.getElementById('reviewForm')?.addEventListener('submit', handleReviewSubmit);
 
-  // 17. UMKM Active: Add Menu Form
-  document.getElementById('addMenuForm')?.addEventListener('submit', (e) => {
+  // 17. UMKM Active: Add Menu Form (100% sync ke Supabase)
+  document.getElementById('addMenuForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const session = LS.getSession();
     if (!session || session.role !== 'umkm') return;
@@ -2178,25 +2386,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const price = parseInt(document.getElementById('menuPriceInput').value);
     const portion = document.getElementById('menuPortionInput').value.trim();
     if (!name || !price) return;
+    const menuId = Date.now();
+    const newMenu = { id: menuId, name, price, portion: portion || 'Porsi Standar' };
+
+    if (supabaseClient) {
+      try {
+        const { data } = await supabaseClient
+          .from('app_users').select('extra_data').eq('id', session.id).maybeSingle();
+        if (data) {
+          const extra = data.extra_data || {};
+          const menus = [...(extra.menus || []), newMenu];
+          await supabaseClient.from('app_users').update({
+            extra_data: { ...extra, menus }
+          }).eq('id', session.id);
+          console.log('[MUYANG] Menu baru berhasil disinkronkan ke Supabase cloud!');
+        }
+      } catch (err) {
+        console.warn('[MUYANG] Error syncing menu to Supabase:', err);
+      }
+    }
+
+    // Juga simpan ke localStorage sebagai cache
     const users = LS.getUmkm();
     const idx = users.findIndex(u => u.id === session.id);
-    if (idx === -1) return;
-    const menuId = Date.now();
-    users[idx].menus.push({ id: menuId, name, price, portion: portion || 'Porsi Standar' });
-    LS.setUmkm(users);
-
-    // Sync updated menu to Supabase cloud
-    if (supabaseClient) {
-      supabaseClient.from('app_users').update({
-        extra_data: { ...users[idx] }
-      }).eq('id', session.id).then(() => {
-        console.log('[MUYANG] Menu baru berhasil disinkronkan ke Supabase cloud!');
-      }).catch(err => console.warn('[MUYANG] Error syncing menu to Supabase:', err));
+    if (idx !== -1) {
+      users[idx].menus = [...(users[idx].menus || []), newMenu];
+      LS.setUmkm(users);
     }
 
     document.getElementById('addMenuForm').reset();
-    renderUmkmMenuList(users[idx]);
-    renderCulinaryGrid(); // Immediately update public catalogue
+    await renderUmkmDashboard();
+    renderCulinaryGrid();
     showToast(`Menu "${name}" berhasil ditambahkan dan langsung tampil di katalog publik!`);
   });
 
