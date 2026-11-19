@@ -1473,32 +1473,51 @@ function detectArea(alamat) {
   return 'Jl. Kalimantan';
 }
 
-// Offset perkiraan (meter) tiap area dari titik pusat kampus: [utara, timur]
-// Perkiraan kasar - ganti dengan koordinat asli dari Google Maps bila sudah ada.
-const AREA_OFFSETS_M = {
-  'Jl. Kalimantan': [40, -90],
-  'Jl. Jawa': [-170, 70],
-  'Jl. Mastrip': [210, 60],
-  'Jl. Riau': [120, -240],
-  'Jl. Karimata': [-260, -140],
-  'Jl. Danau Toba': [-340, 190]
+// Garis tengah jalan (lat,lng) hasil kalibrasi screenshot peta OSM - warung baru ditempatkan DI ATAS jalan, di luar kampus.
+// Jl. Karimata & Jl. Danau Toba masih sementara (belum terlihat di peta); ganti setelah koordinat aslinya diambil.
+const AREA_ROADS = {
+  'Jl. Kalimantan': [[-8.160706, 113.714258], [-8.162409, 113.713793], [-8.163907, 113.713139], [-8.164793, 113.712761], [-8.165474, 113.712434], [-8.166155, 113.712124], [-8.166836, 113.7119]],
+  'Jl. Jawa': [[-8.168454, 113.711762], [-8.168675, 113.712451], [-8.16893, 113.713139], [-8.16922, 113.714516], [-8.169577, 113.715893], [-8.169952, 113.717271], [-8.17031, 113.718648], [-8.170548, 113.720025], [-8.170633, 113.720713], [-8.170786, 113.721574]],
+  'Jl. Mastrip': [[-8.160825, 113.72209], [-8.161063, 113.722779], [-8.161387, 113.723381], [-8.162068, 113.72388], [-8.162749, 113.724207], [-8.16343, 113.7245], [-8.164111, 113.724707], [-8.165474, 113.725103], [-8.166155, 113.725223], [-8.166836, 113.725395], [-8.167517, 113.725653]],
+  'Jl. Riau': [[-8.167449, 113.725533], [-8.167704, 113.724844], [-8.168011, 113.724156], [-8.168283, 113.723467], [-8.168879, 113.722727], [-8.16956, 113.722383], [-8.170242, 113.722056], [-8.171604, 113.721522], [-8.172285, 113.721178], [-8.173647, 113.719904]],
+  'Jl. Karimata': [[-8.1690, 113.7245], [-8.1698, 113.7255]],
+  'Jl. Danau Toba': [[-8.1730, 113.7210], [-8.1738, 113.7220]]
 };
+const CAMPUS_RADIUS_M = 300; // perkiraan jari-jari kampus dari titik pusat
+const ROAD_SLOTS = [0.5, 0.15, 0.85, 0.32, 0.68]; // posisi sepanjang jalan agar pin tidak berdempetan
 
-function offsetFromCampus(northM, eastM) {
-  const [hubLat, hubLng] = PUSAT_UNEJ_COORDS;
-  return {
-    lat: +(hubLat + northM / 111320).toFixed(6),
-    lng: +(hubLng + eastM / (111320 * Math.cos(hubLat * Math.PI / 180))).toFixed(6)
-  };
+function haversineM(lat1, lng1, lat2, lng2) {
+  const R = 6371000, r = Math.PI / 180;
+  const a = Math.sin((lat2 - lat1) * r / 2) ** 2 +
+    Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin((lng2 - lng1) * r / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+function pointAlongRoad(line, t) {
+  const seg = [];
+  let total = 0;
+  for (let i = 1; i < line.length; i++) {
+    const d = haversineM(line[i - 1][0], line[i - 1][1], line[i][0], line[i][1]);
+    seg.push(d); total += d;
+  }
+  let target = total * t;
+  for (let i = 0; i < seg.length; i++) {
+    if (target <= seg[i] || i === seg.length - 1) {
+      const f = seg[i] ? Math.min(target / seg[i], 1) : 0;
+      return [line[i][0] + (line[i + 1][0] - line[i][0]) * f, line[i][1] + (line[i + 1][1] - line[i][1]) * f];
+    }
+    target -= seg[i];
+  }
+  return line[0];
 }
 
 function assignCoordinates(area, idx) {
   const co = (idx % 3) * 6;
-  const k = idx % 4; // geser sedikit agar pin tidak menumpuk
-  const [n0, e0] = AREA_OFFSETS_M[area] || AREA_OFFSETS_M['Jl. Kalimantan'];
-  const n = n0 + k * 55, e = e0 + k * 45;
-  const { lat, lng } = offsetFromCampus(n, e);
-  const distance = Math.round(Math.hypot(n, e) / 10) * 10;
+  const line = AREA_ROADS[area] || AREA_ROADS['Jl. Kalimantan'];
+  const [rawLat, rawLng] = pointAlongRoad(line, ROAD_SLOTS[idx % ROAD_SLOTS.length]);
+  const lat = +rawLat.toFixed(6), lng = +rawLng.toFixed(6);
+  const fromHub = haversineM(lat, lng, PUSAT_UNEJ_COORDS[0], PUSAT_UNEJ_COORDS[1]);
+  const distance = Math.max(100, Math.round((fromHub - CAMPUS_RADIUS_M) / 10) * 10);
   const canvasBase = {
     'Jl. Jawa': [38, 46], 'Jl. Mastrip': [64, 62], 'Jl. Danau Toba': [74, 68],
     'Jl. Riau': [28, 24], 'Jl. Karimata': [54, 78]
@@ -1940,18 +1959,15 @@ async function handleReviewSubmit(e) {
 // REAL CAMPUS RADAR MAP (Leaflet.js + OpenStreetMap - 100% Free / No API Key)
 // ============================================================
 const PUSAT_UNEJ_COORDS = [-8.164297126393304, 113.71661967155912];
-const UNEJ_CENTER = [-8.1650, 113.7166];
+const UNEJ_CENTER = [-8.1655, 113.7175];
 const DEFAULT_MAP_ZOOM = 15.8;
 let leafletMap = null;
 let leafletMarkers = {};
 let campusHubMarker = null;
 
 const AREA_COORDINATES = {
-  'all': { center: [-8.1650, 113.7166], zoom: 15.8 },
-  ...Object.fromEntries(Object.entries(AREA_OFFSETS_M).map(([name, [n, e]]) => {
-    const p = offsetFromCampus(n, e);
-    return [name, { center: [p.lat, p.lng], zoom: 17 }];
-  }))
+  'all': { center: [-8.1655, 113.7175], zoom: 15.8 },
+  ...Object.fromEntries(Object.entries(AREA_ROADS).map(([name, line]) => [name, { center: pointAlongRoad(line, 0.5), zoom: 17 }]))
 };
 
 function initLeafletMap() {
@@ -1980,6 +1996,16 @@ function initLeafletMap() {
 
   // Add custom zoom control at bottom-right
   L.control.zoom({ position: 'bottomright' }).addTo(leafletMap);
+
+  // Mode bantu: buka situs dengan ?pickcoords=1, lalu klik jalan di peta untuk menyalin koordinatnya.
+  if (new URLSearchParams(location.search).has('pickcoords')) {
+    leafletMap.on('click', (e) => {
+      const txt = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+      console.log('[MUYANG] koordinat:', txt);
+      try { navigator.clipboard && navigator.clipboard.writeText(txt); } catch (_) { }
+      showToast('Koordinat: ' + txt);
+    });
+  }
 
   // OpenStreetMap standard tiles (100% Free, No API Key, Clean & Detailed campus streets)
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
