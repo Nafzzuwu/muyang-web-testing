@@ -690,47 +690,16 @@ async function handleLoginAdmin(e) {
 }
 
 // ============================================================
-// AUTH: LUPA PASSWORD (verifikasi data akun, lalu atur password baru)
-// Mahasiswa: NIM + nama lengkap + fakultas.  UMKM: email + nama pemilik + WhatsApp.
+// AUTH: LUPA PASSWORD (mahasiswa lewat NIM, UMKM lewat email, lalu atur password baru)
 // ============================================================
-const RESET_LOCK_KEY = 'muyang_reset_lock';
-const RESET_MAX_ATTEMPTS = 5;
-const RESET_LOCK_MS = 5 * 60 * 1000;
-
-function normText(v) { return (v || '').toString().trim().toLowerCase().replace(/\s+/g, ' '); }
-function normPhone(v) {
-  let d = (v || '').toString().replace(/\D/g, '');
-  if (d.startsWith('62')) d = '0' + d.slice(2);
-  return d;
-}
-
-function resetLockRemainingMs() {
-  try {
-    const r = JSON.parse(localStorage.getItem(RESET_LOCK_KEY) || '{}');
-    return Math.max(0, (r.until || 0) - Date.now());
-  } catch (_) { return 0; }
-}
-function registerResetFailure() {
-  try {
-    const r = JSON.parse(localStorage.getItem(RESET_LOCK_KEY) || '{}');
-    const count = (r.count || 0) + 1;
-    localStorage.setItem(RESET_LOCK_KEY, JSON.stringify(
-      count >= RESET_MAX_ATTEMPTS ? { count: 0, until: Date.now() + RESET_LOCK_MS } : { count, until: 0 }
-    ));
-  } catch (_) { }
-}
-function clearResetFailures() {
-  try { localStorage.removeItem(RESET_LOCK_KEY); } catch (_) { }
-}
-
 window.openForgotPassword = function (role) {
   const isMhs = role === 'mahasiswa';
   openModal('forgotPasswordModal');
   document.getElementById('forgotFormMahasiswa').style.display = isMhs ? '' : 'none';
   document.getElementById('forgotFormUmkm').style.display = isMhs ? 'none' : '';
   document.getElementById('forgotSubtitle').textContent = isMhs
-    ? 'Isi NIM dan data akun kamu untuk membuat password baru.'
-    : 'Isi email dan data pendaftaran UMKM kamu untuk membuat password baru.';
+    ? 'Masukkan NIM kamu untuk membuat password baru.'
+    : 'Masukkan email UMKM kamu untuk membuat password baru.';
   document.getElementById('forgotBackBtn').dataset.role = role;
   // Bawa isian dari form login supaya tidak mengetik ulang
   const typed = document.getElementById(isMhs ? 'loginNim' : 'loginEmailUmkm')?.value.trim();
@@ -741,12 +710,6 @@ window.openForgotPassword = function (role) {
 async function handleForgotPassword(e, role) {
   e.preventDefault();
   if (!supabaseClient) { showToast('Database tidak tersedia.', 'error'); return; }
-
-  const lockMs = resetLockRemainingMs();
-  if (lockMs > 0) {
-    showToast(`Terlalu banyak percobaan. Coba lagi dalam ${Math.ceil(lockMs / 60000)} menit.`, 'error');
-    return;
-  }
 
   const isMhs = role === 'mahasiswa';
   const newPass = document.getElementById(isMhs ? 'forgotNewPassMhs' : 'forgotNewPassUmkm').value;
@@ -764,26 +727,8 @@ async function handleForgotPassword(e, role) {
       : document.getElementById('forgotEmailUmkm').value.trim().toLowerCase();
     const user = await DB.getUserByIdentifier(identifier, role);
 
-    let verified = false;
-    if (user) {
-      if (isMhs) {
-        verified =
-          normText(user.name) === normText(document.getElementById('forgotNama').value) &&
-          normText(user.extra_data?.fakultas) === normText(document.getElementById('forgotFakultas').value);
-      } else {
-        const reg = await DB.getRegistrationByUserId(user.id);
-        const ownerName = reg?.owner_name || user.extra_data?.ownerName;
-        const wa = normPhone(document.getElementById('forgotWa').value);
-        verified =
-          normText(ownerName) === normText(document.getElementById('forgotOwner').value) &&
-          wa.length > 0 && wa === normPhone(user.phone);
-      }
-    }
-
-    // Pesan sengaja sama untuk "akun tidak ada" dan "data salah" agar akun orang lain tidak bisa ditebak
-    if (!verified) {
-      registerResetFailure();
-      showToast('Data tidak cocok dengan akun terdaftar. Periksa lagi isian kamu.', 'error');
+    if (!user) {
+      showToast(isMhs ? 'NIM tidak ditemukan.' : 'Email UMKM tidak ditemukan.', 'error');
       return;
     }
 
@@ -793,7 +738,6 @@ async function handleForgotPassword(e, role) {
       return;
     }
 
-    clearResetFailures();
     document.getElementById(isMhs ? 'forgotFormMahasiswa' : 'forgotFormUmkm')?.reset();
     window.openLoginModal(role);
     const loginInput = document.getElementById(isMhs ? 'loginNim' : 'loginEmailUmkm');
