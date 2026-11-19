@@ -1919,14 +1919,15 @@ async function handleReviewSubmit(e) {
 // ============================================================
 // REAL CAMPUS RADAR MAP (Leaflet.js + OpenStreetMap - 100% Free / No API Key)
 // ============================================================
-const UNEJ_CENTER = [-8.1712, 113.7212];
-const DEFAULT_MAP_ZOOM = 16.5;
+const PUSAT_UNEJ_COORDS = [-8.164297126393304, 113.71661967155912];
+const UNEJ_CENTER = [-8.1690, 113.7198];
+const DEFAULT_MAP_ZOOM = 15.8;
 let leafletMap = null;
 let leafletMarkers = {};
 let campusHubMarker = null;
 
 const AREA_COORDINATES = {
-  'all': { center: [-8.1712, 113.7212], zoom: 16 },
+  'all': { center: [-8.1690, 113.7198], zoom: 15.8 },
   'Jl. Kalimantan': { center: [-8.1698, 113.7220], zoom: 17 },
   'Jl. Jawa': { center: [-8.1732, 113.7202], zoom: 17 },
   'Jl. Mastrip': { center: [-8.1758, 113.7248], zoom: 17 },
@@ -1968,19 +1969,19 @@ function initLeafletMap() {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
   }).addTo(leafletMap);
 
-  // Add Campus Center Landmark
+  // Add Campus Center Landmark (Pusat UNEJ Tegalboto)
   const campusIcon = L.divIcon({
     className: 'leaflet-campus-marker',
     html: `
       <div class="leaflet-campus-hub">
         <i class="fa-solid fa-building-columns"></i>
-        <span>Kampus UNEJ (Tegalboto)</span>
+        <span>Pusat Kampus UNEJ</span>
       </div>
     `,
-    iconSize: [175, 34],
-    iconAnchor: [87, 17]
+    iconSize: [165, 34],
+    iconAnchor: [82, 17]
   });
-  campusHubMarker = L.marker([-8.1687, 113.7198], { icon: campusIcon, interactive: false, zIndexOffset: 200 }).addTo(leafletMap);
+  campusHubMarker = L.marker(PUSAT_UNEJ_COORDS, { icon: campusIcon, interactive: false, zIndexOffset: 200 }).addTo(leafletMap);
 
   // Setup Toolbar event listeners
   document.querySelectorAll('.map-chip-btn').forEach(btn => {
@@ -1995,7 +1996,7 @@ function initLeafletMap() {
 
   document.getElementById('mapRecenterBtn')?.addEventListener('click', () => {
     document.querySelectorAll('.map-chip-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-area') === 'all'));
-    leafletMap.flyTo(UNEJ_CENTER, DEFAULT_MAP_ZOOM, { duration: 0.8 });
+    leafletMap.flyTo(PUSAT_UNEJ_COORDS, 16.5, { duration: 0.8 });
   });
 
   // Invalidate size on window resize
