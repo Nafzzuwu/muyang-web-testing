@@ -53,7 +53,7 @@ const LS = {
 
 // Clear any old legacy localStorage keys on load
 (function purgeLegacy() {
-  ['muyang_users_mhs','muyang_users_umkm','muyang_seeded_v2','muyang_user_reviews'].forEach(k => localStorage.removeItem(k));
+  ['muyang_users_mhs', 'muyang_users_umkm', 'muyang_seeded_v2', 'muyang_user_reviews'].forEach(k => localStorage.removeItem(k));
 })();
 
 // ============================================================
@@ -747,6 +747,16 @@ async function handleRegisterUmkm(e) {
   const paketPrice = parseInt(paketEl.options[paketEl.selectedIndex]?.dataset.price || 0);
   const password = document.getElementById('regPasswordUmkm').value;
 
+  // Titik lokasi wajib diisi dan harus masuk akal (area Jember)
+  const loc = regLocPicker ? regLocPicker.getLatLng() : null;
+  if (!loc) {
+    showToast('Tentukan titik lokasi warung di peta dulu (ketuk peta atau pakai "Gunakan lokasi saya").', 'error');
+    document.getElementById('regMapPicker')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  const locErr = validateCoords(loc.lat, loc.lng);
+  if (locErr) { showToast(locErr, 'error'); return; }
+
   const btn = e.target.querySelector('[type=submit]');
   if (btn) { btn.disabled = true; btn.textContent = 'Mendaftarkan...'; }
 
@@ -789,6 +799,8 @@ async function handleRegisterUmkm(e) {
       owner_name: ownerName,
       phone: whatsapp,
       address: alamat,
+      lat: +loc.lat.toFixed(6),
+      lng: +loc.lng.toFixed(6),
       category: paketName,
       status: 'pending'
     });
@@ -800,6 +812,7 @@ async function handleRegisterUmkm(e) {
     LS.setSession({ role: 'umkm', id: newId, email, warungName, status: 'pending' });
     closeAllModals();
     document.getElementById('registerFormUmkm')?.reset();
+    if (regLocPicker) regLocPicker.clear();
     updateNavbarState();
     routeToDashboard();
     showToast(`Pendaftaran "${warungName}" berhasil! Menunggu verifikasi admin.`);
@@ -986,6 +999,7 @@ async function renderUmkmDashboard() {
       }
       await renderUmkmMenuList(warung);
       await renderUmkmIncomingReviews(warung.id);
+      setupUmkmLocationEditor(warung);
     }
     showDashboard('viewDashboardUmkmActive');
   } else if (status === 'expired') {
@@ -1033,9 +1047,9 @@ async function renderUmkmMenuList(warung) {
     <div class="dash-menu-item">
       <div style="display:flex;align-items:center;gap:10px;">
         ${m.image_url
-          ? `<img src="${m.image_url}" alt="${m.name}" style="width:48px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--neutral-200);" onerror="this.style.display='none'">`
-          : `<div style="width:48px;height:40px;background:var(--neutral-100);border-radius:6px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--neutral-300);"><i class="fa-solid fa-utensils" style="color:var(--neutral-300);font-size:0.9rem;"></i></div>`
-        }
+      ? `<img src="${m.image_url}" alt="${m.name}" style="width:48px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--neutral-200);" onerror="this.style.display='none'">`
+      : `<div style="width:48px;height:40px;background:var(--neutral-100);border-radius:6px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--neutral-300);"><i class="fa-solid fa-utensils" style="color:var(--neutral-300);font-size:0.9rem;"></i></div>`
+    }
         <div>
           <span class="dash-menu-name">${m.name}</span>
           ${m.is_best_seller ? '<span style="background:var(--gold-100);color:var(--gold-600);font-size:0.68rem;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;">Favorit</span>' : ''}
@@ -1055,7 +1069,7 @@ async function renderUmkmMenuList(warung) {
   `).join('');
 }
 
-window.toggleMenuAvailability = async function(menuId, isAvailable) {
+window.toggleMenuAvailability = async function (menuId, isAvailable) {
   await DB.updateMenuAvailability(menuId, isAvailable);
   await refreshWarungsCache();
   renderCulinaryGrid();
@@ -1176,6 +1190,10 @@ async function renderAdminDashboard() {
                   <div style="font-weight:800;color:var(--neutral-900);">${u.business_name}</div>
                   <div style="font-size:0.75rem;color:var(--neutral-500);margin-top:2px;"><span style="font-weight:600;">REG#${u.id}</span></div>
                   <div style="font-size:0.75rem;color:var(--neutral-400);margin-top:2px;"><i class="fa-solid fa-location-dot"></i> ${u.address}</div>
+                  ${u.lat != null && u.lng != null
+          ? `<div style="font-size:0.75rem;margin-top:2px;"><a href="https://www.google.com/maps?q=${u.lat},${u.lng}" target="_blank" rel="noopener" style="color:var(--primary-700);font-weight:700;text-decoration:none;"><i class="fa-solid fa-map-pin"></i> Lihat titik di Google Maps</a> <span style="color:var(--neutral-400);">(${Number(u.lat).toFixed(5)}, ${Number(u.lng).toFixed(5)})</span></div>`
+          : `<div style="font-size:0.75rem;color:#d97706;margin-top:2px;"><i class="fa-solid fa-triangle-exclamation"></i> Belum ada titik (memakai titik di jalan)</div>`}
+                  <button class="btn btn-outline btn-xs" style="margin-top:4px;" onclick="window.adminEditCoords(${u.id}, '${u.user_id}')"><i class="fa-solid fa-pen"></i> ${u.lat != null && u.lng != null ? 'Koreksi titik' : 'Isi titik'}</button>
                   <div style="font-size:0.72rem;color:var(--neutral-400);"><i class="fa-regular fa-clock"></i> ${new Date(u.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
                 </td>
                 <td>
@@ -1329,7 +1347,11 @@ window.adminActivateUmkm = async function (regId, warungName, userId) {
       // Detect category from business_name
       const cat = detectCategory(reg.business_name);
       const area = detectArea(reg.address);
-      const coords = assignCoordinates(area, Math.floor(Math.random() * 10));
+      // Pakai titik asli dari pendaftar; pendaftar lama tanpa titik tetap memakai titik di jalan (cara lama)
+      const hasRegCoords = reg.lat != null && reg.lng != null && validateCoords(Number(reg.lat), Number(reg.lng)) === null;
+      const coords = hasRegCoords
+        ? buildGeoFields(Number(reg.lat), Number(reg.lng))
+        : assignCoordinates(area, Math.floor(Math.random() * 10));
 
       const defaultFeatures = ['Mitra Terverifikasi Muyang', 'Porsi Kenyang Terjamin', 'Bisa QRIS / Tunai', 'Harga Ramah Mahasiswa'];
       const { data: newWarung, error: insertErr } = await supabaseClient.from('warungs').insert([{
@@ -1440,6 +1462,238 @@ window.adminDeleteReview = async function (reviewId) {
   renderCulinaryGrid();
   await renderAdminDashboard();
   showToast('Ulasan berhasil dihapus.');
+};
+
+// ============================================================
+// LOKASI WARUNG: pin di peta (Leaflet, tanpa API key)
+// ============================================================
+const MAX_CAMPUS_DISTANCE_M = 15000; // titik di luar 15 km dari kampus ditolak
+
+// Return string pesan error, atau null kalau titik valid
+function validateCoords(lat, lng) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return 'Koordinat tidak valid.';
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return 'Koordinat tidak valid.';
+  const d = haversineM(lat, lng, PUSAT_UNEJ_COORDS[0], PUSAT_UNEJ_COORDS[1]);
+  if (d > MAX_CAMPUS_DISTANCE_M) {
+    return `Titik lokasi terlalu jauh dari kampus UNEJ (${(d / 1000).toFixed(1)} km). Pastikan pin ada di area Jember.`;
+  }
+  return null;
+}
+
+// Hitung semua field lokasi dari lat/lng (dipakai aktivasi, dashboard UMKM, dan koreksi admin)
+function buildGeoFields(lat, lng) {
+  lat = +Number(lat).toFixed(6); lng = +Number(lng).toFixed(6);
+  const fromHub = haversineM(lat, lng, PUSAT_UNEJ_COORDS[0], PUSAT_UNEJ_COORDS[1]);
+  const distance = Math.max(100, Math.round((fromHub - CAMPUS_RADIUS_M) / 10) * 10);
+  // Posisi di kanvas fallback (hanya dipakai kalau Leaflet gagal dimuat) - perkiraan kasar
+  const clamp = v => Math.max(5, Math.min(95, Math.round(v)));
+  const canvas = {
+    x: clamp((lng - 113.711) / 0.015 * 100),
+    y: clamp((-8.160 - lat) / 0.016 * 100)
+  };
+  return { lat, lng, distance, canvas };
+}
+
+// Mini-peta dengan pin yang bisa digeser. Mengembalikan null kalau Leaflet belum termuat.
+function createLocationPicker(containerId, opts = {}) {
+  const el = document.getElementById(containerId);
+  if (!el || typeof L === 'undefined') return null;
+
+  const map = L.map(el, {
+    center: opts.initial || UNEJ_CENTER,
+    zoom: opts.initial ? 18 : 16,
+    scrollWheelZoom: false
+  });
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
+  }).addTo(map);
+
+  // Penanda kampus supaya pemilik tahu arah
+  L.marker(PUSAT_UNEJ_COORDS, {
+    interactive: false,
+    icon: L.divIcon({ className: 'loc-picker-campus', html: '<span>UNEJ</span>', iconSize: [44, 20], iconAnchor: [22, 10] })
+  }).addTo(map);
+
+  const pinIcon = L.divIcon({
+    className: 'loc-picker-pin',
+    html: '<i class="fa-solid fa-location-dot"></i>',
+    iconSize: [32, 40],
+    iconAnchor: [16, 38]
+  });
+  let marker = null;
+
+  function notify() {
+    if (opts.onChange) opts.onChange(marker ? marker.getLatLng() : null);
+  }
+  function place(lat, lng) {
+    if (!marker) {
+      marker = L.marker([lat, lng], { draggable: true, icon: pinIcon }).addTo(map);
+      marker.on('dragend', notify);
+    } else {
+      marker.setLatLng([lat, lng]);
+    }
+    notify();
+  }
+
+  map.on('click', (e) => place(e.latlng.lat, e.latlng.lng));
+  if (opts.initial) place(opts.initial[0], opts.initial[1]);
+
+  return {
+    map,
+    getLatLng: () => (marker ? marker.getLatLng() : null),
+    setLatLng(lat, lng, zoom) {
+      place(lat, lng);
+      map.setView([lat, lng], zoom || 18);
+    },
+    clear() {
+      if (marker) { map.removeLayer(marker); marker = null; }
+      map.setView(UNEJ_CENTER, 16);
+      notify();
+    },
+    invalidate: () => map.invalidateSize()
+  };
+}
+
+// Buat peta hanya saat kontainernya benar-benar terlihat (modal/dashboard awalnya tersembunyi)
+function lazyInitWhenVisible(el, init, onVisibleAgain) {
+  if (!el || typeof ResizeObserver === 'undefined') { init(); return; }
+  let created = false;
+  new ResizeObserver(() => {
+    if (el.clientWidth === 0) return;
+    if (!created) { created = true; init(); }
+    else if (onVisibleAgain) onVisibleAgain();
+  }).observe(el);
+}
+
+function useMyLocation(picker, textEl) {
+  if (!navigator.geolocation) { showToast('Browser tidak mendukung GPS.', 'error'); return; }
+  if (textEl) textEl.textContent = 'Mencari lokasi Anda...';
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude } = pos.coords;
+      const err = validateCoords(latitude, longitude);
+      if (err) { showToast(err, 'error'); if (textEl) textEl.textContent = 'Lokasi GPS di luar area Jember.'; return; }
+      picker.setLatLng(latitude, longitude);
+      showToast('Lokasi ditemukan. Geser pin kalau kurang pas.');
+    },
+    () => {
+      showToast('Tidak bisa mengambil lokasi. Izinkan akses lokasi atau ketuk peta secara manual.', 'error');
+      if (textEl) textEl.textContent = 'Belum ada titik. Ketuk peta atau geser pin.';
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
+function coordsText(ll) {
+  return ll ? `Titik: ${ll.lat.toFixed(6)}, ${ll.lng.toFixed(6)}` : 'Belum ada titik. Ketuk peta atau geser pin.';
+}
+
+// ---- Form pendaftaran UMKM ----
+let regLocPicker = null;
+function initUmkmRegisterPicker() {
+  const el = document.getElementById('regMapPicker');
+  const textEl = document.getElementById('regCoordsText');
+  lazyInitWhenVisible(el, () => {
+    regLocPicker = createLocationPicker('regMapPicker', {
+      onChange: (ll) => { if (textEl) textEl.textContent = coordsText(ll); }
+    });
+  }, () => regLocPicker && regLocPicker.invalidate());
+  document.getElementById('regUseMyLocation')?.addEventListener('click', () => {
+    if (regLocPicker) useMyLocation(regLocPicker, textEl);
+  });
+}
+
+// ---- Dashboard UMKM: ubah lokasi setelah aktif ----
+let umkmLocPicker = null;
+let umkmLocWarung = null;
+function setupUmkmLocationEditor(warung) {
+  const section = document.getElementById('umkmLocationSection');
+  const el = document.getElementById('umkmLocationMap');
+  const textEl = document.getElementById('umkmCoordsText');
+  if (!section || !el) return;
+  section.style.display = '';
+  umkmLocWarung = warung;
+  const initial = (warung.lat != null && warung.lng != null) ? [Number(warung.lat), Number(warung.lng)] : null;
+
+  if (umkmLocPicker) {
+    if (initial) umkmLocPicker.setLatLng(initial[0], initial[1]);
+    return;
+  }
+  lazyInitWhenVisible(el, () => {
+    umkmLocPicker = createLocationPicker('umkmLocationMap', {
+      initial: (umkmLocWarung && umkmLocWarung.lat != null) ? [Number(umkmLocWarung.lat), Number(umkmLocWarung.lng)] : null,
+      onChange: (ll) => { if (textEl) textEl.textContent = coordsText(ll); }
+    });
+  }, () => umkmLocPicker && umkmLocPicker.invalidate());
+
+  const gpsBtn = document.getElementById('umkmUseMyLocation');
+  if (gpsBtn && !gpsBtn.dataset.bound) {
+    gpsBtn.dataset.bound = '1';
+    gpsBtn.addEventListener('click', () => { if (umkmLocPicker) useMyLocation(umkmLocPicker, textEl); });
+  }
+}
+
+// Simpan lokasi baru ke warungs + umkm_registrations, lalu segarkan katalog & peta
+async function saveWarungLocation(warungId, ownerId, lat, lng) {
+  const geo = buildGeoFields(lat, lng);
+  const { error } = await supabaseClient.from('warungs').update({
+    lat: geo.lat,
+    lng: geo.lng,
+    google_maps_url: `https://www.google.com/maps?q=${geo.lat},${geo.lng}`,
+    distance: `${geo.distance}m dari Kampus`,
+    coordinates: geo.canvas
+  }).eq('id', warungId);
+  if (error) throw error;
+  await supabaseClient.from('umkm_registrations').update({ lat: geo.lat, lng: geo.lng }).eq('user_id', ownerId);
+  await refreshWarungsCache();
+  renderCulinaryGrid();
+  renderRadarMapPins();
+}
+
+window.saveUmkmLocation = async function () {
+  const session = LS.getSession();
+  if (!session || session.role !== 'umkm' || !supabaseClient) return;
+  const ll = umkmLocPicker ? umkmLocPicker.getLatLng() : null;
+  if (!ll) { showToast('Tentukan titik lokasi di peta dulu.', 'error'); return; }
+  const err = validateCoords(ll.lat, ll.lng);
+  if (err) { showToast(err, 'error'); return; }
+  const warung = umkmLocWarung || await DB.getWarungByOwnerId(session.id);
+  if (!warung) { showToast('Data warung tidak ditemukan.', 'error'); return; }
+  const btn = document.getElementById('umkmSaveLocationBtn');
+  if (btn) btn.disabled = true;
+  try {
+    await saveWarungLocation(warung.id, session.id, ll.lat, ll.lng);
+    umkmLocWarung = await DB.getWarungByOwnerId(session.id);
+    showToast('Lokasi warung berhasil diperbarui!');
+  } catch (e) {
+    console.warn('[UMKM] Save location error:', e);
+    showToast('Gagal menyimpan lokasi: ' + (e?.message || 'Coba lagi.'), 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+};
+
+// ---- Admin: isi / koreksi titik (tempel "lat, lng" dari Google Maps) ----
+window.adminEditCoords = async function (regId, userId) {
+  if (!supabaseClient) return;
+  const input = prompt('Tempel koordinat warung dalam format: lat, lng\nContoh: -8.170684, 113.721057\n\nTips: di Google Maps, klik kanan titik warung lalu klik angka koordinat untuk menyalin.');
+  if (input === null) return;
+  const m = input.match(/(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)/);
+  if (!m) { showToast('Format salah. Contoh: -8.170684, 113.721057', 'error'); return; }
+  const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+  const err = validateCoords(lat, lng);
+  if (err) { showToast(err, 'error'); return; }
+  try {
+    await supabaseClient.from('umkm_registrations').update({ lat, lng }).eq('id', regId);
+    const warung = await DB.getWarungByOwnerId(userId);
+    if (warung) await saveWarungLocation(warung.id, userId, lat, lng);
+    await renderAdminDashboard();
+    showToast('Titik lokasi diperbarui.');
+  } catch (e) {
+    console.warn('[Admin] Edit coords error:', e);
+    showToast('Gagal menyimpan titik: ' + (e?.message || 'Coba lagi.'), 'error');
+  }
 };
 
 // ============================================================
@@ -1830,8 +2084,8 @@ window.openDetailModal = async function (id) {
       </h4>
       <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px;">
         ${normalized.popularMenus.length === 0
-          ? '<p style="color:var(--neutral-400);font-size:0.85rem;">Belum ada menu yang ditambahkan.</p>'
-          : normalized.popularMenus.map(menu => `
+      ? '<p style="color:var(--neutral-400);font-size:0.85rem;">Belum ada menu yang ditambahkan.</p>'
+      : normalized.popularMenus.map(menu => `
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #fff; border: 1.5px solid var(--neutral-200); border-radius: var(--radius-md);">
             <div>
               <div style="font-size: 0.95rem; font-weight: 800; color: var(--neutral-900);">
@@ -1851,11 +2105,11 @@ window.openDetailModal = async function (id) {
           <i class="fa-solid fa-comments" style="color: var(--accent-500);"></i> Ulasan Mahasiswa (${reviews.length})
         </h4>
         ${isMahasiswa
-          ? (hasReviewed
-            ? `<span style="font-size:0.8rem;color:var(--success-600);font-weight:700;"><i class="fa-solid fa-check-circle"></i> Sudah Diulas</span>`
-            : `<button class="btn btn-primary btn-sm open-review-form-btn" data-id="${item.id}"><i class="fa-solid fa-pen"></i> Tulis Ulasan</button>`)
-          : `<button class="btn btn-outline btn-sm" onclick="window.openLoginModal('mahasiswa')"><i class="fa-solid fa-lock"></i> Login untuk Ulasan</button>`
-        }
+      ? (hasReviewed
+        ? `<span style="font-size:0.8rem;color:var(--success-600);font-weight:700;"><i class="fa-solid fa-check-circle"></i> Sudah Diulas</span>`
+        : `<button class="btn btn-primary btn-sm open-review-form-btn" data-id="${item.id}"><i class="fa-solid fa-pen"></i> Tulis Ulasan</button>`)
+      : `<button class="btn btn-outline btn-sm" onclick="window.openLoginModal('mahasiswa')"><i class="fa-solid fa-lock"></i> Login untuk Ulasan</button>`
+    }
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px;">
@@ -2027,7 +2281,7 @@ function initLeafletMap() {
     leafletMap.on('click', (e) => {
       const txt = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
       console.log('[MUYANG] koordinat:', txt);
-      try { navigator.clipboard && navigator.clipboard.writeText(txt); } catch (_) {}
+      try { navigator.clipboard && navigator.clipboard.writeText(txt); } catch (_) { }
       showToast('Koordinat: ' + txt);
     });
   }
@@ -2422,7 +2676,7 @@ function initAdminSecretTrigger() {
   // 2. Secret Keyboard Shortcut: Ctrl + Shift + A atau Ctrl + Alt + A
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) ||
-        (e.ctrlKey && e.altKey && (e.key === 'A' || e.key === 'a'))) {
+      (e.ctrlKey && e.altKey && (e.key === 'A' || e.key === 'a'))) {
       e.preventDefault();
       const session = LS.getSession();
       if (session && session.role === 'admin') {
@@ -2649,6 +2903,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 14. Register Forms
   document.getElementById('registerFormMahasiswa')?.addEventListener('submit', handleRegisterMahasiswa);
   document.getElementById('registerFormUmkm')?.addEventListener('submit', handleRegisterUmkm);
+  initUmkmRegisterPicker();
 
   // 15. Review Form
   document.getElementById('reviewForm')?.addEventListener('submit', handleReviewSubmit);

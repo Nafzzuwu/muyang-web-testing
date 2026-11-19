@@ -1632,8 +1632,15 @@ textarea {
 }
 
 @keyframes campusPulse {
-  from { transform: scale(1); box-shadow: 0 4px 16px rgba(74, 25, 22, 0.45), 0 0 0 2.5px #ffffff; }
-  to   { transform: scale(1.03); box-shadow: 0 6px 22px rgba(74, 25, 22, 0.55), 0 0 0 4px rgba(255, 255, 255, 0.9); }
+  from {
+    transform: scale(1);
+    box-shadow: 0 4px 16px rgba(74, 25, 22, 0.45), 0 0 0 2.5px #ffffff;
+  }
+
+  to {
+    transform: scale(1.03);
+    box-shadow: 0 6px 22px rgba(74, 25, 22, 0.55), 0 0 0 4px rgba(255, 255, 255, 0.9);
+  }
 }
 
 .leaflet-warung-marker {
@@ -1694,8 +1701,15 @@ textarea {
 }
 
 @keyframes radarPinActivePulse {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.35), 0 8px 24px rgba(74, 25, 22, 0.35); }
-  50%      { box-shadow: 0 0 0 8px rgba(234, 88, 12, 0.1), 0 8px 24px rgba(74, 25, 22, 0.35); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.35), 0 8px 24px rgba(74, 25, 22, 0.35);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(234, 88, 12, 0.1), 0 8px 24px rgba(74, 25, 22, 0.35);
+  }
 }
 
 .pin-icon-tag {
@@ -1789,8 +1803,15 @@ textarea {
 }
 
 @keyframes sidebarFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .spot-card-hero {
@@ -3093,10 +3114,13 @@ textarea {
   }
 
   @keyframes swipePulse {
-    0%, 100% {
+
+    0%,
+    100% {
       transform: translateX(0);
       opacity: 0.85;
     }
+
     50% {
       transform: translateX(5px);
       opacity: 1;
@@ -4038,4 +4062,65 @@ textarea {
     font-size: 0.78rem;
     padding: 7px 10px;
   }
+}
+
+/* ============================================================
+   LOKASI WARUNG: PIN PICKER (form pendaftaran & dashboard UMKM)
+   ============================================================ */
+.loc-picker-map {
+  width: 100%;
+  height: 240px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--neutral-200);
+  overflow: hidden;
+  z-index: 0;
+}
+
+.loc-picker-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.loc-picker-text {
+  font-size: 0.78rem;
+  color: var(--neutral-500);
+  font-weight: 600;
+}
+
+.loc-picker-hint {
+  font-size: 0.75rem;
+  color: var(--neutral-400);
+  margin-top: 6px;
+}
+
+.loc-picker-pin {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 2.2rem;
+  line-height: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+}
+
+.loc-picker-pin i {
+  display: block;
+}
+
+.loc-picker-campus span {
+  display: block;
+  background: var(--primary-700, #1d4ed8);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-align: center;
+  line-height: 20px;
+  border-radius: 10px;
+}
+
+.loc-picker-campus {
+  background: none;
+  border: none;
 }
