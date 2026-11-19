@@ -51,6 +51,75 @@ const LS = {
 };
 
 // ============================================================
+// SUPABASE CLIENT INITIALIZATION & LIVE DATA SYNC
+// ============================================================
+const SUPABASE_CONFIG = {
+  url: 'https://dtkfdhxcoatrctsdynhv.supabase.co',
+  key: 'sb_publishable_AVy6Q_27ndMvnT37O-cSog_KcWXL7Aa'
+};
+
+let supabaseClient = null;
+if (typeof window !== 'undefined' && window.supabase && SUPABASE_CONFIG.url && SUPABASE_CONFIG.key) {
+  try {
+    supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+    console.log('[MUYANG] Supabase Client Initialized:', SUPABASE_CONFIG.url);
+  } catch (err) {
+    console.warn('[MUYANG] Gagal inisialisasi Supabase client:', err);
+  }
+}
+
+// In-memory cache for live database warungs from Supabase
+let liveWarungsCache = null;
+
+async function syncWarungsFromSupabase() {
+  if (!supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient.from('warungs').select('*').order('id', { ascending: true });
+    if (error) {
+      console.info('[MUYANG] Info Supabase (tabel belum siap, memakai data lokal):', error.message);
+      return;
+    }
+    if (data && data.length > 0) {
+      liveWarungsCache = data.map(item => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        categoryLabel: item.category_label || item.categoryLabel,
+        location: item.location,
+        area: item.area,
+        lat: item.lat,
+        lng: item.lng,
+        googleMapsUrl: item.google_maps_url || item.googleMapsUrl,
+        whatsapp: item.whatsapp,
+        distance: item.distance,
+        priceRange: item.price_range || item.priceRange,
+        minPrice: item.min_price || item.minPrice,
+        maxPrice: item.max_price || item.maxPrice,
+        avgPrice: item.avg_price || item.avgPrice,
+        rating: item.rating,
+        reviewsCount: item.reviews_count || item.reviewsCount,
+        kenyangScore: item.kenyang_score || item.kenyangScore,
+        isFeatured: item.is_featured !== undefined ? item.is_featured : item.isFeatured,
+        promoBadge: item.promo_badge || item.promoBadge,
+        image: item.image,
+        hours: item.hours,
+        features: item.features || [],
+        description: item.description,
+        popularMenus: item.popular_menus || item.popularMenus || [],
+        reviews: item.reviews || [],
+        coordinates: item.coordinates || { x: 50, y: 50 }
+      }));
+      console.log(`[MUYANG] Berhasil memuat ${liveWarungsCache.length} warung live dari Supabase!`);
+      // Update catalog & map with live cloud data
+      renderCulinaryGrid();
+      renderRadarMapPins();
+    }
+  } catch (err) {
+    console.warn('[MUYANG] Koneksi Supabase offline, memakai data lokal:', err);
+  }
+}
+
+// ============================================================
 // SEED DEMO DATA (only on first load)
 // ============================================================
 function initSeedData() {
@@ -134,8 +203,9 @@ function assignCoordinates(area, idx) {
 }
 
 function getAllCulinaryData() {
-  // Clone static CULINARY_DATA
-  const list = JSON.parse(JSON.stringify(CULINARY_DATA));
+  // Use live data from Supabase if available, otherwise clone static CULINARY_DATA
+  const baseData = (liveWarungsCache && liveWarungsCache.length > 0) ? liveWarungsCache : CULINARY_DATA;
+  const list = JSON.parse(JSON.stringify(baseData));
   const umkmList = LS.getUmkm();
 
   umkmList.forEach((u, index) => {
@@ -427,12 +497,61 @@ window.openLoginModal = function (tab) {
 };
 
 // ============================================================
-// AUTH: LOGIN HANDLERS
+// AUTH: LOGIN HANDLERS (Supabase Cloud + Local Fallback)
 // ============================================================
-function handleLoginMahasiswa(e) {
+async function handleLoginMahasiswa(e) {
   e.preventDefault();
   const nim = document.getElementById('loginNim').value.trim();
   const password = document.getElementById('loginPasswordMhs').value;
+
+  // 1. Cek ke Supabase Database terlebih dahulu
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('app_users')
+        .select('*')
+        .eq('role', 'mahasiswa')
+        .eq('identifier', nim)
+        .eq('password', password)
+        .maybeSingle();
+
+      if (data) {
+        const extra = data.extra_data || {};
+        const sessionData = {
+          role: 'mahasiswa',
+          nim: data.identifier,
+          nama: data.name,
+          fakultas: extra.fakultas || 'Mahasiswa UNEJ'
+        };
+        LS.setSession(sessionData);
+
+        // Sync local cache
+        const localMhs = LS.getMhs();
+        let existing = localMhs.find(u => u.nim === nim);
+        if (!existing) {
+          localMhs.push({
+            nim: data.identifier,
+            password: data.password,
+            nama: data.name,
+            fakultas: extra.fakultas || 'Mahasiswa UNEJ',
+            bookmarks: extra.bookmarks || [],
+            reviewedSpots: extra.reviewedSpots || []
+          });
+          LS.setMhs(localMhs);
+        }
+
+        closeAllModals();
+        updateNavbarState();
+        routeToDashboard();
+        showToast(`Selamat datang, ${data.name}! (Terhubung Cloud)`);
+        return;
+      }
+    } catch (err) {
+      console.warn('[MUYANG] Gagal login via Supabase cloud, mencoba data lokal:', err);
+    }
+  }
+
+  // 2. Fallback Lokal
   const users = LS.getMhs();
   const user = users.find(u => u.nim === nim && u.password === password);
   if (!user) {
@@ -446,10 +565,66 @@ function handleLoginMahasiswa(e) {
   showToast(`Selamat datang, ${user.nama}!`);
 }
 
-function handleLoginUmkm(e) {
+async function handleLoginUmkm(e) {
   e.preventDefault();
   const email = document.getElementById('loginEmailUmkm').value.trim().toLowerCase();
   const password = document.getElementById('loginPasswordUmkm').value;
+
+  // 1. Cek ke Supabase Database
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('app_users')
+        .select('*')
+        .eq('role', 'umkm')
+        .eq('identifier', email)
+        .eq('password', password)
+        .maybeSingle();
+
+      if (data) {
+        const extra = data.extra_data || {};
+        const sessionData = {
+          role: 'umkm',
+          id: data.id,
+          email: data.identifier,
+          warungName: data.name,
+          status: extra.status || 'active'
+        };
+        LS.setSession(sessionData);
+
+        // Sync local UMKM list
+        const localUmkm = LS.getUmkm();
+        let existing = localUmkm.find(u => u.id === data.id || u.email === email);
+        if (!existing) {
+          localUmkm.push({
+            id: data.id,
+            email: data.identifier,
+            password: data.password,
+            warungName: data.name,
+            ownerName: extra.ownerName || data.name,
+            whatsapp: extra.whatsapp || '',
+            alamat: extra.alamat || '',
+            paket: extra.paket || 'regular',
+            paketPrice: extra.paketPrice || 0,
+            status: extra.status || 'active',
+            linkedCulinaryId: extra.linkedCulinaryId || null,
+            menus: extra.menus || [{ id: Date.now(), name: 'Menu Andalan', price: 10000, portion: 'Porsi Kenyang' }]
+          });
+          LS.setUmkm(localUmkm);
+        }
+
+        closeAllModals();
+        updateNavbarState();
+        routeToDashboard();
+        showToast(`Selamat datang, ${data.name}! (Terhubung Cloud)`);
+        return;
+      }
+    } catch (err) {
+      console.warn('[MUYANG] Gagal login UMKM via cloud, mencoba data lokal:', err);
+    }
+  }
+
+  // 2. Fallback Lokal
   const users = LS.getUmkm();
   const user = users.find(u => u.email === email && u.password === password);
   if (!user) {
@@ -463,10 +638,36 @@ function handleLoginUmkm(e) {
   showToast(`Selamat datang, ${user.warungName}!`);
 }
 
-function handleLoginAdmin(e) {
+async function handleLoginAdmin(e) {
   e.preventDefault();
   const username = document.getElementById('adminUsername').value.trim();
   const password = document.getElementById('adminPassword').value;
+
+  // 1. Cek ke Supabase Database
+  if (supabaseClient) {
+    try {
+      const { data } = await supabaseClient
+        .from('app_users')
+        .select('*')
+        .eq('role', 'admin')
+        .eq('identifier', username)
+        .eq('password', password)
+        .maybeSingle();
+
+      if (data) {
+        LS.setSession({ role: 'admin', username: data.identifier, name: data.name });
+        closeAllModals();
+        updateNavbarState();
+        routeToDashboard();
+        showToast(`Selamat datang, ${data.name}! (Cloud Admin)`);
+        return;
+      }
+    } catch (err) {
+      console.warn('[MUYANG] Login admin cloud fallback:', err);
+    }
+  }
+
+  // 2. Fallback Lokal
   if (username === ADMIN_CREDS.username && password === ADMIN_CREDS.password) {
     LS.setSession({ role: 'admin', username });
     closeAllModals();
@@ -479,14 +680,50 @@ function handleLoginAdmin(e) {
 }
 
 // ============================================================
-// AUTH: REGISTER HANDLERS
+// AUTH: REGISTER HANDLERS (Supabase Cloud + Local Sync)
 // ============================================================
-function handleRegisterMahasiswa(e) {
+async function handleRegisterMahasiswa(e) {
   e.preventDefault();
   const nama = document.getElementById('regNamaLengkap').value.trim();
   const nim = document.getElementById('regNim').value.trim();
   const fakultas = document.getElementById('regFakultas').value.trim();
   const password = document.getElementById('regPasswordMhs').value;
+
+  // 1. Cek duplikasi di Supabase Database
+  if (supabaseClient) {
+    try {
+      const { data: existing } = await supabaseClient
+        .from('app_users')
+        .select('id')
+        .eq('identifier', nim)
+        .maybeSingle();
+
+      if (existing) {
+        showToast('NIM sudah terdaftar di database. Silakan login.', 'error');
+        return;
+      }
+
+      const newId = 'MHS-' + String(Date.now()).slice(-5);
+      const { error: insertError } = await supabaseClient.from('app_users').insert([{
+        id: newId,
+        role: 'mahasiswa',
+        identifier: nim,
+        password: password,
+        name: nama,
+        extra_data: { fakultas, bookmarks: [], reviewedSpots: [] }
+      }]);
+
+      if (insertError) {
+        console.warn('[MUYANG] Peringatan registrasi Supabase:', insertError.message);
+      } else {
+        console.log('[MUYANG] Akun Mahasiswa baru berhasil tersimpan di Supabase!');
+      }
+    } catch (err) {
+      console.warn('[MUYANG] Koneksi cloud saat registrasi:', err);
+    }
+  }
+
+  // 2. Simpan juga di local storage
   const users = LS.getMhs();
   if (users.find(u => u.nim === nim)) {
     showToast('NIM sudah terdaftar. Silakan login.', 'error');
@@ -496,14 +733,15 @@ function handleRegisterMahasiswa(e) {
   users.push(newUser);
   LS.setMhs(users);
   LS.setSession({ role: 'mahasiswa', nim, nama, fakultas });
+
   closeAllModals();
   document.getElementById('registerFormMahasiswa').reset();
   updateNavbarState();
   routeToDashboard();
-  showToast(`Daftar berhasil! Selamat datang, ${nama}!`);
+  showToast(`Daftar berhasil! Selamat datang, ${nama}! (Tersimpan di Cloud)`);
 }
 
-function handleRegisterUmkm(e) {
+async function handleRegisterUmkm(e) {
   e.preventDefault();
   const warungName = document.getElementById('regWarungName').value.trim();
   const ownerName = document.getElementById('regOwnerName').value.trim();
@@ -514,6 +752,7 @@ function handleRegisterUmkm(e) {
   const paket = paketEl.value;
   const paketPrice = parseInt(paketEl.options[paketEl.selectedIndex].dataset.price);
   const password = document.getElementById('regPasswordUmkm').value;
+
   const users = LS.getUmkm();
   if (users.find(u => u.email === email)) {
     showToast('Email sudah terdaftar. Silakan login.', 'error');
@@ -535,14 +774,66 @@ function handleRegisterUmkm(e) {
       { id: Date.now(), name: 'Paket Menu Hemat', price: 10000, portion: 'Porsi Kenyang' }
     ]
   };
+
+  // 1. Simpan ke Supabase Database (Tabel app_users & umkm_registrations)
+  if (supabaseClient) {
+    try {
+      const { data: existing } = await supabaseClient
+        .from('app_users')
+        .select('id')
+        .eq('identifier', email)
+        .maybeSingle();
+
+      if (existing) {
+        showToast('Email sudah terdaftar di database cloud. Silakan login.', 'error');
+        return;
+      }
+
+      // Insert ke app_users (untuk login)
+      await supabaseClient.from('app_users').insert([{
+        id,
+        role: 'umkm',
+        identifier: email,
+        password: password,
+        name: warungName,
+        extra_data: {
+          ownerName,
+          whatsapp,
+          alamat,
+          paket,
+          paketPrice,
+          status: 'pending',
+          menus: newUser.menus
+        }
+      }]);
+
+      // Insert ke umkm_registrations (untuk rekap admin)
+      await supabaseClient.from('umkm_registrations').insert([{
+        business_name: warungName,
+        owner_name: ownerName,
+        phone: whatsapp,
+        address: alamat,
+        category: paket,
+        price_range: String(paketPrice),
+        status: 'pending'
+      }]);
+
+      console.log('[MUYANG] Akun UMKM & Pendaftaran berhasil tersimpan di Supabase!');
+    } catch (err) {
+      console.warn('[MUYANG] Error inserting UMKM to Supabase:', err);
+    }
+  }
+
+  // 2. Simpan juga secara lokal
   users.push(newUser);
   LS.setUmkm(users);
   LS.setSession({ role: 'umkm', id, email, warungName, status: 'pending' });
+
   closeAllModals();
   document.getElementById('registerFormUmkm').reset();
   updateNavbarState();
   routeToDashboard();
-  showToast(`Pendaftaran "${warungName}" berhasil! Menunggu verifikasi admin.`);
+  showToast(`Pendaftaran "${warungName}" berhasil! Menunggu verifikasi admin. (Tersimpan di Cloud)`);
 }
 
 // ============================================================
@@ -1416,6 +1707,19 @@ function handleReviewSubmit(e) {
   reviews[spotId].unshift(newReview);
   LS.setReviews(reviews);
 
+  // Sync review to Supabase cloud database
+  if (supabaseClient) {
+    supabaseClient.from('warungs').select('reviews').eq('id', spotId).maybeSingle().then(({ data }) => {
+      if (data) {
+        const cloudReviews = data.reviews || [];
+        cloudReviews.unshift(newReview);
+        supabaseClient.from('warungs').update({ reviews: cloudReviews }).eq('id', spotId).then(() => {
+          console.log('[MUYANG] Review berhasil disinkronisasi ke cloud Supabase!');
+        });
+      }
+    }).catch(err => console.warn('[MUYANG] Error syncing review to cloud:', err));
+  }
+
   if (!users[idx].reviewedSpots) users[idx].reviewedSpots = [];
   users[idx].reviewedSpots.push(spotId);
   LS.setMhs(users);
@@ -1940,6 +2244,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const menuId = Date.now();
     users[idx].menus.push({ id: menuId, name, price, portion: portion || 'Porsi Standar' });
     LS.setUmkm(users);
+
+    // Sync updated menu to Supabase cloud
+    if (supabaseClient) {
+      supabaseClient.from('app_users').update({
+        extra_data: { ...users[idx] }
+      }).eq('id', session.id).then(() => {
+        console.log('[MUYANG] Menu baru berhasil disinkronkan ke Supabase cloud!');
+      }).catch(err => console.warn('[MUYANG] Error syncing menu to Supabase:', err));
+    }
+
     document.getElementById('addMenuForm').reset();
     renderUmkmMenuList(users[idx]);
     renderCulinaryGrid(); // Immediately update public catalogue
@@ -1961,6 +2275,9 @@ document.addEventListener('DOMContentLoaded', () => {
   renderRadarMapPins();
   selectRadarSpot(1);
   updateMealPlanner();
+
+  // 20.1 Fetch live data from Supabase Cloud
+  syncWarungsFromSupabase();
 
   // 21. Scroll-reveal entrance animation for sections
   if ('IntersectionObserver' in window) {
