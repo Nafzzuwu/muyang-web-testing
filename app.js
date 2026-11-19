@@ -329,6 +329,15 @@ function normalizeWarung(w) {
   const prices = menus.map(m => m.price).filter(p => p > 0);
   const minPrice = prices.length > 0 ? Math.min(...prices) : (w.min_price || 0);
   const maxPrice = prices.length > 0 ? Math.max(...prices) : (w.max_price || 0);
+
+  // Safe parse: JSONB bisa datang sebagai array atau string — pastikan selalu array/object
+  let features = w.features || [];
+  if (typeof features === 'string') { try { features = JSON.parse(features); } catch { features = []; } }
+  if (!Array.isArray(features)) features = [];
+
+  let coordinates = w.coordinates || { x: 50, y: 50 };
+  if (typeof coordinates === 'string') { try { coordinates = JSON.parse(coordinates); } catch { coordinates = { x: 50, y: 50 }; } }
+
   return {
     id: w.id,
     name: w.name,
@@ -352,7 +361,7 @@ function normalizeWarung(w) {
     promoBadge: w.promo_badge || null,
     image: w.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
     hours: w.hours || '08.00 - 21.00 WIB',
-    features: w.features || [],
+    features,
     description: w.description || `Warung mitra resmi Muyang. Sajian lezat khusus mahasiswa UNEJ.`,
     popularMenus: menus.map(m => ({
       id: m.id,
@@ -362,7 +371,7 @@ function normalizeWarung(w) {
       isBestSeller: m.is_best_seller || false,
       imageUrl: m.image_url || null
     })),
-    coordinates: w.coordinates || { x: 50, y: 50 }
+    coordinates
   };
 }
 
@@ -1269,9 +1278,9 @@ window.adminActivateUmkm = async function (regId, warungName, userId) {
         promo_badge: 'Mitra Baru Muyang',
         image_url: cat.image,
         hours: '08.00 - 21.00 WIB',
-        features: JSON.stringify(['Mitra Terverifikasi Muyang', 'Porsi Kenyang Terjamin', 'Bisa QRIS / Tunai', 'Harga Ramah Mahasiswa']),
+        features: ['Mitra Terverifikasi Muyang', 'Porsi Kenyang Terjamin', 'Bisa QRIS / Tunai', 'Harga Ramah Mahasiswa'],
         description: `Warung mitra resmi Muyang di area ${area}. Menyajikan menu lezat dan porsi mengenyangkan khusus mahasiswa UNEJ.`,
-        coordinates: JSON.stringify(coords.canvas)
+        coordinates: coords.canvas
       }]);
     } else if (existingWarung) {
       // Activate existing warung
