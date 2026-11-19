@@ -442,6 +442,9 @@ function navigateToSection(hash) {
     history.replaceState(null, '', hash);
     setTimeout(() => targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 40);
     setActiveNav(hash);
+    if (hash === '#radar-map' && leafletMap) {
+      setTimeout(() => leafletMap.invalidateSize(), 300);
+    }
   }
 }
 window.navigateToSection = navigateToSection;
@@ -1914,75 +1917,248 @@ async function handleReviewSubmit(e) {
 }
 
 // ============================================================
-// RADAR MAP
+// REAL CAMPUS RADAR MAP (Leaflet.js + CartoDB Voyager)
 // ============================================================
+const UNEJ_CENTER = [-8.1695, 113.7208];
+const DEFAULT_MAP_ZOOM = 16;
+let leafletMap = null;
+let leafletMarkers = {};
+let campusHubMarker = null;
+
+const AREA_COORDINATES = {
+  'all': { center: [-8.1695, 113.7208], zoom: 15.5 },
+  'Jl. Kalimantan': { center: [-8.1698, 113.7218], zoom: 16.5 },
+  'Jl. Jawa': { center: [-8.1730, 113.7200], zoom: 16.5 },
+  'Jl. Mastrip': { center: [-8.1755, 113.7248], zoom: 16.5 },
+  'Jl. Riau': { center: [-8.1672, 113.7190], zoom: 16.5 },
+  'Jl. Karimata': { center: [-8.1742, 113.7252], zoom: 16.5 },
+  'Jl. Danau Toba': { center: [-8.1788, 113.7268], zoom: 16.5 }
+};
+
+function initLeafletMap() {
+  const container = document.getElementById('radarMapContainer');
+  if (!container) return;
+  if (leafletMap) {
+    leafletMap.invalidateSize();
+    return;
+  }
+  if (typeof L === 'undefined') {
+    console.warn('[MUYANG] Leaflet library not loaded.');
+    return;
+  }
+
+  // Initialize Map
+  leafletMap = L.map('radarMapContainer', {
+    center: UNEJ_CENTER,
+    zoom: DEFAULT_MAP_ZOOM,
+    zoomControl: false,
+    scrollWheelZoom: false,
+    attributionControl: false
+  });
+
+  // Add subtle attribution in corner
+  L.control.attribution({ position: 'bottomright' }).addTo(leafletMap);
+
+  // Add custom zoom control at bottom-right
+  L.control.zoom({ position: 'bottomright' }).addTo(leafletMap);
+
+  // CartoDB Voyager Tiles (Clean, warm, modern, high contrast for campus landmarks)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    subdomains: 'abcd',
+    attribution: '&copy; OpenStreetMap &copy; CARTO'
+  }).addTo(leafletMap);
+
+  // Add Campus Center Landmark
+  const campusIcon = L.divIcon({
+    className: 'leaflet-campus-marker',
+    html: `
+      <div class="leaflet-campus-hub">
+        <i class="fa-solid fa-building-columns"></i>
+        <span>Kampus UNEJ (Tegalboto)</span>
+      </div>
+    `,
+    iconSize: [175, 34],
+    iconAnchor: [87, 17]
+  });
+  campusHubMarker = L.marker([-8.1687, 113.7198], { icon: campusIcon, interactive: false, zIndexOffset: 200 }).addTo(leafletMap);
+
+  // Setup Toolbar event listeners
+  document.querySelectorAll('.map-chip-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.map-chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const area = btn.getAttribute('data-area');
+      const target = AREA_COORDINATES[area] || AREA_COORDINATES['all'];
+      leafletMap.flyTo(target.center, target.zoom, { duration: 0.9 });
+    });
+  });
+
+  document.getElementById('mapRecenterBtn')?.addEventListener('click', () => {
+    document.querySelectorAll('.map-chip-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-area') === 'all'));
+    leafletMap.flyTo(UNEJ_CENTER, DEFAULT_MAP_ZOOM, { duration: 0.8 });
+  });
+
+  // Invalidate size on window resize
+  window.addEventListener('resize', () => {
+    if (leafletMap) leafletMap.invalidateSize();
+  });
+}
+
 function renderRadarMapPins() {
-  const radarPinsContainer = document.getElementById('radarPinsContainer');
-  if (!radarPinsContainer) return;
   const allData = getAllCulinaryData();
 
-  radarPinsContainer.innerHTML = allData.map(item => {
-    const isSelected = String(item.id) === String(state.selectedSpotId);
-    const isWithinBudget = item.minPrice <= state.maxBudget;
-    return `
-      <div class="culinary-map-pin ${isSelected ? 'active' : ''}" 
-           style="left: ${item.coordinates.x}%; top: ${item.coordinates.y}%; opacity: ${isWithinBudget ? '1' : '0.45'};" 
-           data-id="${item.id}"
-           title="${item.name} (${formatIDR(item.minPrice)})">
-        <div class="pin-bubble ${item.isFeatured ? 'featured' : ''}">
-          <i class="fa-solid fa-utensils"></i>
+  // 1. Initialize Leaflet map if not ready
+  if (typeof L !== 'undefined' && !leafletMap) {
+    initLeafletMap();
+  }
+
+  // 2. If Leaflet is available, update Leaflet markers
+  if (leafletMap && typeof L !== 'undefined') {
+    // Remove existing markers
+    Object.values(leafletMarkers).forEach(m => leafletMap.removeLayer(m));
+    leafletMarkers = {};
+
+    allData.forEach((item, idx) => {
+      let lat = Number(item.lat);
+      let lng = Number(item.lng);
+      if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+        const fallback = assignCoordinates(item.area || 'Jl. Kalimantan', idx);
+        lat = fallback.lat;
+        lng = fallback.lng;
+      }
+
+      const isSelected = String(item.id) === String(state.selectedSpotId);
+      const isWithinBudget = item.minPrice <= state.maxBudget;
+      const opacity = isWithinBudget ? 1 : 0.45;
+
+      const html = `
+        <div class="leaflet-warung-pin ${item.isFeatured ? 'featured' : ''} ${isSelected ? 'active' : ''}"
+             style="opacity: ${opacity};"
+             title="${item.name} - Mulai ${formatIDR(item.minPrice)}">
+          <i class="fa-solid ${item.isFeatured ? 'fa-star' : 'fa-utensils'} pin-icon-tag"></i>
           <span>${formatIDR(item.minPrice)}</span>
         </div>
-      </div>
-    `;
-  }).join('');
+      `;
 
-  document.querySelectorAll('.culinary-map-pin').forEach(pin => {
-    pin.addEventListener('click', () => selectRadarSpot(pin.getAttribute('data-id')));
-  });
+      const customIcon = L.divIcon({
+        className: 'leaflet-warung-marker',
+        html: html,
+        iconSize: [95, 30],
+        iconAnchor: [47, 15]
+      });
+
+      const marker = L.marker([lat, lng], {
+        icon: customIcon,
+        zIndexOffset: isSelected ? 1000 : (item.isFeatured ? 500 : 100)
+      }).addTo(leafletMap);
+
+      marker.on('click', () => {
+        selectRadarSpot(item.id);
+      });
+
+      leafletMarkers[item.id] = marker;
+    });
+  }
+
+  // Fallback container update (in case Leaflet couldn't load)
+  const radarPinsContainer = document.getElementById('radarPinsContainer');
+  if (radarPinsContainer && (!leafletMap || typeof L === 'undefined')) {
+    radarPinsContainer.style.display = 'block';
+    radarPinsContainer.innerHTML = allData.map(item => {
+      const isSelected = String(item.id) === String(state.selectedSpotId);
+      const isWithinBudget = item.minPrice <= state.maxBudget;
+      return `
+        <div class="culinary-map-pin ${isSelected ? 'active' : ''}" 
+             style="left: ${item.coordinates.x}%; top: ${item.coordinates.y}%; opacity: ${isWithinBudget ? '1' : '0.45'};" 
+             data-id="${item.id}"
+             title="${item.name} (${formatIDR(item.minPrice)})">
+          <div class="pin-bubble ${item.isFeatured ? 'featured' : ''}">
+            <i class="fa-solid fa-utensils"></i>
+            <span>${formatIDR(item.minPrice)}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    document.querySelectorAll('.culinary-map-pin').forEach(pin => {
+      pin.addEventListener('click', () => selectRadarSpot(pin.getAttribute('data-id')));
+    });
+  }
 }
 
 function selectRadarSpot(id) {
   state.selectedSpotId = id;
-  renderRadarMapPins();
   const allData = getAllCulinaryData();
   const item = allData.find(i => String(i.id) === String(id));
   const radarDetailContainer = document.getElementById('radarDetailContainer');
   if (!item || !radarDetailContainer) return;
 
-  const mapsUrl = item.googleMapsUrl;
-  const rawPhone = item.whatsapp;
+  // Re-render pins so active class updates
+  renderRadarMapPins();
+
+  // Smoothly pan map to selected spot
+  if (leafletMap && item.lat && item.lng) {
+    leafletMap.panTo([Number(item.lat), Number(item.lng)], { animate: true, duration: 0.6 });
+  }
+
+  const mapsUrl = item.googleMapsUrl || `https://www.google.com/maps?q=${item.lat},${item.lng}`;
+  const rawPhone = item.whatsapp || '081234567890';
   const cleanPhone = rawPhone.replace(/[^0-9]/g, '').replace(/^0/, '62');
   const waMsg = encodeURIComponent(`Halo ${item.name}, saya mahasiswa UNEJ dari platform MUYANG. Mau tanya apakah warung buka dan menu hari ini masih tersedia? Terima kasih!`);
   const waUrl = `https://wa.me/${cleanPhone}?text=${waMsg}`;
 
+  const popularMenus = item.popularMenus || [];
+  const topMenusHtml = popularMenus.slice(0, 3).map(m => `
+    <span class="spot-menu-tag"><i class="fa-solid fa-check"></i> ${m.name} (${formatIDR(m.price)})</span>
+  `).join('');
+
   radarDetailContainer.innerHTML = `
     <div class="radar-spot-card">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-        <span class="card-category-label">${item.categoryLabel}</span>
-        <span class="badge-kenyang-score"><i class="fa-solid fa-bowl-food"></i> Kenyang ${item.kenyangScore}</span>
-      </div>
-      <h4 class="radar-spot-title">${item.name}</h4>
-      <p class="card-location" style="margin-bottom: 8px;"><i class="fa-solid fa-location-dot"></i> ${item.location}</p>
-      <p style="font-size: 0.85rem; color: var(--neutral-600); margin-bottom: 12px;">${item.description.substring(0, 100)}...</p>
-      
-      <div style="background: #fff; padding: 10px 14px; border-radius: var(--radius-md); border: 1px solid var(--neutral-200); margin-bottom: 14px;">
-        <div class="price-label">Harga Menu Favorit</div>
-        <div style="font-size: 1.15rem; font-weight: 800; color: var(--accent-600);">Mulai ${formatIDR(item.minPrice)}</div>
+      <div class="spot-card-hero">
+        <img src="${item.image}" alt="${item.name}" class="spot-card-img" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80'" />
+        <div class="spot-card-badges">
+          <span class="spot-badge-cat">${item.categoryLabel}</span>
+          <span class="badge-kenyang-score"><i class="fa-solid fa-bowl-food"></i> Kenyang ${item.kenyangScore}</span>
+        </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-        <a href="${mapsUrl}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="color:#1a73e8;border-color:#1a73e8;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:700;text-decoration:none;">
-          <i class="fa-solid fa-map-location-dot" style="color:#1a73e8;"></i> Rute Maps
-        </a>
-        <a href="${waUrl}" target="_blank" rel="noopener" class="btn btn-wa-chat btn-sm" style="display:flex;align-items:center;justify-content:center;gap:6px;font-weight:700;text-decoration:none;">
-          <i class="fa-brands fa-whatsapp"></i> Chat WA
-        </a>
-      </div>
+      <div class="spot-card-body">
+        <h4 class="radar-spot-title">${item.name}</h4>
+        <div class="spot-meta-row">
+          <span class="spot-meta-distance"><i class="fa-solid fa-person-walking"></i> ${item.distance}</span>
+          <span class="spot-meta-area"><i class="fa-solid fa-location-dot"></i> ${item.area}</span>
+        </div>
 
-      <button class="btn btn-primary btn-sm" style="width: 100%;" id="radarDetailBtn" data-id="${item.id}">
-        <i class="fa-solid fa-eye"></i> Menu Lengkap &amp; Ulasan
-      </button>
+        <p style="font-size: 0.82rem; color: var(--neutral-600); margin-bottom: 12px; line-height: 1.45;">
+          ${(item.description || '').substring(0, 95)}...
+        </p>
+
+        <div class="spot-price-box">
+          <span class="spot-price-label">Mulai Dari</span>
+          <span class="spot-price-val">${formatIDR(item.minPrice)}</span>
+        </div>
+
+        ${popularMenus.length > 0 ? `
+          <div style="font-size: 0.72rem; font-weight: 700; color: var(--neutral-400); text-transform: uppercase; margin-bottom: 6px;">Menu Populer:</div>
+          <div class="spot-popular-tags">
+            ${topMenusHtml}
+          </div>
+        ` : ''}
+
+        <div class="spot-actions-grid">
+          <a href="${mapsUrl}" target="_blank" rel="noopener" class="btn-spot-route" title="Buka rute navigasi Google Maps">
+            <i class="fa-solid fa-map-location-dot"></i> Rute Maps
+          </a>
+          <a href="${waUrl}" target="_blank" rel="noopener" class="btn-spot-wa" title="Hubungi warung via WhatsApp">
+            <i class="fa-brands fa-whatsapp"></i> Chat WA
+          </a>
+        </div>
+
+        <button class="btn btn-primary btn-sm btn-spot-full" id="radarDetailBtn" data-id="${item.id}">
+          <i class="fa-solid fa-book-open"></i> Lihat Menu &amp; Ulasan
+        </button>
+      </div>
     </div>
   `;
 
@@ -2560,6 +2736,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderCulinaryGrid();
   renderRadarMapPins();
   if (warungsCache.length > 0) selectRadarSpot(warungsCache[0].id);
+  setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 400);
   updateMealPlanner();
 
   // 21. Scroll-reveal animation

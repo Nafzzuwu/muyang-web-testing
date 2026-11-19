@@ -19,6 +19,10 @@
     integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
   <!-- Stylesheet -->
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -570,49 +574,39 @@
 
         <div class="radar-map-wrapper">
 
-          <!-- Radar Map Visual Container -->
-          <div class="radar-canvas-container" id="radarCanvas">
-            <!-- Street Overlays -->
-            <div class="street-line street-kalimantan">Jl. Kalimantan (Bundaran UNEJ) &rarr;</div>
-            <div class="street-line street-jawa">&uarr; Jl. Jawa (Pintu Belakang)</div>
-            <div class="street-line street-mastrip">Jl. Mastrip &rarr;</div>
-            <div class="street-line street-riau">&uarr; Jl. Riau</div>
-
-            <!-- University Center Marker -->
-            <div class="campus-hub-marker">
-              <i class="fa-solid fa-building-columns"></i>
-              <span>KAMPUS UNEJ</span>
-            </div>
-
-            <!-- Fasilkom Marker -->
-            <div class="fasilkom-hub-marker">
-              <i class="fa-solid fa-laptop-code"></i>
-              <span>FASILKOM</span>
-            </div>
-
-            <!-- Dynamic Pins -->
-            <div id="radarPinsContainer">
-              <!-- Pins dynamically placed here by app.js -->
-            </div>
-
-            <!-- Map Compass -->
-            <div class="map-compass" title="Arah Utara">
-              <div class="compass-circle">
-                <i class="fa-solid fa-location-arrow"></i>
+          <!-- Interactive Leaflet Map Viewport -->
+          <div class="radar-map-viewport">
+            <!-- Quick Area Switcher Header Bar -->
+            <div class="map-quick-toolbar">
+              <div class="map-area-chips" id="mapAreaChips">
+                <button class="map-chip-btn active" data-area="all" type="button">
+                  <i class="fa-solid fa-layer-group"></i> Semua Area
+                </button>
+                <button class="map-chip-btn" data-area="Jl. Kalimantan" type="button">Jl. Kalimantan</button>
+                <button class="map-chip-btn" data-area="Jl. Jawa" type="button">Jl. Jawa</button>
+                <button class="map-chip-btn" data-area="Jl. Mastrip" type="button">Jl. Mastrip</button>
+                <button class="map-chip-btn" data-area="Jl. Riau" type="button">Jl. Riau</button>
+                <button class="map-chip-btn" data-area="Jl. Karimata" type="button">Jl. Karimata</button>
+                <button class="map-chip-btn" data-area="Jl. Danau Toba" type="button">Jl. Danau Toba</button>
               </div>
-              <span class="compass-label">U</span>
+              <button class="map-recenter-btn" id="mapRecenterBtn" type="button" title="Pusatkan ke Kampus UNEJ">
+                <i class="fa-solid fa-location-crosshairs"></i> Kampus UNEJ
+              </button>
             </div>
 
-            <!-- Map Legend -->
-            <div class="map-legend">
-              <div class="legend-item">
-                <span class="legend-dot campus"></span> Kampus UNEJ
+            <!-- Leaflet Map Container Element -->
+            <div id="radarMapContainer" class="radar-leaflet-map" role="region" aria-label="Peta Interaktif Kuliner Kampus UNEJ"></div>
+
+            <!-- Floating Map Legend -->
+            <div class="map-floating-legend">
+              <div class="legend-chip">
+                <span class="legend-dot campus"></span> Pusat UNEJ
               </div>
-              <div class="legend-item">
-                <span class="legend-dot featured"></span> UMKM Featured
+              <div class="legend-chip">
+                <span class="legend-dot featured"></span> Featured UMKM
               </div>
-              <div class="legend-item">
-                <span class="legend-dot regular"></span> Warung Biasa
+              <div class="legend-chip">
+                <span class="legend-dot regular"></span> Mitra Muyang
               </div>
             </div>
           </div>
@@ -620,11 +614,11 @@
           <!-- Radar Sidebar Info -->
           <div class="radar-sidebar-info">
             <div>
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                <span class="topbar-badge" style="background: var(--primary-100); color: var(--primary-900);">
+              <div class="sidebar-top-meta">
+                <span class="topbar-badge">
                   <i class="fa-solid fa-crosshairs"></i> Spot Terpilih
                 </span>
-                <span style="font-size: 0.75rem; color: var(--neutral-500); font-weight: 600;">Klik pin di peta</span>
+                <span class="sidebar-click-hint"><i class="fa-solid fa-arrow-pointer"></i> Klik pin di peta</span>
               </div>
 
               <div id="radarDetailContainer">
@@ -633,9 +627,9 @@
             </div>
 
             <div class="radar-tips-card">
-              <i class="fa-solid fa-circle-info" style="color: var(--accent-500); font-size: 1rem; margin-top: 2px;"></i>
+              <i class="fa-solid fa-circle-info" style="color: var(--accent-600); font-size: 1.1rem; margin-top: 2px; flex-shrink: 0;"></i>
               <div>
-                <strong>Tips Maba:</strong> Pin emas menandakan UMKM Featured Partner dengan porsi teruji dan harga menu mahasiswa terjamin stabil.
+                <strong>Tips Maba:</strong> Klik pin warung di peta untuk melihat harga menu, rute jalan Google Maps, dan hubungi langsung via WhatsApp.
               </div>
             </div>
           </div>
@@ -1144,6 +1138,9 @@
 
   <!-- Supabase CDN Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Leaflet Map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <!-- Scripts -->
   <script src="data.js"></script>
   <script src="app.js"></script>
