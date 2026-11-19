@@ -1703,6 +1703,35 @@ textarea {
   font-size: 0.72rem;
 }
 
+.pin-text-name {
+  font-weight: 700;
+  max-width: 105px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pin-text-price {
+  font-weight: 800;
+  color: var(--accent-600);
+  background: var(--accent-100);
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  font-size: 0.68rem;
+  letter-spacing: -0.2px;
+}
+
+.leaflet-warung-pin.featured .pin-text-price {
+  background: #fde68a;
+  color: #78350f;
+}
+
+.leaflet-warung-pin.active .pin-text-price,
+.leaflet-warung-pin.featured.active .pin-text-price {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
 .leaflet-warung-pin.featured .pin-icon-tag {
   color: var(--gold-600);
 }

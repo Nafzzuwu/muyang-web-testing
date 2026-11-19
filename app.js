@@ -1917,22 +1917,22 @@ async function handleReviewSubmit(e) {
 }
 
 // ============================================================
-// REAL CAMPUS RADAR MAP (Leaflet.js + CartoDB Voyager)
+// REAL CAMPUS RADAR MAP (Leaflet.js + OpenStreetMap - 100% Free / No API Key)
 // ============================================================
-const UNEJ_CENTER = [-8.1695, 113.7208];
-const DEFAULT_MAP_ZOOM = 16;
+const UNEJ_CENTER = [-8.1712, 113.7212];
+const DEFAULT_MAP_ZOOM = 16.5;
 let leafletMap = null;
 let leafletMarkers = {};
 let campusHubMarker = null;
 
 const AREA_COORDINATES = {
-  'all': { center: [-8.1695, 113.7208], zoom: 15.5 },
-  'Jl. Kalimantan': { center: [-8.1698, 113.7218], zoom: 16.5 },
-  'Jl. Jawa': { center: [-8.1730, 113.7200], zoom: 16.5 },
-  'Jl. Mastrip': { center: [-8.1755, 113.7248], zoom: 16.5 },
-  'Jl. Riau': { center: [-8.1672, 113.7190], zoom: 16.5 },
-  'Jl. Karimata': { center: [-8.1742, 113.7252], zoom: 16.5 },
-  'Jl. Danau Toba': { center: [-8.1788, 113.7268], zoom: 16.5 }
+  'all': { center: [-8.1712, 113.7212], zoom: 16 },
+  'Jl. Kalimantan': { center: [-8.1698, 113.7220], zoom: 17 },
+  'Jl. Jawa': { center: [-8.1732, 113.7202], zoom: 17 },
+  'Jl. Mastrip': { center: [-8.1758, 113.7248], zoom: 17 },
+  'Jl. Riau': { center: [-8.1672, 113.7190], zoom: 17 },
+  'Jl. Karimata': { center: [-8.1742, 113.7252], zoom: 17 },
+  'Jl. Danau Toba': { center: [-8.1788, 113.7268], zoom: 17 }
 };
 
 function initLeafletMap() {
@@ -1962,11 +1962,10 @@ function initLeafletMap() {
   // Add custom zoom control at bottom-right
   L.control.zoom({ position: 'bottomright' }).addTo(leafletMap);
 
-  // CartoDB Voyager Tiles (Clean, warm, modern, high contrast for campus landmarks)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  // OpenStreetMap standard tiles (100% Free, No API Key, Clean & Detailed campus streets)
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    subdomains: 'abcd',
-    attribution: '&copy; OpenStreetMap &copy; CARTO'
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
   }).addTo(leafletMap);
 
   // Add Campus Center Landmark
@@ -2032,20 +2031,24 @@ function renderRadarMapPins() {
       const isWithinBudget = item.minPrice <= state.maxBudget;
       const opacity = isWithinBudget ? 1 : 0.45;
 
+      const shortName = item.name.length > 15 ? item.name.substring(0, 14) + '…' : item.name;
+      const priceText = item.minPrice > 0 ? formatIDR(item.minPrice) : 'Menu Murah';
+
       const html = `
         <div class="leaflet-warung-pin ${item.isFeatured ? 'featured' : ''} ${isSelected ? 'active' : ''}"
              style="opacity: ${opacity};"
-             title="${item.name} - Mulai ${formatIDR(item.minPrice)}">
+             title="${item.name} - Mulai ${priceText}">
           <i class="fa-solid ${item.isFeatured ? 'fa-star' : 'fa-utensils'} pin-icon-tag"></i>
-          <span>${formatIDR(item.minPrice)}</span>
+          <span class="pin-text-name">${shortName}</span>
+          <span class="pin-text-price">${priceText}</span>
         </div>
       `;
 
       const customIcon = L.divIcon({
         className: 'leaflet-warung-marker',
         html: html,
-        iconSize: [95, 30],
-        iconAnchor: [47, 15]
+        iconSize: [160, 32],
+        iconAnchor: [80, 16]
       });
 
       const marker = L.marker([lat, lng], {
