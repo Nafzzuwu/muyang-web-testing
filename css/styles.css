@@ -3113,7 +3113,36 @@ textarea {
   }
 
   .pricing-grid {
-    grid-template-columns: minmax(0, 1fr);
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 14px;
+    overflow-x: auto;
+    overflow-y: visible;
+    margin: 0 -20px;
+    padding: 14px 20px 24px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-400) var(--neutral-100);
+  }
+
+  .pricing-card {
+    flex: 0 0 min(86vw, 340px);
+    scroll-snap-align: start;
+  }
+
+  .pricing-grid::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .pricing-grid::-webkit-scrollbar-track {
+    background: var(--neutral-100);
+    border-radius: var(--radius-full);
+  }
+
+  .pricing-grid::-webkit-scrollbar-thumb {
+    background: var(--accent-400);
+    border-radius: var(--radius-full);
   }
 
   .footer-grid {
