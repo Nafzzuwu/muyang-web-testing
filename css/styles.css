@@ -1,3 +1,8 @@
+/* ===================================================================
+   MUYANG (MURAH KENYANG) - Editorial Culinary Directory Stylesheet v4
+   Warm Parchment, Roasted Burgundy & Terracotta + Ambient Motion
+   =================================================================== */
+
 :root {
   /* Core Brand Palette */
   --primary-950: #1D0908;
@@ -346,7 +351,7 @@ textarea {
 .brand-text p {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 0.7rem;
   font-weight: 800;
   color: var(--accent-600);
@@ -362,11 +367,12 @@ textarea {
   height: 2px;
   border-radius: 2px;
   background: var(--accent-500);
-  transition: width 0.3s var(--ease-out-expo);
+  transform-origin: left center;
+  transition: transform 0.3s var(--ease-out-expo);
 }
 
 .brand-logo:hover .brand-accent-bar {
-  width: 22px;
+  transform: scaleX(1.35);
 }
 
 .nav-links {
@@ -2376,20 +2382,21 @@ textarea {
 }
 
 .tier-features li {
+  position: relative;
+  padding-left: 22px;
   font-size: 0.86rem;
   color: var(--neutral-700);
   margin-bottom: 10px;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  line-height: 1.45;
+  line-height: 1.48;
+  text-align: left;
 }
 
 .tier-features li i {
+  position: absolute;
+  left: 0;
+  top: 4px;
   color: var(--success-600);
-  margin-top: 4px;
   font-size: 0.8rem;
-  flex-shrink: 0;
 }
 
 /* ===================================================================
@@ -2570,7 +2577,7 @@ textarea {
   width: 48px;
   height: 48px;
   background: var(--primary-900);
-  color: var(--gold-400);
+  color: #FFFFFF;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -3199,8 +3206,34 @@ textarea {
     padding: 54px 0 64px;
   }
 
+  .planner-container-card {
+    padding: 20px 16px;
+    border-radius: 20px;
+  }
+
+  .planner-control-box {
+    padding: 16px;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  /* Compact 3-Column Row for Meal Planner Stats on Mobile */
   .planner-stats-result {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .planner-stat-card {
+    padding: 12px 6px;
+  }
+
+  .stat-val-highlight {
+    font-size: 1.02rem;
+  }
+
+  .stat-label-sub {
+    font-size: 0.62rem;
+    letter-spacing: 0.2px;
   }
 
   /* Mobile Swipe Cue */
@@ -3213,6 +3246,19 @@ textarea {
     font-weight: 700;
     color: var(--accent-600);
     margin-bottom: 10px;
+  }
+
+  .planner-timeline-heading {
+    justify-content: space-between;
+    font-size: 0.98rem;
+  }
+
+  .planner-timeline-heading::after {
+    content: 'Geser →';
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent-600);
+    margin-left: auto;
   }
 
   /* Horizontal Carousel on Mobile for Culinary Cards */
@@ -3239,8 +3285,57 @@ textarea {
     min-width: 100% !important;
   }
 
+  /* Horizontal Carousel on Mobile for Susunan Menu 3 Waktu Makan */
+  .meals-timeline-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 12px;
+    padding: 4px 2px 14px;
+    scrollbar-width: thin;
+  }
+
+  .meal-slot-card {
+    flex: 0 0 84% !important;
+    max-width: 305px !important;
+    min-width: 250px !important;
+    scroll-snap-align: start;
+  }
+
+  /* Horizontal Carousel on Mobile for Paket Gabung Warung UMKM */
+  .pricing-section .section-header::after {
+    content: 'Geser paket ke samping →';
+    display: inline-flex;
+    align-items: center;
+    margin-top: 12px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--accent-600);
+    background: var(--accent-100);
+    padding: 5px 13px;
+    border-radius: var(--radius-full);
+  }
+
   .pricing-grid {
-    grid-template-columns: 1fr;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 14px;
+    padding: 6px 2px 18px;
+    scrollbar-width: thin;
+  }
+
+  .pricing-card {
+    flex: 0 0 84% !important;
+    max-width: 315px !important;
+    min-width: 265px !important;
+    scroll-snap-align: start;
   }
 
   .footer-grid {
