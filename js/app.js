@@ -419,7 +419,17 @@ const DB = {
   },
 
   async runAdminAction(action, regId, warung) {
-    const { data, error } = await this.adminAction(action, regId, warung);
+    const labels = {
+      approve: 'Menyetujui pendaftaran...',
+      reject: 'Menolak pendaftaran...',
+      activate: 'Mengaktifkan mitra...',
+      deactivate: 'Menonaktifkan kemitraan...',
+      reactivate: 'Mengaktifkan kembali mitra...'
+    };
+    const { data, error } = await withLoading(
+      () => this.adminAction(action, regId, warung),
+      labels[action] || 'Memproses aksi admin...'
+    );
     if (error) throw error;
     return data;
   },
@@ -725,6 +735,7 @@ async function handleLoginMahasiswa(e) {
 
   const btn = e.target.querySelector('[type=submit]');
   if (btn) { btn.disabled = true; btn.textContent = 'Memverifikasi...'; }
+  setLoading(true, 'Memverifikasi akun...');
 
   try {
     const { data, error } = await DB.login(nim, password, 'mahasiswa');
@@ -741,6 +752,7 @@ async function handleLoginMahasiswa(e) {
     showToast('Gagal terhubung ke database.', 'error');
     console.warn('[AUTH] Login mahasiswa error:', err);
   } finally {
+    setLoading(false);
     if (btn) { btn.disabled = false; btn.textContent = 'Masuk'; }
   }
 }
@@ -753,6 +765,7 @@ async function handleLoginUmkm(e) {
 
   const btn = e.target.querySelector('[type=submit]');
   if (btn) { btn.disabled = true; btn.textContent = 'Memverifikasi...'; }
+  setLoading(true, 'Memverifikasi akun UMKM...');
 
   try {
     const { data, error } = await DB.login(email, password, 'umkm');
@@ -769,6 +782,7 @@ async function handleLoginUmkm(e) {
     showToast('Gagal terhubung ke database.', 'error');
     console.warn('[AUTH] Login UMKM error:', err);
   } finally {
+    setLoading(false);
     if (btn) { btn.disabled = false; btn.textContent = 'Masuk'; }
   }
 }
@@ -781,6 +795,7 @@ async function handleLoginAdmin(e) {
 
   const btn = e.target.querySelector('[type=submit]');
   if (btn) { btn.disabled = true; btn.textContent = 'Memverifikasi...'; }
+  setLoading(true, 'Memverifikasi akses admin...');
 
   try {
     const { data, error } = await DB.login(username, password, 'admin');
@@ -797,6 +812,7 @@ async function handleLoginAdmin(e) {
     showToast('Gagal terhubung ke database.', 'error');
     console.warn('[AUTH] Login admin error:', err);
   } finally {
+    setLoading(false);
     if (btn) { btn.disabled = false; btn.textContent = 'Masuk'; }
   }
 }
@@ -836,6 +852,7 @@ async function handleForgotPassword(e, role) {
   const btn = e.target.querySelector('[type=submit]');
   const btnLabel = btn ? btn.innerHTML : '';
   if (btn) { btn.disabled = true; btn.textContent = 'Memverifikasi...'; }
+  setLoading(true, 'Memverifikasi data dan memperbarui password...');
 
   try {
     const identifier = isMhs
@@ -860,6 +877,7 @@ async function handleForgotPassword(e, role) {
     showToast('Terjadi kesalahan. Coba lagi.', 'error');
     console.warn('[AUTH] Forgot password error:', err);
   } finally {
+    setLoading(false);
     if (btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
   }
 }
@@ -877,6 +895,7 @@ async function handleRegisterMahasiswa(e) {
 
   const btn = e.target.querySelector('[type=submit]');
   if (btn) { btn.disabled = true; btn.textContent = 'Mendaftarkan...'; }
+  setLoading(true, 'Membuat akun mahasiswa...');
 
   try {
     const { data, error } = await DB.registerMahasiswa(nim, nama, fakultas, password);
@@ -894,6 +913,7 @@ async function handleRegisterMahasiswa(e) {
     showToast('Terjadi kesalahan. Coba lagi.', 'error');
     console.warn('[AUTH] Register mahasiswa error:', err);
   } finally {
+    setLoading(false);
     if (btn) { btn.disabled = false; btn.textContent = 'Daftar Sekarang'; }
   }
 }
@@ -922,6 +942,7 @@ async function handleRegisterUmkm(e) {
 
   const btn = e.target.querySelector('[type=submit]');
   if (btn) { btn.disabled = true; btn.textContent = 'Mendaftarkan...'; }
+  setLoading(true, 'Mengirim pendaftaran UMKM...');
 
   try {
     const { data, error } = await DB.registerUmkm({
@@ -945,6 +966,7 @@ async function handleRegisterUmkm(e) {
     showToast('Terjadi kesalahan. Coba lagi.', 'error');
     console.warn('[AUTH] Register UMKM error:', err);
   } finally {
+    setLoading(false);
     if (btn) { btn.disabled = false; btn.textContent = 'Daftar Mitra Sekarang'; }
   }
 }
@@ -1045,7 +1067,7 @@ async function renderMahasiswaDashboard() {
 window.removeDashBookmark = async function (warungId) {
   const session = LS.getSession();
   if (!session || session.role !== 'mahasiswa') return;
-  await DB.removeBookmark(session.id, warungId);
+  await withLoading(() => DB.removeBookmark(session.id, warungId), 'Menghapus dari simpanan...');
   await renderMahasiswaDashboard();
   renderCulinaryGrid();
   showToast('Warung dihapus dari simpanan favorit.');
@@ -1054,7 +1076,7 @@ window.removeDashBookmark = async function (warungId) {
 window.deleteMahasiswaReview = async function (reviewId) {
   const session = LS.getSession();
   if (!session || session.role !== 'mahasiswa') return;
-  await DB.deleteReview(reviewId);
+  await withLoading(() => DB.deleteReview(reviewId), 'Menghapus ulasan...');
   await renderMahasiswaDashboard();
   // Refresh warung cache for updated rating
   await refreshWarungsCache();
@@ -1199,7 +1221,7 @@ async function renderUmkmMenuList(warung) {
 }
 
 window.toggleMenuAvailability = async function (menuId, isAvailable) {
-  await DB.updateMenuAvailability(menuId, isAvailable);
+  await withLoading(() => DB.updateMenuAvailability(menuId, isAvailable), 'Memperbarui ketersediaan menu...');
   await refreshWarungsCache();
   renderCulinaryGrid();
 };
@@ -1232,7 +1254,7 @@ async function renderUmkmIncomingReviews(warungId) {
 window.deleteUmkmMenu = async function (menuId) {
   const session = LS.getSession();
   if (!session || session.role !== 'umkm') return;
-  await DB.deleteMenu(menuId);
+  await withLoading(() => DB.deleteMenu(menuId), 'Menghapus menu...');
   // Refresh warung data
   const warung = await DB.getWarungByOwnerId(session.id);
   if (warung) await renderUmkmMenuList(warung);
@@ -1587,7 +1609,10 @@ window.adminReactivateUmkm = function (regId, warungName) {
 };
 
 window.adminDeleteReview = async function (reviewId) {
-  const { error } = await DB.deleteReview(reviewId, LS.getSession()?.token);
+  const { error } = await withLoading(
+    () => DB.deleteReview(reviewId, LS.getSession()?.token),
+    'Menghapus ulasan...'
+  );
   if (error) { showToast('Gagal menghapus ulasan: ' + error.message, 'error'); return; }
   await refreshWarungsCache();
   renderCulinaryGrid();
@@ -1786,6 +1811,7 @@ window.saveUmkmLocation = async function () {
   if (!warung) { showToast('Data warung tidak ditemukan.', 'error'); return; }
   const btn = document.getElementById('umkmSaveLocationBtn');
   if (btn) btn.disabled = true;
+  setLoading(true, 'Menyimpan lokasi warung...');
   try {
     await saveWarungLocation(warung.id, session.id, ll.lat, ll.lng);
     umkmLocWarung = await DB.getWarungByOwnerId(session.id);
@@ -1794,6 +1820,7 @@ window.saveUmkmLocation = async function () {
     console.warn('[UMKM] Save location error:', e);
     showToast('Gagal menyimpan lokasi: ' + (e?.message || 'Coba lagi.'), 'error');
   } finally {
+    setLoading(false);
     if (btn) btn.disabled = false;
   }
 };
@@ -1817,7 +1844,10 @@ function applyAdminLocInitial() {
 
 window.adminEditCoords = async function (regId, userId) {
   if (!supabaseClient) return;
-  const { data: reg, error } = await DB.getAdminRegistration(LS.getSession()?.token, regId);
+  const { data: reg, error } = await withLoading(
+    () => DB.getAdminRegistration(LS.getSession()?.token, regId),
+    'Memuat data pendaftar...'
+  );
   if (error) { showToast('Gagal memuat data pendaftaran.', 'error'); return; }
   if (!reg) { showToast('Data pendaftaran tidak ditemukan.', 'error'); return; }
 
@@ -1865,6 +1895,7 @@ window.saveAdminLocation = async function () {
   if (err) { showToast(err, 'error'); return; }
   const btn = document.getElementById('adminLocSaveBtn');
   if (btn) btn.disabled = true;
+  setLoading(true, 'Menyimpan koreksi lokasi...');
   try {
     const { regId } = adminLocTarget;
     const lat = +pt.lat.toFixed(6), lng = +pt.lng.toFixed(6);
@@ -1878,6 +1909,7 @@ window.saveAdminLocation = async function () {
     console.warn('[Admin] Save coords error:', e);
     showToast('Gagal menyimpan titik: ' + (e?.message || 'Coba lagi.'), 'error');
   } finally {
+    setLoading(false);
     if (btn) btn.disabled = false;
   }
 };
@@ -2359,6 +2391,7 @@ async function handleReviewSubmit(e) {
 
   const btn = e.target.querySelector('[type=submit]');
   if (btn) { btn.disabled = true; btn.textContent = 'Mengirim...'; }
+  setLoading(true, 'Mengirim ulasan...');
 
   try {
     const { error } = await DB.insertReview({
@@ -2391,6 +2424,7 @@ async function handleReviewSubmit(e) {
     showToast('Terjadi kesalahan. Coba lagi.', 'error');
     console.warn('[Review] Submit error:', err);
   } finally {
+    setLoading(false);
     if (btn) { btn.disabled = false; btn.textContent = 'Kirim Ulasan'; }
   }
 }
@@ -3118,6 +3152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const btn = e.target.querySelector('[type=submit]');
     if (btn) { btn.disabled = true; btn.textContent = 'Menyimpan...'; }
+    setLoading(true, 'Menyimpan menu...');
 
     try {
       // Upload foto menu jika ada
@@ -3153,6 +3188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (menuPhotoName) menuPhotoName.textContent = '';
       showToast(`Menu "${name}" berhasil ditambahkan${imageUrl ? ' dengan foto' : ''}!`);
     } finally {
+      setLoading(false);
       if (btn) { btn.disabled = false; btn.textContent = 'Tambah Menu'; }
     }
   });
@@ -3207,6 +3243,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const statusEl = document.getElementById('uploadWarungStatus');
     const btn = document.getElementById('uploadWarungPhotoBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'Mengupload...'; }
+    setLoading(true, 'Mengunggah foto warung...');
     if (statusEl) statusEl.textContent = '';
 
     try {
@@ -3224,6 +3261,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         showToast('Foto warung berhasil diupload dan tampil di katalog!');
       }
     } finally {
+      setLoading(false);
       if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-upload-alt"></i> Simpan Foto Warung'; }
     }
   });

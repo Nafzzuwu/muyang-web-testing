@@ -3818,3 +3818,379 @@ textarea {
   background: none;
   border: none;
 }
+
+/* ================================================================
+   MUYANG VISUAL REFRESH
+   Warm editorial utility: calm surfaces, strong hierarchy, useful motion
+   ================================================================ */
+:root {
+  --ink: #231916;
+  --ink-soft: #65544e;
+  --paper: #fffaf4;
+  --paper-deep: #f2e8dc;
+  --line-warm: rgba(86, 49, 38, 0.14);
+  --accent-deep: #b84716;
+  --shadow-soft: 0 12px 32px rgba(65, 36, 24, 0.08);
+  --shadow-float: 0 24px 60px rgba(55, 26, 18, 0.16);
+}
+
+body {
+  background:
+    radial-gradient(circle at 8% 4%, rgba(241, 154, 76, 0.11), transparent 28rem),
+    radial-gradient(circle at 94% 22%, rgba(112, 42, 31, 0.06), transparent 26rem),
+    var(--paper);
+  color: var(--ink);
+}
+
+::selection {
+  background: var(--gold-400);
+  color: var(--primary-950);
+}
+
+.main-header {
+  background: rgba(255, 250, 244, 0.86);
+  border-bottom-color: var(--line-warm);
+  box-shadow: 0 5px 24px rgba(65, 36, 24, 0.06);
+}
+
+.navbar {
+  height: 78px;
+}
+
+.brand-logo {
+  gap: 10px;
+}
+
+.brand-icon {
+  border-radius: 15px;
+  box-shadow: 0 8px 18px rgba(74, 25, 22, 0.2);
+}
+
+.brand-text h1 {
+  letter-spacing: 1.5px;
+}
+
+.nav-item a {
+  padding: 9px 13px;
+  font-size: 0.84rem;
+  letter-spacing: -0.1px;
+}
+
+.nav-item a i {
+  color: var(--accent-500);
+  font-size: 0.78rem;
+}
+
+.btn {
+  min-height: 42px;
+  border-radius: 13px;
+  letter-spacing: -0.1px;
+}
+
+.btn-primary,
+.btn-accent {
+  box-shadow: 0 8px 18px rgba(74, 25, 22, 0.16);
+}
+
+.btn-primary:hover,
+.btn-accent:hover {
+  transform: translateY(-2px);
+}
+
+.hero-section {
+  padding: 54px 0 88px;
+  background: transparent;
+}
+
+.hero-banner {
+  min-height: 560px;
+  padding: 54px 56px;
+  border-radius: 30px;
+  grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+  gap: 56px;
+  background:
+    linear-gradient(120deg, rgba(40, 12, 9, 0.98), rgba(93, 31, 24, 0.95)),
+    var(--primary-950);
+  box-shadow: var(--shadow-float);
+}
+
+.hero-banner::before {
+  width: 520px;
+  height: 520px;
+  opacity: 0.55;
+}
+
+.hero-content {
+  align-self: center;
+}
+
+.hero-badge-row {
+  margin-bottom: 24px;
+}
+
+.pitch-tag,
+.location-tag {
+  font-size: 0.72rem;
+  letter-spacing: 0.8px;
+}
+
+.hero-title {
+  font-size: clamp(3.8rem, 7vw, 6.4rem);
+  letter-spacing: -4px;
+  line-height: 0.92;
+}
+
+.hero-subtitle-tag {
+  margin-top: 15px;
+  font-size: 1.12rem;
+  letter-spacing: 2px;
+}
+
+.hero-desc {
+  max-width: 520px;
+  margin-top: 25px;
+  font-size: 0.98rem;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.hero-stats-mini {
+  margin-top: 34px;
+  background: rgba(20, 4, 3, 0.3);
+  border-color: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+}
+
+.stat-mini-num {
+  font-size: 1.2rem;
+}
+
+.hero-interactive-card {
+  align-self: center;
+  padding: 30px;
+  border-radius: 22px;
+  box-shadow: 0 22px 42px rgba(0, 0, 0, 0.28);
+}
+
+.card-header-budget h3 {
+  font-size: 1.12rem;
+}
+
+.budget-pulse {
+  border: 1px solid var(--success-500);
+  background: transparent;
+  font-size: 0.68rem;
+}
+
+.budget-pill {
+  border-radius: 13px;
+  transition: transform var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.budget-pill:hover {
+  transform: translateY(-3px);
+}
+
+.section-header {
+  max-width: 760px;
+  margin-bottom: 32px;
+}
+
+.section-pill {
+  background: var(--accent-100);
+  color: var(--accent-deep);
+  border-color: rgba(184, 71, 22, 0.18);
+  font-size: 0.68rem;
+}
+
+.section-title {
+  max-width: 700px;
+  font-size: clamp(2rem, 4vw, 3rem);
+  letter-spacing: -1.4px;
+}
+
+.section-subtitle {
+  max-width: 650px;
+  font-size: 0.94rem;
+  color: var(--ink-soft);
+}
+
+.catalogue-section,
+.map-radar-section,
+.meal-planner-section,
+.pricing-section {
+  position: relative;
+  padding-top: 92px;
+  padding-bottom: 104px;
+}
+
+.catalogue-section {
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.filter-bar-card {
+  padding: 20px;
+  border: 1px solid var(--line-warm);
+  border-radius: 22px;
+  box-shadow: var(--shadow-soft);
+}
+
+.search-field,
+.filter-select,
+.form-input,
+.form-select-ctrl,
+.form-textarea {
+  border-color: rgba(86, 49, 38, 0.18);
+  border-radius: 12px;
+  background: #fffdf9;
+}
+
+.search-field:focus,
+.filter-select:focus,
+.form-input:focus,
+.form-select-ctrl:focus,
+.form-textarea:focus {
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.11);
+}
+
+.chip-btn,
+.map-chip-btn {
+  border-radius: 10px;
+  border-color: rgba(86, 49, 38, 0.15);
+}
+
+.culinary-card {
+  border: 1px solid var(--line-warm);
+  border-radius: 20px;
+  box-shadow: var(--shadow-soft);
+  background: rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+}
+
+.culinary-card:hover {
+  transform: translateY(-7px);
+  box-shadow: var(--shadow-float);
+  border-color: rgba(234, 88, 12, 0.3);
+}
+
+.culinary-card .card-img {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+}
+
+.culinary-card:hover .card-img {
+  transform: scale(1.06);
+  filter: saturate(1.08);
+}
+
+.map-radar-section {
+  background: linear-gradient(180deg, #fffaf4, #f5eadf 52%, #fffaf4);
+}
+
+.radar-map-wrapper {
+  border: 1px solid var(--line-warm);
+  border-radius: 24px;
+  box-shadow: var(--shadow-float);
+}
+
+.radar-sidebar-info {
+  background: rgba(255, 253, 249, 0.95);
+}
+
+.pricing-section {
+  background: #f5eadf;
+}
+
+.pricing-card {
+  border-color: var(--line-warm);
+  border-radius: 22px;
+  box-shadow: var(--shadow-soft);
+  padding: 30px 26px;
+}
+
+.pricing-card:hover {
+  transform: translateY(-8px);
+}
+
+.pricing-card.featured {
+  border-width: 2px;
+  box-shadow: 0 18px 40px rgba(184, 71, 22, 0.16);
+}
+
+.pricing-card.featured::before {
+  top: -11px;
+  letter-spacing: 0.8px;
+}
+
+.modal-backdrop {
+  background: rgba(35, 17, 12, 0.58);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.modal-card {
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 24px;
+  box-shadow: 0 30px 90px rgba(35, 17, 12, 0.28);
+  animation: modalRise 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes modalRise {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-close-btn {
+  border-radius: 10px;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.modal-close-btn:hover {
+  transform: rotate(5deg);
+}
+
+.dashboard-view .container {
+  animation: pageEnter 0.45s ease both;
+}
+
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.main-footer {
+  padding-top: 72px;
+  border-top-width: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar { height: 68px; }
+  .hero-section { padding: 28px 0 58px; }
+  .hero-banner {
+    min-height: 0;
+    padding: 32px 22px;
+    border-radius: 22px;
+    gap: 30px;
+  }
+  .hero-title { font-size: 3.8rem; letter-spacing: -2.5px; }
+  .hero-desc { margin-top: 18px; }
+  .hero-stats-mini { gap: 9px; padding: 14px; }
+  .hero-interactive-card { padding: 22px 18px; }
+  .catalogue-section,
+  .map-radar-section,
+  .meal-planner-section,
+  .pricing-section { padding-top: 64px; padding-bottom: 72px; }
+  .section-header { margin-bottom: 24px; }
+  .section-title { font-size: 2rem; letter-spacing: -0.8px; }
+  .filter-bar-card { padding: 14px; border-radius: 17px; }
+  .pricing-grid { padding-top: 20px; }
+  .pricing-card { flex-basis: min(84vw, 330px); }
+}
