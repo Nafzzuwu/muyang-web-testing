@@ -55,8 +55,7 @@ MUYANG_WEBPAGE/
 ├── css/
 │   └── styles.css        # Desain responsif, tema burgundy & parchment
 ├── js/
-│   ├── app.js            # Logika filter, radar peta, kalkulator, & modal
-│   └── data.js           # Konstanta statis (data warung di Supabase)
+│   └── app.js             # Logika aplikasi, Supabase, radar peta, & modal
 └── assets/
     └── icons/            # Favicon & ikon aplikasi
 ```
@@ -71,4 +70,3 @@ MUYANG_WEBPAGE/
    python -m http.server 8080
    ```
    Lalu buka di browser: `http://localhost:8080`
-

@@ -124,22 +124,6 @@ textarea {
 }
 
 /* Header & Navigation */
-.header-topbar {
-  background: var(--primary-950);
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 0.825rem;
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.topbar-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
 .topbar-badge {
   display: inline-flex;
   align-items: center;
@@ -152,18 +136,6 @@ textarea {
   font-size: 0.75rem;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-}
-
-.topbar-cohort {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.topbar-cohort span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
 }
 
 .main-header {
@@ -320,11 +292,6 @@ textarea {
 .btn-sm {
   padding: 6px 12px;
   font-size: 0.825rem;
-}
-
-.btn-lg {
-  padding: 14px 26px;
-  font-size: 1rem;
 }
 
 .mobile-menu-btn {
@@ -733,50 +700,6 @@ textarea {
   font-size: 1.05rem;
   color: var(--neutral-600);
   line-height: 1.65;
-}
-
-/* Mode Switcher / Tab Navigation */
-.app-tabs-container {
-  padding: 24px 0 0;
-}
-
-.app-mode-switcher {
-  display: flex;
-  justify-content: center;
-  background: var(--neutral-200);
-  padding: 6px;
-  border-radius: var(--radius-full);
-  max-width: 580px;
-  margin: 0 auto;
-  gap: 4px;
-}
-
-.tab-btn {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border-radius: var(--radius-full);
-  border: none;
-  background: transparent;
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--neutral-700);
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.tab-btn.active {
-  background: var(--primary-900);
-  color: #ffffff;
-  box-shadow: 0 4px 10px rgba(74, 25, 22, 0.25);
-}
-
-.tab-btn:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.5);
-  color: var(--neutral-900);
 }
 
 /* ===================================================================
@@ -2045,225 +1968,7 @@ textarea {
   color: #78350f;
 }
 
-/* ===================================================================
-   SECTION: PITCH DECK & DIGITAL BUSINESS MODEL HUB
-   (Slide 1 - 9 Showcase)
-   =================================================================== */
-.pitchdeck-section {
-  padding: 70px 0;
-  background: #ffffff;
-  border-top: 2px solid var(--neutral-200);
-}
-
-.deck-nav-tabs {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 36px;
-}
-
-.deck-tab-btn {
-  padding: 10px 18px;
-  border-radius: var(--radius-full);
-  border: 1.5px solid var(--neutral-200);
-  background: var(--neutral-50);
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--neutral-700);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.deck-tab-btn.active {
-  background: var(--primary-900);
-  border-color: var(--primary-900);
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(74, 25, 22, 0.2);
-}
-
-.deck-panel {
-  display: none;
-  animation: fadeIn 0.3s ease forwards;
-}
-
-.deck-panel.active {
-  display: block;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* Slide 1: Team Showcase */
-.team-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  margin-top: 24px;
-}
-
-.team-card {
-  background: var(--bg-surface-soft);
-  border-radius: var(--radius-xl);
-  padding: 32px 24px;
-  text-align: center;
-  border: 1px solid var(--neutral-200);
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition-base);
-  position: relative;
-  overflow: hidden;
-}
-
-.team-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--primary-600);
-}
-
-.team-avatar-circle {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  margin: 0 auto 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.8rem;
-  color: #fff;
-  font-weight: 800;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.team-name {
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: var(--primary-900);
-  margin-bottom: 4px;
-}
-
-.team-nim {
-  display: inline-block;
-  background: var(--primary-100);
-  color: var(--primary-800);
-  padding: 3px 12px;
-  border-radius: var(--radius-full);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  margin-bottom: 12px;
-}
-
-.team-role {
-  font-size: 0.875rem;
-  color: var(--neutral-600);
-  font-weight: 600;
-}
-
-/* Slide 2: Problem & Impact */
-.problem-grid-deck {
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 30px;
-  align-items: stretch;
-}
-
-.problem-card-dark {
-  background: linear-gradient(135deg, var(--primary-950), var(--primary-900));
-  border-radius: var(--radius-xl);
-  padding: 36px;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.problem-badge-pill {
-  background: rgba(234, 88, 12, 0.3);
-  color: #fdba74;
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
-  font-size: 0.78rem;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-
-.impact-split-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-top: 24px;
-}
-
-.impact-card-box {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: var(--radius-lg);
-  padding: 18px;
-}
-
-.impact-card-box h5 {
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: #fbbf24;
-  margin-bottom: 6px;
-}
-
-.impact-card-box p {
-  font-size: 0.825rem;
-  color: rgba(255, 255, 255, 0.85);
-  line-height: 1.5;
-}
-
-.problem-visual-card {
-  background: var(--bg-surface-soft);
-  border-radius: var(--radius-xl);
-  padding: 30px;
-  border: 1px solid var(--neutral-200);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.student-budget-dilemma {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-top: 18px;
-}
-
-.dilemma-pill {
-  background: #fff;
-  border: 1px solid var(--neutral-200);
-  border-radius: var(--radius-md);
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--neutral-800);
-}
-
-.dilemma-pill span.price {
-  color: var(--accent-600);
-  font-size: 0.95rem;
-}
-
 /* Slide 3: Business Model Canvas (BMC) */
 .bmc-grid-wrapper {
   display: grid;
@@ -2873,50 +2578,6 @@ textarea {
   }
 }
 
-/* Revenue Simulator Box (Slide 6 & 7) */
-.market-simulator-card {
-  background: var(--bg-surface-soft);
-  border-radius: var(--radius-xl);
-  padding: 24px;
-  border: 1px solid var(--neutral-300);
-  margin-top: 24px;
-}
-
-.market-slider-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  font-weight: 700;
-  color: var(--primary-900);
-}
-
-.sim-result-box {
-  background: #ffffff;
-  border-radius: var(--radius-lg);
-  padding: 16px 20px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  border: 1px solid var(--neutral-200);
-  margin-top: 14px;
-  text-align: center;
-}
-
-.sim-val {
-  font-size: 1.4rem;
-  font-weight: 900;
-  color: var(--accent-600);
-}
-
-.sim-lbl {
-  font-size: 0.75rem;
-  color: var(--neutral-500);
-  text-transform: uppercase;
-  font-weight: 700;
-  margin-top: 2px;
-}
-
 /* Footer */
 .main-footer {
   background: linear-gradient(180deg, #1a0908 0%, var(--primary-950) 40%, #0d0504 100%);
@@ -3056,22 +2717,6 @@ textarea {
     border-top: 2px solid var(--neutral-200);
   }
 
-  .bmc-grid-wrapper {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .problem-grid-deck {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .market-size-container {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .vpc-container {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .meals-timeline-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -3106,10 +2751,6 @@ textarea {
 
   .section-title {
     font-size: 1.75rem;
-  }
-
-  .team-grid {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .pricing-grid {
@@ -3288,10 +2929,6 @@ textarea {
 
   /* Bigger tap targets on mobile */
   .btn {
-    min-height: 44px;
-  }
-
-  .btn-quick-login {
     min-height: 44px;
   }
 
@@ -3875,19 +3512,6 @@ textarea {
     gap: 10px;
   }
 
-  /* Map canvas smaller */
-  .radar-canvas-container {
-    min-height: 260px;
-    max-height: 280px;
-  }
-
-  /* Map legend smaller */
-  .map-legend {
-    font-size: 0.65rem;
-    padding: 8px 10px;
-    gap: 4px;
-  }
-
   /* Meal planner */
   .meals-timeline-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -3956,74 +3580,6 @@ textarea {
   padding: 10px 12px;
   border-radius: var(--radius-md);
   border: 1px solid var(--neutral-200);
-}
-
-/* ============================================================
-   QUICK-LOGIN DEMO PILLS & BUTTONS
-   ============================================================ */
-.quick-login-box {
-  margin-top: 16px;
-  padding: 12px;
-  background: var(--bg-surface-soft);
-  border: 1px dashed var(--neutral-300);
-  border-radius: var(--radius-lg);
-}
-
-.quick-login-title {
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: var(--neutral-600);
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.quick-login-pills {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.btn-quick-login {
-  background: #fff;
-  border: 1.5px solid var(--accent-300);
-  color: var(--primary-900);
-  padding: 8px 12px;
-  border-radius: var(--radius-full);
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  text-align: left;
-  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
-  font-family: inherit;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-
-.btn-quick-login:hover {
-  background: linear-gradient(90deg, #fff 0%, #fff7ed 100%);
-  border-color: var(--accent-500);
-  color: var(--accent-700);
-  transform: translateX(4px);
-  box-shadow: 0 3px 8px rgba(249, 115, 22, 0.2);
-}
-
-.btn-quick-login:active {
-  transform: translateX(1px);
-}
-
-.btn-quick-login .pill-tag {
-  font-size: 0.7rem;
-  background: var(--primary-100);
-  color: var(--primary-800);
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  font-weight: 800;
 }
 
 /* ============================================================
@@ -4137,21 +3693,6 @@ textarea {
     font-size: 1.1rem;
   }
 
-  .radar-canvas-container {
-    min-height: 240px;
-    max-height: 260px;
-  }
-
-  .campus-hub-marker {
-    font-size: 0.65rem;
-    padding: 5px 8px;
-  }
-
-  .fasilkom-hub-marker {
-    font-size: 0.6rem;
-    padding: 4px 7px;
-  }
-
   .pin-bubble {
     font-size: 0.65rem;
     padding: 3px 7px;
@@ -4174,10 +3715,6 @@ textarea {
     padding: 18px 14px;
   }
 
-  .btn-quick-login {
-    font-size: 0.78rem;
-    padding: 7px 10px;
-  }
 }
 
 /* ============================================================

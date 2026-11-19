@@ -51,6 +51,40 @@ const LS = {
   clearSession: () => localStorage.removeItem('muyang_session')
 };
 
+function saveAuthResponse(authData) {
+  if (!authData?.ok || !authData.token || !authData.user) return false;
+  const user = authData.user;
+  const extra = user.extra_data || {};
+  LS.setSession({
+    token: authData.token,
+    expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+    role: user.role,
+    id: user.id,
+    nim: user.role === 'mahasiswa' ? user.identifier : undefined,
+    email: user.role === 'umkm' ? user.identifier : undefined,
+    username: user.role === 'admin' ? user.identifier : undefined,
+    nama: user.role === 'mahasiswa' ? user.name : undefined,
+    name: user.name,
+    warungName: user.role === 'umkm' ? user.name : undefined,
+    fakultas: extra.fakultas || 'Mahasiswa UNEJ',
+    status: user.status || (user.role === 'umkm' ? 'pending' : undefined)
+  });
+  return true;
+}
+
+function authErrorMessage(code, fallback = 'Operasi autentikasi gagal.') {
+  return ({
+    invalid_credentials: 'Identitas atau password salah.',
+    too_many_attempts: 'Terlalu banyak percobaan. Coba lagi beberapa menit lagi.',
+    duplicate: 'Data tersebut sudah terdaftar.',
+    weak_password: 'Password baru minimal 6 karakter.',
+    invalid_input: 'Periksa kembali data yang dimasukkan.',
+    invalid_location: 'Titik lokasi warung tidak valid.',
+    verification_failed: 'Data verifikasi tidak cocok.',
+    unauthorized: 'Sesi sudah tidak valid. Silakan masuk kembali.'
+  })[code] || fallback;
+}
+
 // Clear any old legacy localStorage keys on load
 (function purgeLegacy() {
   ['muyang_users_mhs', 'muyang_users_umkm', 'muyang_seeded_v2', 'muyang_user_reviews'].forEach(k => localStorage.removeItem(k));
@@ -78,6 +112,128 @@ if (typeof window !== 'undefined' && window.supabase) {
 // DATABASE HELPER — central fetch function
 // ============================================================
 const DB = {
+  async rpc(name, params = {}) {
+    if (!supabaseClient) return { data: null, error: new Error('Database tidak tersedia.') };
+    const { data, error } = await supabaseClient.rpc(name, params);
+    return { data, error };
+  },
+
+  async login(identifier, password, role) {
+    return this.rpc('app_login', {
+      p_identifier: identifier,
+      p_password: password,
+      p_role: role
+    });
+  },
+
+  async registerMahasiswa(nim, name, fakultas, password) {
+    return this.rpc('app_register_mahasiswa', {
+      p_nim: nim,
+      p_name: name,
+      p_fakultas: fakultas,
+      p_password: password
+    });
+  },
+
+  async registerUmkm(payload) {
+    return this.rpc('app_register_umkm', {
+      p_warung_name: payload.warungName,
+      p_owner_name: payload.ownerName,
+      p_email: payload.email,
+      p_whatsapp: payload.whatsapp,
+      p_alamat: payload.alamat,
+      p_paket_name: payload.paketName,
+      p_lat: payload.lat,
+      p_lng: payload.lng,
+      p_password: payload.password
+    });
+  },
+
+  async resetPassword(identifier, role, verifier, newPassword) {
+    return this.rpc('app_reset_password', {
+      p_identifier: identifier,
+      p_role: role,
+      p_verifier: verifier,
+      p_new_password: newPassword
+    });
+  },
+
+  async getMyBookmarks(token) {
+    const { data, error } = await this.rpc('mhs_my_bookmarks', { p_token: token });
+    return { data: data || [], error };
+  },
+
+  async addBookmark(token, warungId) {
+    return this.rpc('mhs_add_bookmark', { p_token: token, p_warung_id: warungId });
+  },
+
+  async removeBookmark(token, warungId) {
+    return this.rpc('mhs_remove_bookmark', { p_token: token, p_warung_id: warungId });
+  },
+
+  async submitReview(token, review) {
+    return this.rpc('mhs_submit_review', {
+      p_token: token,
+      p_warung_id: review.warung_id,
+      p_rating: review.rating,
+      p_kenyang: review.kenyang,
+      p_comment: review.comment,
+      p_faculty: review.faculty
+    });
+  },
+
+  async deleteReview(reviewId, token = LS.getSession()?.token) {
+    return this.rpc('delete_review', { p_token: token, p_review_id: reviewId });
+  },
+
+  async getMyRegistration(token) {
+    return this.rpc('umkm_my_registration', { p_token: token });
+  },
+
+  async getMyWarung(token) {
+    return this.rpc('umkm_my_warung', { p_token: token });
+  },
+
+  async getAdminRegistrations(token) {
+    const { data, error } = await this.rpc('admin_list_registrations', { p_token: token });
+    return { data: data || [], error };
+  },
+
+  async getAdminRegistration(token, regId) {
+    return this.rpc('admin_get_registration', { p_token: token, p_reg_id: regId });
+  },
+
+  async listAdminReviews(token) {
+    return this.getAdminReviews(token);
+  },
+
+  async deleteAdminReview(token, reviewId) {
+    return this.deleteReview(token, reviewId);
+  },
+
+  async getAdminReviews(token) {
+    const { data, error } = await this.rpc('admin_list_reviews', { p_token: token });
+    return { data: data || [], error };
+  },
+
+  async saveUmkmLocation(token, lat, lng, distance, coordinates) {
+    return this.rpc('umkm_set_location', {
+      p_token: token, p_lat: lat, p_lng: lng,
+      p_distance: distance, p_coordinates: coordinates
+    });
+  },
+
+  async saveAdminLocation(token, regId, lat, lng, distance, coordinates) {
+    return this.rpc('admin_set_registration_location', {
+      p_token: token, p_reg_id: regId, p_lat: lat, p_lng: lng,
+      p_distance: distance, p_coordinates: coordinates
+    });
+  },
+
+  async setWarungImage(token, imageUrl) {
+    return this.rpc('umkm_set_warung_image', { p_token: token, p_image_url: imageUrl });
+  },
+
   // ---- WARUNGS ----
   async getAllActiveWarungs() {
     if (!supabaseClient) return [];
@@ -101,12 +257,9 @@ const DB = {
   },
 
   async getWarungByOwnerId(userId) {
-    if (!supabaseClient) return null;
-    const { data } = await supabaseClient
-      .from('warungs')
-      .select('*, warung_menus(*)')
-      .eq('owner_id', userId)
-      .maybeSingle();
+    const session = LS.getSession();
+    if (!session || session.id !== userId || session.role !== 'umkm') return null;
+    const { data } = await this.getMyWarung(session.token);
     return data;
   },
 
@@ -115,7 +268,7 @@ const DB = {
     if (!supabaseClient) return [];
     const { data } = await supabaseClient
       .from('reviews')
-      .select('*, users(name)')
+      .select('*')
       .eq('warung_id', warungId)
       .order('created_at', { ascending: false });
     return data || [];
@@ -123,6 +276,8 @@ const DB = {
 
   async getUserReviews(userId) {
     if (!supabaseClient) return [];
+    const session = LS.getSession();
+    if (!session || session.id !== userId) return [];
     const { data } = await supabaseClient
       .from('reviews')
       .select('*, warungs(name, image_url)')
@@ -143,115 +298,63 @@ const DB = {
   },
 
   async insertReview(review) {
-    if (!supabaseClient) return { error: 'No DB' };
-    const { error } = await supabaseClient.from('reviews').insert([review]);
-    if (!error) {
-      // Update warung rating/count
-      const reviews = await DB.getReviewsForWarung(review.warung_id);
-      const avgRating = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
-      const avgKenyang = reviews.reduce((s, r) => s + r.kenyang, 0) / reviews.length;
-      await supabaseClient.from('warungs').update({
-        rating: parseFloat(avgRating.toFixed(1)),
-        kenyang_score: parseFloat((avgKenyang * 2).toFixed(1)),
-        reviews_count: reviews.length
-      }).eq('id', review.warung_id);
-    }
-    return { error };
+    return this.submitReview(LS.getSession()?.token, review);
   },
 
   async deleteReview(reviewId) {
-    if (!supabaseClient) return;
-    const { data } = await supabaseClient.from('reviews').select('warung_id').eq('id', reviewId).maybeSingle();
-    await supabaseClient.from('reviews').delete().eq('id', reviewId);
-    if (data) {
-      const reviews = await DB.getReviewsForWarung(data.warung_id);
-      if (reviews.length > 0) {
-        const avgRating = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
-        const avgKenyang = reviews.reduce((s, r) => s + r.kenyang, 0) / reviews.length;
-        await supabaseClient.from('warungs').update({
-          rating: parseFloat(avgRating.toFixed(1)),
-          kenyang_score: parseFloat((avgKenyang * 2).toFixed(1)),
-          reviews_count: reviews.length
-        }).eq('id', data.warung_id);
-      } else {
-        await supabaseClient.from('warungs').update({ rating: 4.5, kenyang_score: 9.0, reviews_count: 0 }).eq('id', data.warung_id);
-      }
-    }
+    return this.deleteReviewRpc(LS.getSession()?.token, reviewId);
+  },
+
+  async deleteReviewRpc(token, reviewId) {
+    return this.rpc('delete_review', { p_token: token, p_review_id: reviewId });
   },
 
   // ---- BOOKMARKS ----
   async getUserBookmarks(userId) {
-    if (!supabaseClient) return [];
-    const { data } = await supabaseClient
-      .from('bookmarks')
-      .select('warung_id, warungs(id, name, image_url, area, distance, min_price)')
-      .eq('user_id', userId);
+    const { data } = await this.getMyBookmarks(LS.getSession()?.token);
     return data || [];
   },
 
   async isBookmarked(userId, warungId) {
-    if (!supabaseClient) return false;
-    const { data } = await supabaseClient
-      .from('bookmarks')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('warung_id', warungId)
-      .maybeSingle();
-    return !!data;
+    const rows = await this.getUserBookmarks(userId);
+    return rows.some(row => String(row.warung_id) === String(warungId));
   },
 
   async addBookmark(userId, warungId) {
-    if (!supabaseClient) return;
-    await supabaseClient.from('bookmarks').insert([{ user_id: userId, warung_id: warungId }]);
+    return this.addBookmarkRpc(LS.getSession()?.token, warungId);
   },
 
   async removeBookmark(userId, warungId) {
-    if (!supabaseClient) return;
-    await supabaseClient.from('bookmarks').delete().eq('user_id', userId).eq('warung_id', warungId);
+    return this.removeBookmarkRpc(LS.getSession()?.token, warungId);
   },
+
+  async addBookmarkRpc(token, warungId) { return this.rpc('mhs_add_bookmark', { p_token: token, p_warung_id: warungId }); },
+  async removeBookmarkRpc(token, warungId) { return this.rpc('mhs_remove_bookmark', { p_token: token, p_warung_id: warungId }); },
 
   // ---- WARUNG MENUS ----
   async insertMenu(menu) {
-    if (!supabaseClient) return { error: 'No DB' };
-    const { data, error } = await supabaseClient.from('warung_menus').insert([menu]).select().single();
-    return { data, error };
+    return this.rpc('umkm_add_menu', {
+      p_token: LS.getSession()?.token,
+      p_name: menu.name,
+      p_price: menu.price,
+      p_portion: menu.portion,
+      p_image_url: menu.image_url || null
+    });
   },
 
   async deleteMenu(menuId) {
-    if (!supabaseClient) return;
-    await supabaseClient.from('warung_menus').delete().eq('id', menuId);
+    return this.rpc('umkm_delete_menu', { p_token: LS.getSession()?.token, p_menu_id: menuId });
   },
 
   async updateMenuAvailability(menuId, isAvailable) {
-    if (!supabaseClient) return;
-    await supabaseClient.from('warung_menus').update({ is_available: isAvailable }).eq('id', menuId);
+    return this.rpc('umkm_set_menu_available', {
+      p_token: LS.getSession()?.token,
+      p_menu_id: menuId,
+      p_available: isAvailable
+    });
   },
 
   // ---- USERS ----
-  async getUserById(id) {
-    if (!supabaseClient) return null;
-    const { data } = await supabaseClient.from('users').select('*').eq('id', id).maybeSingle();
-    return data;
-  },
-
-  async getUserByIdentifier(identifier, role) {
-    if (!supabaseClient) return null;
-    let q = supabaseClient.from('users').select('*').eq('identifier', identifier);
-    if (role) q = q.eq('role', role);
-    const { data } = await q.maybeSingle();
-    return data;
-  },
-
-  async updateUserPassword(id, password) {
-    if (!supabaseClient) return { error: 'No DB' };
-    const { error } = await supabaseClient.from('users').update({ password }).eq('id', id);
-    return { error };
-  },
-  async insertUser(user) {
-    if (!supabaseClient) return { error: 'No DB' };
-    const { data, error } = await supabaseClient.from('users').insert([user]).select().single();
-    return { data, error };
-  },
 
   // ---- PAKET KEMITRAAN ----
   async getPaketList() {
@@ -268,53 +371,54 @@ const DB = {
 
   // ---- UMKM REGISTRATIONS ----
   async getAllRegistrations() {
-    if (!supabaseClient) return [];
-    const { data } = await supabaseClient
-      .from('umkm_registrations')
-      .select('*, users(name, identifier), paket_kemitraan(name, price)')
-      .order('created_at', { ascending: false });
+    const session = LS.getSession();
+    if (!session?.token || session.role !== 'admin') return [];
+    const { data, error } = await this.getAdminRegistrations(session.token);
+    if (error) throw error;
     return data || [];
   },
 
   async getRegistrationByUserId(userId) {
-    if (!supabaseClient) return null;
-    const { data } = await supabaseClient
-      .from('umkm_registrations')
-      .select('*, paket_kemitraan(name, price, duration)')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const session = LS.getSession();
+    if (!session || session.id !== userId || session.role !== 'umkm') return null;
+    const { data } = await this.getMyRegistration(session.token);
     return data;
   },
 
   async insertRegistration(reg) {
-    if (!supabaseClient) return { error: 'No DB' };
-    const { data, error } = await supabaseClient.from('umkm_registrations').insert([reg]).select().single();
-    return { data, error };
+    return { data: null, error: new Error('Pendaftaran harus menggunakan app_register_umkm.') };
   },
 
-  async updateRegistrationStatus(id, status, extraFields) {
-    if (!supabaseClient) return;
-    const payload = { status, ...extraFields };
-    await supabaseClient.from('umkm_registrations').update(payload).eq('id', id);
+  async adminAction(action, regId, warung) {
+    const functions = {
+      approve: 'admin_approve_registration',
+      reject: 'admin_reject_registration',
+      activate: 'admin_activate_registration',
+      deactivate: 'admin_deactivate_registration',
+      reactivate: 'admin_reactivate_registration'
+    };
+    const params = { p_token: LS.getSession()?.token, p_reg_id: regId };
+    if (action === 'activate') params.p_warung = warung;
+    return this.rpc(functions[action], params);
+  },
+
+  async runAdminAction(action, regId, warung) {
+    const { data, error } = await this.adminAction(action, regId, warung);
+    if (error) throw error;
+    return data;
   },
 
   // ---- TRANSACTIONS ----
   async getTransactionByRegId(regId) {
-    if (!supabaseClient) return null;
-    const { data } = await supabaseClient.from('transactions').select('*').eq('registration_id', regId).maybeSingle();
-    return data;
+    return null;
   },
 
   async insertTransaction(tx) {
-    if (!supabaseClient) return;
-    await supabaseClient.from('transactions').insert([tx]);
+    return { error: new Error('Transaksi dibuat oleh RPC persetujuan admin.') };
   },
 
   async updateTransactionStatus(regId, status) {
-    if (!supabaseClient) return;
-    await supabaseClient.from('transactions').update({ status }).eq('registration_id', regId);
+    return { error: new Error('Status transaksi dikelola oleh RPC server.') };
   }
 };
 
@@ -459,11 +563,15 @@ window.navigateToSection = navigateToSection;
 // ============================================================
 function updateNavbarState() {
   const session = LS.getSession();
+  if (session && (!session.token || (session.expiresAt && session.expiresAt <= Date.now()))) {
+    LS.clearSession();
+  }
+  const currentSession = LS.getSession();
   const navActions = document.getElementById('navActions');
   const mobileAuthArea = document.getElementById('mobileNavAuthArea');
   if (!navActions) return;
 
-  if (!session) {
+  if (!currentSession) {
     navActions.innerHTML = `
       <button class="btn btn-outline btn-sm" id="navBtnLogin">
         <i class="fa-solid fa-right-to-bracket"></i> Masuk
@@ -484,15 +592,15 @@ function updateNavbarState() {
     let displayName = '';
     let roleLabel = '';
     let roleIcon = '';
-    if (session.role === 'mahasiswa') {
-      displayName = session.nama || session.nim;
+    if (currentSession.role === 'mahasiswa') {
+      displayName = currentSession.nama || currentSession.nim;
       roleLabel = 'Mahasiswa UNEJ';
       roleIcon = '<i class="fa-solid fa-user-graduate"></i>';
-    } else if (session.role === 'umkm') {
-      displayName = session.warungName || session.email;
+    } else if (currentSession.role === 'umkm') {
+      displayName = currentSession.warungName || currentSession.email;
       roleLabel = 'Mitra UMKM';
       roleIcon = '<i class="fa-solid fa-store"></i>';
-    } else if (session.role === 'admin') {
+    } else if (currentSession.role === 'admin') {
       displayName = 'Administrator';
       roleLabel = 'Admin MUYANG';
       roleIcon = '<i class="fa-solid fa-shield-halved"></i>';
@@ -601,21 +709,15 @@ async function handleLoginMahasiswa(e) {
   if (btn) { btn.disabled = true; btn.textContent = 'Memverifikasi...'; }
 
   try {
-    const data = await DB.getUserByIdentifier(nim, 'mahasiswa');
-    if (!data || data.password !== password) {
-      showToast('NIM atau password salah.', 'error');
+    const { data, error } = await DB.login(nim, password, 'mahasiswa');
+    if (error) throw error;
+    if (!saveAuthResponse(data)) {
+      showToast(authErrorMessage(data?.error, 'NIM atau password salah.'), 'error');
     } else {
-      LS.setSession({
-        role: 'mahasiswa',
-        id: data.id,
-        nim: data.identifier,
-        nama: data.name,
-        fakultas: data.extra_data?.fakultas || 'Mahasiswa UNEJ'
-      });
       closeAllModals();
       updateNavbarState();
       routeToDashboard();
-      showToast(`Selamat datang, ${data.name}!`);
+      showToast(`Selamat datang, ${data.user.name}!`);
     }
   } catch (err) {
     showToast('Gagal terhubung ke database.', 'error');
@@ -635,23 +737,15 @@ async function handleLoginUmkm(e) {
   if (btn) { btn.disabled = true; btn.textContent = 'Memverifikasi...'; }
 
   try {
-    const data = await DB.getUserByIdentifier(email, 'umkm');
-    if (!data || data.password !== password) {
-      showToast('Email atau password UMKM salah.', 'error');
+    const { data, error } = await DB.login(email, password, 'umkm');
+    if (error) throw error;
+    if (!saveAuthResponse(data)) {
+      showToast(authErrorMessage(data?.error, 'Email atau password UMKM salah.'), 'error');
     } else {
-      // Get registration status
-      const reg = await DB.getRegistrationByUserId(data.id);
-      LS.setSession({
-        role: 'umkm',
-        id: data.id,
-        email: data.identifier,
-        warungName: data.name,
-        status: reg ? reg.status : 'pending'
-      });
       closeAllModals();
       updateNavbarState();
       routeToDashboard();
-      showToast(`Selamat datang, ${data.name}!`);
+      showToast(`Selamat datang, ${data.user.name}!`);
     }
   } catch (err) {
     showToast('Gagal terhubung ke database.', 'error');
@@ -671,15 +765,15 @@ async function handleLoginAdmin(e) {
   if (btn) { btn.disabled = true; btn.textContent = 'Memverifikasi...'; }
 
   try {
-    const data = await DB.getUserByIdentifier(username, 'admin');
-    if (!data || data.password !== password) {
-      showToast('Kredensial admin salah.', 'error');
+    const { data, error } = await DB.login(username, password, 'admin');
+    if (error) throw error;
+    if (!saveAuthResponse(data)) {
+      showToast(authErrorMessage(data?.error, 'Kredensial admin salah.'), 'error');
     } else {
-      LS.setSession({ role: 'admin', id: data.id, username: data.identifier, name: data.name });
       closeAllModals();
       updateNavbarState();
       routeToDashboard();
-      showToast(`Selamat datang, ${data.name}!`);
+      showToast(`Selamat datang, ${data.user.name}!`);
     }
   } catch (err) {
     showToast('Gagal terhubung ke database.', 'error');
@@ -705,6 +799,8 @@ window.openForgotPassword = function (role) {
   const typed = document.getElementById(isMhs ? 'loginNim' : 'loginEmailUmkm')?.value.trim();
   const target = document.getElementById(isMhs ? 'forgotNim' : 'forgotEmailUmkm');
   if (typed && target && !target.value) target.value = typed;
+  const verifier = document.getElementById(isMhs ? 'forgotVerifierMhs' : 'forgotVerifierUmkm');
+  if (verifier) verifier.value = '';
 };
 
 async function handleForgotPassword(e, role) {
@@ -714,8 +810,10 @@ async function handleForgotPassword(e, role) {
   const isMhs = role === 'mahasiswa';
   const newPass = document.getElementById(isMhs ? 'forgotNewPassMhs' : 'forgotNewPassUmkm').value;
   const confirmPass = document.getElementById(isMhs ? 'forgotConfirmPassMhs' : 'forgotConfirmPassUmkm').value;
+  const verifier = document.getElementById(isMhs ? 'forgotVerifierMhs' : 'forgotVerifierUmkm').value.trim();
   if (newPass.length < 6) { showToast('Password baru minimal 6 karakter.', 'error'); return; }
   if (newPass !== confirmPass) { showToast('Konfirmasi password tidak sama.', 'error'); return; }
+  if (!verifier) { showToast('Isi data verifikasi terlebih dahulu.', 'error'); return; }
 
   const btn = e.target.querySelector('[type=submit]');
   const btnLabel = btn ? btn.innerHTML : '';
@@ -725,16 +823,13 @@ async function handleForgotPassword(e, role) {
     const identifier = isMhs
       ? document.getElementById('forgotNim').value.trim()
       : document.getElementById('forgotEmailUmkm').value.trim().toLowerCase();
-    const user = await DB.getUserByIdentifier(identifier, role);
-
-    if (!user) {
-      showToast(isMhs ? 'NIM tidak ditemukan.' : 'Email UMKM tidak ditemukan.', 'error');
-      return;
-    }
-
-    const { error } = await DB.updateUserPassword(user.id, newPass);
+    const { data, error } = await DB.resetPassword(identifier, role, verifier, newPass);
     if (error) {
       showToast('Gagal mengubah password: ' + (error.message || 'Coba lagi.'), 'error');
+      return;
+    }
+    if (!data?.ok) {
+      showToast(authErrorMessage(data?.error, 'Verifikasi gagal. Periksa identitas dan data verifikasi.'), 'error');
       return;
     }
 
@@ -766,34 +861,17 @@ async function handleRegisterMahasiswa(e) {
   if (btn) { btn.disabled = true; btn.textContent = 'Mendaftarkan...'; }
 
   try {
-    // Check duplicate NIM
-    const existing = await DB.getUserByIdentifier(nim);
-    if (existing) {
-      showToast('NIM sudah terdaftar. Silakan login.', 'error');
+    const { data, error } = await DB.registerMahasiswa(nim, nama, fakultas, password);
+    if (error) throw error;
+    if (!saveAuthResponse(data)) {
+      showToast(authErrorMessage(data?.error, 'Gagal mendaftar.'), 'error');
       return;
     }
-
-    const newId = 'MHS-' + String(Date.now()).slice(-6);
-    const { error } = await DB.insertUser({
-      id: newId,
-      role: 'mahasiswa',
-      identifier: nim,
-      password,
-      name: nama,
-      extra_data: { fakultas }
-    });
-
-    if (error) {
-      showToast('Gagal mendaftar: ' + error.message, 'error');
-      return;
-    }
-
-    LS.setSession({ role: 'mahasiswa', id: newId, nim, nama, fakultas });
     closeAllModals();
     document.getElementById('registerFormMahasiswa')?.reset();
     updateNavbarState();
     routeToDashboard();
-    showToast(`Daftar berhasil! Selamat datang, ${nama}!`);
+    showToast(`Daftar berhasil! Selamat datang, ${data.user.name}!`);
   } catch (err) {
     showToast('Terjadi kesalahan. Coba lagi.', 'error');
     console.warn('[AUTH] Register mahasiswa error:', err);
@@ -812,7 +890,6 @@ async function handleRegisterUmkm(e) {
   const alamat = document.getElementById('regAlamat').value.trim();
   const paketEl = document.getElementById('regPaket');
   const paketName = paketEl.value;
-  const paketPrice = parseInt(paketEl.options[paketEl.selectedIndex]?.dataset.price || 0);
   const password = document.getElementById('regPasswordUmkm').value;
 
   // Titik lokasi wajib diisi dan harus masuk akal (area Jember)
@@ -829,61 +906,23 @@ async function handleRegisterUmkm(e) {
   if (btn) { btn.disabled = true; btn.textContent = 'Mendaftarkan...'; }
 
   try {
-    // Check duplicate email
-    const existing = await DB.getUserByIdentifier(email);
-    if (existing) {
-      showToast('Email sudah terdaftar. Silakan login.', 'error');
-      return;
-    }
-
-    // Get paket_id from DB
-    const paketList = await DB.getPaketList();
-    const matchedPaket = paketList.find(p => p.name === paketName);
-    const paketId = matchedPaket ? matchedPaket.id : null;
-
-    const newId = 'UMKM-' + String(Date.now()).slice(-6);
-
-    // 1. Insert user
-    const { error: userError } = await DB.insertUser({
-      id: newId,
-      role: 'umkm',
-      identifier: email,
-      password,
-      name: warungName,
-      phone: whatsapp,
-      extra_data: { ownerName, alamat }
-    });
-
-    if (userError) {
-      showToast('Gagal membuat akun: ' + userError.message, 'error');
-      return;
-    }
-
-    // 2. Insert registration
-    const { error: regError } = await DB.insertRegistration({
-      user_id: newId,
-      paket_id: paketId,
-      business_name: warungName,
-      owner_name: ownerName,
-      phone: whatsapp,
-      address: alamat,
+    const { data, error } = await DB.registerUmkm({
+      warungName, ownerName, email, whatsapp, alamat, paketName,
       lat: +loc.lat.toFixed(6),
       lng: +loc.lng.toFixed(6),
-      category: paketName,
-      status: 'pending'
+      password
     });
-
-    if (regError) {
-      showToast('Akun dibuat tapi registrasi gagal: ' + regError.message, 'error');
+    if (error) throw error;
+    if (!saveAuthResponse(data)) {
+      showToast(authErrorMessage(data?.error, 'Gagal mendaftarkan UMKM.'), 'error');
+      return;
     }
-
-    LS.setSession({ role: 'umkm', id: newId, email, warungName, status: 'pending' });
     closeAllModals();
     document.getElementById('registerFormUmkm')?.reset();
     if (regLocPicker) regLocPicker.clear();
     updateNavbarState();
     routeToDashboard();
-    showToast(`Pendaftaran "${warungName}" berhasil! Menunggu verifikasi admin.`);
+    showToast(`Pendaftaran "${data.user.name}" berhasil! Menunggu verifikasi admin.`);
   } catch (err) {
     showToast('Terjadi kesalahan. Coba lagi.', 'error');
     console.warn('[AUTH] Register UMKM error:', err);
@@ -896,6 +935,8 @@ async function handleRegisterUmkm(e) {
 // AUTH: LOGOUT
 // ============================================================
 window.logoutUser = function () {
+  const session = LS.getSession();
+  if (session?.token) DB.rpc('app_logout', { p_token: session.token });
   LS.clearSession();
   updateNavbarState();
   showLanding();
@@ -1191,7 +1232,15 @@ async function renderAdminDashboard() {
   if (tableEl) tableEl.innerHTML = '<p style="color:var(--neutral-400);padding:16px;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat data dari database...</p>';
   if (statsEl) statsEl.innerHTML = '';
 
-  const registrations = await DB.getAllRegistrations();
+  let registrations;
+  try {
+    registrations = await DB.getAllRegistrations();
+  } catch (error) {
+    console.warn('[Admin] Load registrations error:', error);
+    if (tableEl) tableEl.innerHTML = '<p style="color:#b91c1c;padding:16px;">Gagal memuat data admin. Sesi mungkin kedaluwarsa; keluar lalu masuk kembali.</p>';
+    if (reviewsTableEl) reviewsTableEl.innerHTML = '';
+    return;
+  }
 
   const statusLabel = {
     pending: '<span class="status-badge status-pending">Pending Review</span>',
@@ -1313,10 +1362,12 @@ async function renderAdminDashboard() {
 
   // Reviews Moderation Table
   if (reviewsTableEl) {
-    // Fetch all reviews from DB
-    const { data: allReviews } = supabaseClient
-      ? await supabaseClient.from('reviews').select('*, warungs(name), users(name, identifier)').order('created_at', { ascending: false })
-      : { data: [] };
+    const { data: allReviews, error: reviewsError } = await DB.getAdminReviews(LS.getSession()?.token);
+    if (reviewsError) {
+      console.warn('[Admin] Load reviews error:', reviewsError);
+      reviewsTableEl.innerHTML = '<p style="color:#b91c1c;padding:12px;">Gagal memuat ulasan admin.</p>';
+      return;
+    }
 
     const reviews = allReviews || [];
     if (reviews.length === 0) {
@@ -1359,59 +1410,38 @@ async function renderAdminDashboard() {
 window.adminApproveUmkm = async function (regId, warungName, userId) {
   if (!supabaseClient) return;
   try {
-    // Update registration status
-    await DB.updateRegistrationStatus(regId, 'awaiting_payment');
-
-    // Create transaction entry
-    const reg = await supabaseClient.from('umkm_registrations').select('paket_id, paket_kemitraan(price)').eq('id', regId).maybeSingle();
-    const amount = reg?.data?.paket_kemitraan?.price || 0;
-    await DB.insertTransaction({
-      registration_id: regId,
-      user_id: userId,
-      paket_id: reg?.data?.paket_id || null,
-      amount,
-      status: 'pending'
-    });
+    await DB.runAdminAction('approve', regId);
 
     await renderAdminDashboard();
     showToast(`UMKM "${warungName}" disetujui. Menunggu bukti transfer.`);
   } catch (err) {
     console.warn('[Admin] Approve error:', err);
-    showToast('Gagal menyetujui. Coba lagi.', 'error');
+    showToast('Gagal menyetujui: ' + (err?.message || 'Coba lagi.'), 'error');
   }
 };
 
 window.adminRejectUmkm = async function (regId, warungName) {
   if (!supabaseClient) return;
   try {
-    await DB.updateRegistrationStatus(regId, 'rejected');
+    await DB.runAdminAction('reject', regId);
     await renderAdminDashboard();
     showToast(`Pendaftaran "${warungName}" ditolak.`);
   } catch (err) {
-    showToast('Gagal menolak. Coba lagi.', 'error');
+    showToast('Gagal menolak: ' + (err?.message || 'Coba lagi.'), 'error');
   }
 };
 
 window.adminActivateUmkm = async function (regId, warungName, userId) {
   if (!supabaseClient) return;
   try {
-    // 1. Update registration status
-    await DB.updateRegistrationStatus(regId, 'active');
-
-    // 2. Update transaction
-    await DB.updateTransactionStatus(regId, 'verified');
-
-    // 3. Get user & registration detail to create warung
-    const { data: reg } = await supabaseClient
-      .from('umkm_registrations')
-      .select('*, paket_kemitraan(name)')
-      .eq('id', regId)
-      .maybeSingle();
+    const { data: reg, error: regError } = await DB.getAdminRegistration(LS.getSession()?.token, regId);
+    if (regError) throw regError;
 
     // 4. Check if warung already exists for this owner
-    const existingWarung = await DB.getWarungByOwnerId(userId);
+    const existingWarung = null;
 
-    if (!existingWarung && reg) {
+    if (!reg) throw new Error('Data pendaftaran tidak ditemukan.');
+    {
       // Detect category from business_name
       const cat = detectCategory(reg.business_name);
       const area = detectArea(reg.address);
@@ -1422,7 +1452,7 @@ window.adminActivateUmkm = async function (regId, warungName, userId) {
         : assignCoordinates(area, Math.floor(Math.random() * 10));
 
       const defaultFeatures = ['Mitra Terverifikasi Muyang', 'Porsi Kenyang Terjamin', 'Bisa QRIS / Tunai', 'Harga Ramah Mahasiswa'];
-      const { data: newWarung, error: insertErr } = await supabaseClient.from('warungs').insert([{
+      const warungPayload = {
         owner_id: userId,
         name: reg.business_name,
         category: cat.key,
@@ -1447,14 +1477,8 @@ window.adminActivateUmkm = async function (regId, warungName, userId) {
         features: defaultFeatures,
         description: `Warung mitra resmi Muyang di area ${area}. Menyajikan menu lezat dan porsi mengenyangkan khusus mahasiswa UNEJ.`,
         coordinates: coords.canvas
-      }]).select().single();
-      if (insertErr) {
-        console.warn('[Admin] Insert warung error:', insertErr.message);
-        throw insertErr;
-      }
-    } else if (existingWarung) {
-      // Re-activate existing warung
-      await supabaseClient.from('warungs').update({ is_active: true }).eq('id', existingWarung.id);
+      };
+      await DB.runAdminAction('activate', regId, warungPayload);
     }
 
     // 5. Refresh catalog
@@ -1478,13 +1502,9 @@ window.adminDeactivateUmkm = async function (regId, warungName, userId) {
   if (!confirm(`Nonaktifkan kemitraan "${warungName}"?\n\nWarung akan hilang dari katalog publik, namun semua data (menu, ulasan, riwayat) tetap tersimpan di database.\n\nAdmin dapat mengaktifkan kembali jika UMKM memperpanjang kemitraan.`)) return;
   try {
     // 1. Set registration status = expired
-    await DB.updateRegistrationStatus(regId, 'expired');
+    await DB.runAdminAction('deactivate', regId);
 
     // 2. Set warung is_active = false (hilang dari katalog publik)
-    const warung = await DB.getWarungByOwnerId(userId);
-    if (warung) {
-      await supabaseClient.from('warungs').update({ is_active: false, promo_badge: null }).eq('id', warung.id);
-    }
 
     // 3. Refresh
     await refreshWarungsCache();
@@ -1494,7 +1514,7 @@ window.adminDeactivateUmkm = async function (regId, warungName, userId) {
     showToast(`Kemitraan "${warungName}" telah dinonaktifkan. Data tetap tersimpan.`);
   } catch (err) {
     console.warn('[Admin] Deactivate error:', err);
-    showToast('Gagal menonaktifkan. Coba lagi.', 'error');
+    showToast('Gagal menonaktifkan: ' + (err?.message || 'Coba lagi.'), 'error');
   }
 };
 
@@ -1504,13 +1524,9 @@ window.adminReactivateUmkm = async function (regId, warungName, userId) {
   if (!confirm(`Aktifkan kembali kemitraan "${warungName}"?\n\nWarung akan kembali tampil di katalog publik.`)) return;
   try {
     // 1. Set registration status = active
-    await DB.updateRegistrationStatus(regId, 'active');
+    await DB.runAdminAction('reactivate', regId);
 
     // 2. Re-activate warung
-    const warung = await DB.getWarungByOwnerId(userId);
-    if (warung) {
-      await supabaseClient.from('warungs').update({ is_active: true, promo_badge: 'Mitra Perpanjang' }).eq('id', warung.id);
-    }
 
     // 3. Refresh
     await refreshWarungsCache();
@@ -1520,12 +1536,13 @@ window.adminReactivateUmkm = async function (regId, warungName, userId) {
     showToast(`Kemitraan "${warungName}" berhasil diaktifkan kembali!`);
   } catch (err) {
     console.warn('[Admin] Reactivate error:', err);
-    showToast('Gagal mengaktifkan kembali. Coba lagi.', 'error');
+    showToast('Gagal mengaktifkan kembali: ' + (err?.message || 'Coba lagi.'), 'error');
   }
 };
 
 window.adminDeleteReview = async function (reviewId) {
-  await DB.deleteReview(reviewId);
+  const { error } = await DB.deleteReview(reviewId, LS.getSession()?.token);
+  if (error) { showToast('Gagal menghapus ulasan: ' + error.message, 'error'); return; }
   await refreshWarungsCache();
   renderCulinaryGrid();
   await renderAdminDashboard();
@@ -1705,15 +1722,8 @@ function setupUmkmLocationEditor(warung) {
 // Simpan lokasi baru ke warungs + umkm_registrations, lalu segarkan katalog & peta
 async function saveWarungLocation(warungId, ownerId, lat, lng) {
   const geo = buildGeoFields(lat, lng);
-  const { error } = await supabaseClient.from('warungs').update({
-    lat: geo.lat,
-    lng: geo.lng,
-    google_maps_url: `https://www.google.com/maps?q=${geo.lat},${geo.lng}`,
-    distance: `${geo.distance}m dari Kampus`,
-    coordinates: geo.canvas
-  }).eq('id', warungId);
+  const { error } = await DB.saveUmkmLocation(LS.getSession()?.token, geo.lat, geo.lng, `${geo.distance}m dari Kampus`, geo.canvas);
   if (error) throw error;
-  await supabaseClient.from('umkm_registrations').update({ lat: geo.lat, lng: geo.lng }).eq('user_id', ownerId);
   await refreshWarungsCache();
   renderCulinaryGrid();
   renderRadarMapPins();
@@ -1761,11 +1771,8 @@ function applyAdminLocInitial() {
 
 window.adminEditCoords = async function (regId, userId) {
   if (!supabaseClient) return;
-  const { data: reg } = await supabaseClient
-    .from('umkm_registrations')
-    .select('id, user_id, business_name, address, lat, lng')
-    .eq('id', regId)
-    .maybeSingle();
+  const { data: reg, error } = await DB.getAdminRegistration(LS.getSession()?.token, regId);
+  if (error) { showToast('Gagal memuat data pendaftaran.', 'error'); return; }
   if (!reg) { showToast('Data pendaftaran tidak ditemukan.', 'error'); return; }
 
   adminLocTarget = {
@@ -1813,11 +1820,11 @@ window.saveAdminLocation = async function () {
   const btn = document.getElementById('adminLocSaveBtn');
   if (btn) btn.disabled = true;
   try {
-    const { regId, userId } = adminLocTarget;
+    const { regId } = adminLocTarget;
     const lat = +pt.lat.toFixed(6), lng = +pt.lng.toFixed(6);
-    await supabaseClient.from('umkm_registrations').update({ lat, lng }).eq('id', regId);
-    const warung = await DB.getWarungByOwnerId(userId);
-    if (warung) await saveWarungLocation(warung.id, userId, lat, lng);
+    const geo = buildGeoFields(lat, lng);
+    const { error } = await DB.saveAdminLocation(LS.getSession()?.token, regId, lat, lng, `${geo.distance}m dari Kampus`, geo.canvas);
+    if (error) throw error;
     closeAllModals();
     await renderAdminDashboard();
     showToast('Titik lokasi diperbarui.');
@@ -2314,7 +2321,7 @@ async function handleReviewSubmit(e) {
       rating,
       kenyang,
       comment,
-      reviewer_name: `${session.nama} (${faculty || session.fakultas})`
+      faculty: faculty || session.fakultas
     });
 
     if (error) {
@@ -3089,19 +3096,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      // Update warung min/max price
-      const updatedWarung = await DB.getWarungByOwnerId(session.id);
-      if (updatedWarung && updatedWarung.warung_menus.length > 0) {
-        const prices = updatedWarung.warung_menus.filter(m => m.is_available).map(m => m.price);
-        if (prices.length > 0) {
-          await supabaseClient.from('warungs').update({
-            min_price: Math.min(...prices),
-            max_price: Math.max(...prices),
-            avg_price: Math.round(prices.reduce((a, b) => a + b, 0) / prices.length)
-          }).eq('id', warung.id);
-        }
-      }
-
       await refreshWarungsCache();
       await renderUmkmDashboard();
       renderCulinaryGrid();
@@ -3176,7 +3170,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Update warung image_url di database
       const warung = await DB.getWarungByOwnerId(session.id);
       if (warung) {
-        await supabaseClient.from('warungs').update({ image_url: imageUrl }).eq('id', warung.id);
+        const { error } = await DB.setWarungImage(session.token, imageUrl);
+        if (error) throw error;
         await refreshWarungsCache();
         renderCulinaryGrid();
         if (statusEl) statusEl.innerHTML = '<span style="color:var(--success-600);font-weight:700;"><i class="fa-solid fa-check-circle"></i> Foto berhasil disimpan!</span>';
