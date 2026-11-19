@@ -3605,28 +3605,6 @@ textarea {
   margin-top: 2px;
 }
 
-/* Footer Admin Link */
-.footer-admin-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #fdba74 !important;
-  font-size: 0.78rem !important;
-  font-weight: 700;
-  text-decoration: none !important;
-  transition: all 0.2s;
-}
-
-.footer-admin-link:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff !important;
-  border-color: #fdba74;
-}
-
 /* Nav Logged Wrap */
 .nav-logged-wrap {
   display: flex;

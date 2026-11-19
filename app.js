@@ -2028,17 +2028,24 @@ async function uploadImageToStorage(file, folder) {
 }
 
 // ============================================================
-// ADMIN SECRET TRIGGER
+// ADMIN PRIVATE ACCESS (Stealth / Hidden Triggers)
+// Tidak ada link / tombol publik di website untuk login admin.
+// Akses admin bersifat private via:
+//  1. URL Hash: #admin atau #admin-login
+//  2. URL Query: ?admin=1 atau ?admin=true
+//  3. Keyboard Shortcut: Ctrl + Shift + A (atau Ctrl + Alt + A)
+//  4. 5x Klik Cepat pada Logo Brand di Header
 // ============================================================
 function initAdminSecretTrigger() {
   let clickCount = 0;
   let clickTimer = null;
 
-  function handleAdminClick() {
+  function handleAdminClick(e) {
     clickCount++;
     if (clickTimer) clearTimeout(clickTimer);
-    clickTimer = setTimeout(() => { clickCount = 0; }, 1800);
-    if (clickCount >= 3) {
+    clickTimer = setTimeout(() => { clickCount = 0; }, 2000);
+    if (clickCount >= 5) {
+      if (e) e.preventDefault();
       clickCount = 0;
       clearTimeout(clickTimer);
       const session = LS.getSession();
@@ -2051,20 +2058,43 @@ function initAdminSecretTrigger() {
     }
   }
 
-  document.getElementById('footerBrandIcon')?.addEventListener('click', handleAdminClick);
+  // 1. Stealth 5x klik cepat pada logo Muyang di header
   document.getElementById('headerBrandLogo')?.addEventListener('click', handleAdminClick);
 
-  document.getElementById('footerAdminLink')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    const session = LS.getSession();
-    if (session && session.role === 'admin') { routeToDashboard(); }
-    else { openModal('adminLoginModal'); }
+  // 2. Secret Keyboard Shortcut: Ctrl + Shift + A atau Ctrl + Alt + A
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) ||
+        (e.ctrlKey && e.altKey && (e.key === 'A' || e.key === 'a'))) {
+      e.preventDefault();
+      const session = LS.getSession();
+      if (session && session.role === 'admin') {
+        showToast('Sudah masuk sebagai Administrator.');
+        routeToDashboard();
+      } else {
+        openModal('adminLoginModal');
+      }
+    }
   });
 
-  if (new URLSearchParams(window.location.search).get('admin') === '1') {
+  // 3. Secret URL query: ?admin=1 atau ?admin=true
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('admin') === '1' || urlParams.get('admin') === 'true') {
     const session = LS.getSession();
-    if (session && session.role === 'admin') { routeToDashboard(); }
-    else { openModal('adminLoginModal'); }
+    if (session && session.role === 'admin') {
+      routeToDashboard();
+    } else {
+      openModal('adminLoginModal');
+    }
+  }
+
+  // 4. Secret URL hash: #admin atau #admin-login
+  if (window.location.hash === '#admin' || window.location.hash === '#admin-login') {
+    const session = LS.getSession();
+    if (session && session.role === 'admin') {
+      routeToDashboard();
+    } else {
+      openModal('adminLoginModal');
+    }
   }
 }
 
@@ -2082,7 +2112,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!link) return;
     const href = link.getAttribute('href');
     if (!href) return;
-    if (link.id && (link.id.startsWith('switchTo') || link.id === 'footerAdminLink')) return;
+    if (link.id && link.id.startsWith('switchTo')) return;
+    if (href === '#admin' || href === '#admin-login') {
+      e.preventDefault();
+      const session = LS.getSession();
+      if (session && session.role === 'admin') routeToDashboard();
+      else openModal('adminLoginModal');
+      return;
+    }
     if (href === '#dashboard') { e.preventDefault(); routeToDashboard(); return; }
     if (href.startsWith('#')) { e.preventDefault(); navigateToSection(href); }
   });
