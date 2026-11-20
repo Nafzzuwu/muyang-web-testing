@@ -123,6 +123,44 @@ body {
   position: relative;
 }
 
+/* Layered ambient texture adds depth between the main content sections. */
+body::before,
+body::after {
+  z-index: 0;
+}
+
+#landingContent {
+  isolation: isolate;
+  background-image:
+    radial-gradient(ellipse at 8% 22%, rgba(234, 88, 12, 0.055), transparent 34rem),
+    radial-gradient(ellipse at 92% 54%, rgba(217, 119, 6, 0.06), transparent 38rem);
+}
+
+#landingContent > section {
+  position: relative;
+  isolation: isolate;
+}
+
+#landingContent > section:nth-of-type(even)::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  width: min(34vw, 420px);
+  aspect-ratio: 1;
+  top: 12%;
+  right: -9%;
+  border: 1px solid rgba(194, 65, 12, 0.08);
+  border-radius: 38% 62% 55% 45%;
+  background: radial-gradient(circle at 35% 35%, rgba(245, 158, 11, 0.07), rgba(234, 88, 12, 0.018) 55%, transparent 72%);
+  animation: sectionDrift 24s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes sectionDrift {
+  from { transform: translate3d(0, 0, 0) rotate(-8deg); }
+  to { transform: translate3d(-16px, 22px, 0) rotate(8deg); }
+}
+
 /* Ambient Drifting Warm Glow Orbs across the Parchment Canvas */
 body::before,
 body::after {
@@ -3684,6 +3722,7 @@ textarea {
 
 /* Accessibility: Respect Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
+  #landingContent > section:nth-of-type(even)::before { animation: none; }
   *,
   *::before,
   *::after {
@@ -3738,6 +3777,17 @@ textarea {
   flex-direction: column;
   gap: 12px;
   box-shadow: var(--shadow-xs);
+}
+
+.umkm-renewal-card.is-expired {
+  background: linear-gradient(135deg, #FFFBEB, #FFF7ED);
+  border-color: rgba(194, 65, 12, 0.42);
+}
+
+.umkm-renewal-expiry {
+  color: var(--neutral-600);
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .umkm-renewal-card-top {
@@ -3808,6 +3858,15 @@ textarea {
 }
 
 @media (max-width: 768px) {
+  #landingContent > section:nth-of-type(even)::before {
+    width: 62vw;
+    right: -24%;
+    opacity: 0.65;
+  }
+
+  .umkm-renewal-card { padding: 16px; }
+  .umkm-renewal-card-top { align-items: flex-start; flex-direction: column; }
+  .umkm-renewal-actions .btn { width: 100%; }
   .hero-editorial-stamp {
     width: 104px;
     height: 104px;

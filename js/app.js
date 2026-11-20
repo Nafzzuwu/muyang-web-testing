@@ -1288,7 +1288,7 @@ async function renderPartnershipInfo() {
         <span style="font-size:0.8rem;font-weight:700;color:#92400E;">Paket Dipilih: ${esc(data.pending_name)}</span>
       </div>
       <div class="umkm-renewal-body">
-        Pengajuan paket <strong>${esc(data.pending_name)}</strong> telah tercatat. Silakan transfer sesuai nominal paket dan kirim bukti transfer ke WhatsApp Tim Muyang agar listing segera aktif kembali.
+        ${data.status === 'expired' ? `Masa kemitraan berakhir pada <strong>${endTxt}</strong> dan listing warung tidak tampil di katalog publik. ` : ''}Pengajuan paket <strong>${esc(data.pending_name)}</strong> telah tercatat. Silakan transfer sesuai nominal paket dan kirim bukti transfer ke WhatsApp Tim Muyang${data.status === 'expired' ? ' agar listing dapat diaktifkan kembali' : ''}.
       </div>
       <div class="umkm-renewal-bank">
         <span>Rekening: <strong>BRI 1234-5678-9012-3456</strong> a.n. MUYANG UNEJ</span>
@@ -1304,26 +1304,32 @@ async function renderPartnershipInfo() {
       </div>
     `;
 
-    if (data.status === 'expired') {
-      const desc = document.querySelector('#umkmExpiredBanner .expired-banner-desc');
-      if (desc) {
-        desc.textContent = `Masa aktif berakhir pada ${endTxt}. Pengajuan perpanjangan paket ${data.pending_name} sedang menunggu konfirmasi pembayaran di atas.`;
-      }
-    }
+    const expiredBanner = document.getElementById('umkmExpiredBanner');
+    if (expiredBanner) expiredBanner.style.display = 'none';
     return;
   }
 
   box.className = '';
   let tone = '#ecfdf5;color:#065f46', msg;
   if (data.status === 'expired') {
-    box.style.display = 'none';
-    const desc = document.querySelector('#umkmExpiredBanner .expired-banner-desc');
-    if (desc) {
-      const base = 'Warung Anda sudah tidak tampil di katalog publik. Pilih paket untuk memperpanjang kemitraan dan mengaktifkan kembali listing Anda.';
-      desc.textContent = data.ends_at ? `Berakhir pada ${endTxt}. ${base}` : base;
-    }
+    const expiredBanner = document.getElementById('umkmExpiredBanner');
+    if (expiredBanner) expiredBanner.style.display = 'none';
+    box.className = 'umkm-renewal-card is-expired';
+    box.style.cssText = '';
+    box.style.display = 'flex';
+    box.innerHTML = `
+      <div class="umkm-renewal-card-top">
+        <span class="umkm-renewal-badge"><i class="fa-solid fa-triangle-exclamation"></i> Masa Kemitraan Berakhir</span>
+        <span class="umkm-renewal-expiry">${data.ends_at ? `Berakhir ${endTxt}` : 'Listing tidak tampil di katalog publik'}</span>
+      </div>
+      <div class="umkm-renewal-body">Masa kemitraan warung Anda telah berakhir. Pilih paket untuk memperpanjang dan mengaktifkan kembali listing.</div>
+      <div class="umkm-renewal-actions">
+        <button type="button" class="btn btn-accent btn-sm" onclick="window.openPackageChangeModal()"><i class="fa-solid fa-rotate"></i> Perpanjang / Ganti Paket</button>
+      </div>`;
     return;
   }
+  const expiredBanner = document.getElementById('umkmExpiredBanner');
+  if (expiredBanner) expiredBanner.style.display = 'none';
   if (left !== null && left <= PARTNERSHIP_WARN_DAYS) { tone = '#fffbeb;color:#92400e'; msg = `Paket ${esc(data.paket_name)} berakhir ${endTxt} (${left} hari lagi). Perpanjang agar listing tidak turun.`; }
   else { msg = `Paket ${esc(data.paket_name)} aktif sampai ${endTxt}${left !== null ? ` (${left} hari lagi)` : ''}.`; }
   box.style.cssText = `display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 16px;border-radius:12px;margin:12px 0;background:${tone};`;
