@@ -59,6 +59,25 @@ function timeAgo(isoString) {
 }
 
 // ============================================================
+// SECURITY HELPERS (cegah XSS saat render lewat innerHTML)
+// ============================================================
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+// Hanya izinkan http(s). Hasilnya sudah di-escape, aman untuk atribut src/href.
+function safeUrl(url, fallback = '') {
+  if (url == null || String(url).trim() === '') return esc(fallback);
+  try {
+    const u = new URL(String(url ?? ''), window.location.origin);
+    if (u.protocol === 'https:' || u.protocol === 'http:') return esc(u.href);
+  } catch (e) { /* abaikan */ }
+  return esc(fallback);
+}
+
+// ============================================================
 // SESSION HELPERS (localStorage — session token only)
 // ============================================================
 const LS = {
@@ -118,9 +137,9 @@ let supabaseClient = null;
 if (typeof window !== 'undefined' && window.supabase) {
   try {
     supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-    console.log('[MUYANG] Supabase v3.0 Client OK');
+    console.log('[MUYANG] Database Client OK');
   } catch (err) {
-    console.warn('[MUYANG] Supabase init error:', err);
+    console.warn('[MUYANG] Database init error:', err);
   }
 }
 
@@ -649,12 +668,12 @@ function updateNavbarState() {
         </button>
         <div class="user-dropdown-wrap">
           <button class="btn btn-outline btn-sm user-dropdown-trigger" id="navUserBtn" aria-label="Menu Pengguna">
-            ${roleIcon} <span class="nav-user-name">${displayName}</span> <i class="fa-solid fa-chevron-down" style="font-size:0.65rem;"></i>
+            ${roleIcon} <span class="nav-user-name">${esc(displayName)}</span> <i class="fa-solid fa-chevron-down" style="font-size:0.65rem;"></i>
           </button>
           <div class="user-dropdown-menu" id="navUserDropdown">
             <div style="padding: 10px 14px; background: var(--neutral-50); border-bottom: 1px solid var(--neutral-200);">
               <div style="font-size: 0.7rem; color: var(--neutral-400); font-weight: 700; text-transform: uppercase;">Login Sebagai:</div>
-              <div style="font-size: 0.85rem; font-weight: 800; color: var(--primary-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${displayName}</div>
+              <div style="font-size: 0.85rem; font-weight: 800; color: var(--primary-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${esc(displayName)}</div>
               <div style="font-size: 0.72rem; color: var(--accent-600); font-weight: 700;">${roleLabel}</div>
             </div>
             <a href="#dashboard" class="dropdown-item" id="dropDashboard"><i class="fa-solid fa-gauge"></i> Buka Dashboard</a>
@@ -1023,17 +1042,17 @@ async function renderMahasiswaDashboard() {
         if (!w) return '';
         return `
           <div class="dash-bookmark-card">
-            <img src="${w.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80'}" alt="${w.name}" class="dash-bm-img">
+            <img src="${safeUrl(w.image_url, 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80')}" alt="${esc(w.name)}" class="dash-bm-img">
             <div class="dash-bm-info">
-              <h4>${w.name}</h4>
-              <p><i class="fa-solid fa-location-dot"></i> ${w.area || ''} (${w.distance || ''})</p>
+              <h4>${esc(w.name)}</h4>
+              <p><i class="fa-solid fa-location-dot"></i> ${esc(w.area || '')} (${esc(w.distance || '')})</p>
               <p style="color:var(--accent-600);font-weight:800;margin-top:4px;">Mulai ${formatIDR(w.min_price || 0)}</p>
             </div>
             <div class="dash-bm-actions">
-              <button class="btn btn-primary btn-sm" onclick="window.openDetailModal('${w.id}')">
+              <button class="btn btn-primary btn-sm" onclick="window.openDetailModal(${esc(JSON.stringify(String(w.id)))})">
                 <i class="fa-solid fa-eye"></i> Lihat Menu
               </button>
-              <button class="btn btn-outline btn-sm" onclick="window.removeDashBookmark('${w.id}')" title="Hapus Simpanan">
+              <button class="btn btn-outline btn-sm" onclick="window.removeDashBookmark(${esc(JSON.stringify(String(w.id)))})" title="Hapus Simpanan">
                 <i class="fa-solid fa-trash-can" style="color:#dc2626;"></i>
               </button>
             </div>
@@ -1052,19 +1071,19 @@ async function renderMahasiswaDashboard() {
       reviewListEl.innerHTML = reviewRows.map(r => `
         <div class="dash-review-card">
           <div class="dash-review-top">
-            <span class="dash-review-warung"><i class="fa-solid fa-store" style="color:var(--accent-500);"></i> ${r.warungs?.name || 'Warung'}</span>
+            <span class="dash-review-warung"><i class="fa-solid fa-store" style="color:var(--accent-500);"></i> ${esc(r.warungs?.name || 'Warung')}</span>
             <span class="dash-review-date">${timeAgo(r.created_at)}</span>
           </div>
           <div class="dash-review-badges">
-            <span style="color:var(--gold-500);font-size:0.85rem;">${'<i class="fa-solid fa-star"></i>'.repeat(r.rating)}</span>
+            <span style="color:var(--gold-500);font-size:0.85rem;">${'<i class="fa-solid fa-star"></i>'.repeat(Math.max(0, Math.min(5, Number(r.rating) || 0)))}</span>
             <span style="background:var(--success-100);color:var(--success-700);font-size:0.75rem;font-weight:800;padding:2px 8px;border-radius:var(--radius-full);">Kenyang: ${r.kenyang}/5</span>
           </div>
-          <p class="dash-review-comment">"${r.comment}"</p>
+          <p class="dash-review-comment">"${esc(r.comment)}"</p>
           <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px;">
-            <button class="btn btn-primary btn-xs" onclick="window.openDetailModal('${r.warung_id}')">
+            <button class="btn btn-primary btn-xs" onclick="window.openDetailModal(${esc(JSON.stringify(String(r.warung_id)))})">
               <i class="fa-solid fa-eye"></i> Buka Warung
             </button>
-            <button class="btn btn-outline btn-xs" style="color:#dc2626;border-color:#dc2626;" onclick="window.deleteMahasiswaReview(${r.id})" title="Hapus Ulasan">
+            <button class="btn btn-outline btn-xs" style="color:#dc2626;border-color:#dc2626;" onclick="window.deleteMahasiswaReview(${Number(r.id)})" title="Hapus Ulasan">
               <i class="fa-solid fa-trash-can"></i> Hapus
             </button>
           </div>
@@ -1208,21 +1227,21 @@ async function renderUmkmMenuList(warung) {
     <div class="dash-menu-item">
       <div style="display:flex;align-items:center;gap:10px;">
         ${m.image_url
-      ? `<img src="${m.image_url}" alt="${m.name}" style="width:48px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--neutral-200);" onerror="this.style.display='none'">`
+      ? `<img src="${safeUrl(m.image_url)}" alt="${esc(m.name)}" style="width:48px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--neutral-200);" onerror="this.style.display='none'">`
       : `<div style="width:48px;height:40px;background:var(--neutral-100);border-radius:6px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--neutral-300);"><i class="fa-solid fa-utensils" style="color:var(--neutral-300);font-size:0.9rem;"></i></div>`
     }
         <div>
-          <span class="dash-menu-name">${m.name}</span>
+          <span class="dash-menu-name">${esc(m.name)}</span>
           ${m.is_best_seller ? '<span style="background:var(--gold-100);color:var(--gold-600);font-size:0.68rem;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;">Favorit</span>' : ''}
-          <span class="dash-menu-portion">${m.portion || ''}</span>
+          <span class="dash-menu-portion">${esc(m.portion || '')}</span>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
         <span class="dash-menu-price">${formatIDR(m.price)}</span>
         <label style="font-size:0.75rem;cursor:pointer;display:flex;align-items:center;gap:4px;">
-          <input type="checkbox" ${m.is_available ? 'checked' : ''} onchange="window.toggleMenuAvailability(${m.id}, this.checked)"> Tersedia
+          <input type="checkbox" ${m.is_available ? 'checked' : ''} onchange="window.toggleMenuAvailability(${Number(m.id)}, this.checked)"> Tersedia
         </label>
-        <button class="btn-icon-danger" onclick="window.deleteUmkmMenu(${m.id})" title="Hapus Menu">
+        <button class="btn-icon-danger" onclick="window.deleteUmkmMenu(${Number(m.id)})" title="Hapus Menu">
           <i class="fa-solid fa-trash-can"></i>
         </button>
       </div>
@@ -1249,14 +1268,14 @@ async function renderUmkmIncomingReviews(warungId) {
   reviewsEl.innerHTML = reviews.map(r => `
     <div class="dash-review-card">
       <div class="dash-review-top">
-        <span style="font-weight:800;color:var(--primary-900);">${r.reviewer_name || r.users?.name || 'Mahasiswa'}</span>
+        <span style="font-weight:800;color:var(--primary-900);">${esc(r.reviewer_name || r.users?.name || 'Mahasiswa')}</span>
         <span class="dash-review-date">${timeAgo(r.created_at)}</span>
       </div>
       <div class="dash-review-badges">
-        <span style="color:var(--gold-500);font-size:0.85rem;">${'<i class="fa-solid fa-star"></i>'.repeat(r.rating)}</span>
+        <span style="color:var(--gold-500);font-size:0.85rem;">${'<i class="fa-solid fa-star"></i>'.repeat(Math.max(0, Math.min(5, Number(r.rating) || 0)))}</span>
         <span style="background:var(--success-100);color:var(--success-700);font-size:0.75rem;font-weight:800;padding:2px 8px;border-radius:var(--radius-full);">Kenyang: ${r.kenyang}/5</span>
       </div>
-      <p class="dash-review-comment">"${r.comment}"</p>
+      <p class="dash-review-comment">"${esc(r.comment)}"</p>
     </div>
   `).join('');
 }
@@ -1356,50 +1375,50 @@ async function renderAdminDashboard() {
             ${registrations.map(u => `
               <tr>
                 <td>
-                  <div style="font-weight:800;color:var(--neutral-900);">${u.business_name}</div>
+                  <div style="font-weight:800;color:var(--neutral-900);">${esc(u.business_name)}</div>
                   <div style="font-size:0.75rem;color:var(--neutral-500);margin-top:2px;"><span style="font-weight:600;">REG#${u.id}</span></div>
-                  <div style="font-size:0.75rem;color:var(--neutral-400);margin-top:2px;"><i class="fa-solid fa-location-dot"></i> ${u.address}</div>
+                  <div style="font-size:0.75rem;color:var(--neutral-400);margin-top:2px;"><i class="fa-solid fa-location-dot"></i> ${esc(u.address)}</div>
                   ${u.lat != null && u.lng != null
           ? `<div style="font-size:0.75rem;margin-top:2px;"><a href="https://www.google.com/maps?q=${u.lat},${u.lng}" target="_blank" rel="noopener" style="color:var(--primary-700);font-weight:700;text-decoration:none;"><i class="fa-solid fa-map-pin"></i> Lihat titik di Google Maps</a> <span style="color:var(--neutral-400);">(${Number(u.lat).toFixed(5)}, ${Number(u.lng).toFixed(5)})</span></div>`
           : `<div style="font-size:0.75rem;color:#d97706;margin-top:2px;"><i class="fa-solid fa-triangle-exclamation"></i> Belum ada titik (memakai titik di jalan)</div>`}
-                  <button class="btn btn-outline btn-xs" style="margin-top:4px;" onclick="window.adminEditCoords(${u.id}, '${u.user_id}')"><i class="fa-solid fa-pen"></i> ${u.lat != null && u.lng != null ? 'Koreksi titik' : 'Isi titik'}</button>
+                  <button class="btn btn-outline btn-xs" style="margin-top:4px;" onclick="window.adminEditCoords(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.user_id))})"><i class="fa-solid fa-pen"></i> ${u.lat != null && u.lng != null ? 'Koreksi titik' : 'Isi titik'}</button>
                   <div style="font-size:0.72rem;color:var(--neutral-400);"><i class="fa-regular fa-clock"></i> ${new Date(u.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
                 </td>
                 <td>
-                  <div style="font-weight:700;">${u.owner_name}</div>
-                  <a href="https://wa.me/62${u.phone.replace(/^0/, '')}" target="_blank" style="font-size:0.8rem;color:var(--success-600);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:2px;">
-                    <i class="fa-brands fa-whatsapp"></i> ${u.phone}
+                  <div style="font-weight:700;">${esc(u.owner_name)}</div>
+                  <a href="https://wa.me/62${esc(String(u.phone).replace(/[^0-9]/g, '').replace(/^0/, ''))}" target="_blank" style="font-size:0.8rem;color:var(--success-600);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:2px;">
+                    <i class="fa-brands fa-whatsapp"></i> ${esc(u.phone)}
                   </a>
                 </td>
                 <td>
-                  <div style="font-weight:700;color:var(--primary-900);">${u.paket_kemitraan ? u.paket_kemitraan.name : (u.category || '-')}</div>
+                  <div style="font-weight:700;color:var(--primary-900);">${esc(u.paket_kemitraan ? u.paket_kemitraan.name : (u.category || '-'))}</div>
                   <div style="font-weight:800;color:var(--accent-600);font-size:0.9rem;">${u.paket_kemitraan ? formatIDR(u.paket_kemitraan.price) : ''}</div>
                 </td>
-                <td>${statusLabel[u.status] || u.status}</td>
+                <td>${esc(statusLabel[u.status] || u.status)}</td>
                 <td class="admin-actions-cell">
                   ${u.status === 'pending' ? `
-                    <button class="btn btn-primary btn-xs" onclick="window.adminApproveUmkm(${u.id}, '${u.business_name.replace(/'/g, "\\'")}', '${u.user_id}')">
+                    <button class="btn btn-primary btn-xs" onclick="window.adminApproveUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})">
                       <i class="fa-solid fa-check"></i> Setujui
                     </button>
-                    <button class="btn btn-outline btn-xs" onclick="window.adminRejectUmkm(${u.id}, '${u.business_name.replace(/'/g, "\\'")}', '${u.user_id}')" style="color:#dc2626;border-color:#dc2626;">
+                    <button class="btn btn-outline btn-xs" onclick="window.adminRejectUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})" style="color:#dc2626;border-color:#dc2626;">
                       <i class="fa-solid fa-times"></i> Tolak
                     </button>
                   ` : ''}
                   ${u.status === 'awaiting_payment' || u.status === 'verifying' ? `
-                    <button class="btn btn-accent btn-xs" onclick="window.adminActivateUmkm(${u.id}, '${u.business_name.replace(/'/g, "\\'")}', '${u.user_id}')">
+                    <button class="btn btn-accent btn-xs" onclick="window.adminActivateUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})">
                       <i class="fa-solid fa-bolt"></i> Konfirmasi &amp; Aktifkan
                     </button>
                   ` : ''}
                   ${u.status === 'active' ? `
                     <span style="color:var(--success-600);font-size:0.82rem;font-weight:800;"><i class="fa-solid fa-circle-check"></i> Tayang Publik</span>
-                    <button class="btn btn-outline btn-xs" onclick="window.adminDeactivateUmkm(${u.id}, '${u.business_name.replace(/'/g, "\\'")}', '${u.user_id}')" style="color:#dc2626;border-color:#dc2626;margin-top:4px;">
+                    <button class="btn btn-outline btn-xs" onclick="window.adminDeactivateUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})" style="color:#dc2626;border-color:#dc2626;margin-top:4px;">
                       <i class="fa-solid fa-ban"></i> Nonaktifkan
                     </button>
                   ` : ''}
                   ${u.status === 'rejected' ? `<span style="color:var(--neutral-400);font-size:0.82rem;">Ditolak</span>` : ''}
                   ${u.status === 'expired' ? `
                     <span style="color:#9ca3af;font-size:0.82rem;font-weight:700;"><i class="fa-solid fa-clock"></i> Nonaktif</span>
-                    <button class="btn btn-primary btn-xs" onclick="window.adminReactivateUmkm(${u.id}, '${u.business_name.replace(/'/g, "\\'")}', '${u.user_id}')" style="margin-top:4px;">
+                    <button class="btn btn-primary btn-xs" onclick="window.adminReactivateUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})" style="margin-top:4px;">
                       <i class="fa-solid fa-rotate-right"></i> Aktifkan Kembali
                     </button>
                   ` : ''}
@@ -1438,15 +1457,15 @@ async function renderAdminDashboard() {
           <tbody>
             ${reviews.map(r => `
               <tr>
-                <td style="font-weight:700;color:var(--primary-900);white-space:nowrap;">${r.warungs?.name || 'Warung'}</td>
+                <td style="font-weight:700;color:var(--primary-900);white-space:nowrap;">${esc(r.warungs?.name || 'Warung')}</td>
                 <td>
-                  <div style="font-weight:700;">${r.reviewer_name || r.users?.name || 'Mahasiswa'}</div>
-                  <div style="color:var(--gold-500);font-size:0.75rem;">${'<i class="fa-solid fa-star"></i>'.repeat(r.rating)} (Kenyang ${r.kenyang}/5)</div>
+                  <div style="font-weight:700;">${esc(r.reviewer_name || r.users?.name || 'Mahasiswa')}</div>
+                  <div style="color:var(--gold-500);font-size:0.75rem;">${'<i class="fa-solid fa-star"></i>'.repeat(Math.max(0, Math.min(5, Number(r.rating) || 0)))} (Kenyang ${r.kenyang}/5)</div>
                   <div style="font-size:0.7rem;color:var(--neutral-400);">${timeAgo(r.created_at)}</div>
                 </td>
-                <td style="font-size:0.85rem;color:var(--neutral-700);max-width:300px;">"${r.comment}"</td>
+                <td style="font-size:0.85rem;color:var(--neutral-700);max-width:300px;">"${esc(r.comment)}"</td>
                 <td>
-                  <button class="btn btn-outline btn-xs" style="color:#dc2626;border-color:#dc2626;" onclick="window.adminDeleteReview(${r.id})">
+                  <button class="btn btn-outline btn-xs" style="color:#dc2626;border-color:#dc2626;" onclick="window.adminDeleteReview(${Number(r.id)})">
                     <i class="fa-solid fa-trash-can"></i> Hapus
                   </button>
                 </td>
@@ -2084,12 +2103,12 @@ function renderCulinaryGrid() {
       ? '<span class="badge-featured"><i class="fa-solid fa-fire"></i> Featured UMKM</span>'
       : '<span class="badge-featured" style="background:#0284c7;"><i class="fa-solid fa-store"></i> Mitra Aktif</span>';
     return `
-      <article class="culinary-card" data-id="${item.id}">
+      <article class="culinary-card" data-id="${esc(item.id)}">
         <div class="card-img-wrapper">
-          <img src="${item.image}" alt="${item.name}" class="card-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80'" />
+          <img src="${safeUrl(item.image)}" alt="${esc(item.name)}" class="card-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80'" />
           <div class="card-top-badges">
             ${featuredBadge}
-            <span class="badge-distance"><i class="fa-solid fa-person-walking"></i> ${item.distance}</span>
+            <span class="badge-distance"><i class="fa-solid fa-person-walking"></i> ${esc(item.distance)}</span>
           </div>
           <div class="card-bottom-badges">
             <span class="badge-kenyang-score" title="Kenyang Meter Score">
@@ -2100,7 +2119,7 @@ function renderCulinaryGrid() {
 
         <div class="card-body">
           <div class="card-category-row">
-            <span class="card-category-label">${item.categoryLabel}</span>
+            <span class="card-category-label">${esc(item.categoryLabel)}</span>
             <div class="card-rating">
               <i class="fa-solid fa-star"></i>
               <span>${item.rating}</span>
@@ -2108,11 +2127,11 @@ function renderCulinaryGrid() {
             </div>
           </div>
 
-          <h3 class="card-title">${item.name}</h3>
+          <h3 class="card-title">${esc(item.name)}</h3>
           
           <p class="card-location">
             <i class="fa-solid fa-location-dot"></i>
-            <span>${item.location}</span>
+            <span>${esc(item.location)}</span>
           </p>
 
           <div class="card-price-box">
@@ -2122,21 +2141,21 @@ function renderCulinaryGrid() {
             </div>
             <div style="text-align: right;">
               <div class="price-label">Menu Terpopuler</div>
-              <div style="font-size: 0.85rem; font-weight: 700; color: var(--accent-600);">${(item.popularMenus[0]?.name || 'Menu Variatif').substring(0, 24)}...</div>
+              <div style="font-size: 0.85rem; font-weight: 700; color: var(--accent-600);">${esc((item.popularMenus[0]?.name || 'Menu Variatif').substring(0, 24))}...</div>
             </div>
           </div>
 
           <div class="card-features-list">
             ${(Array.isArray(item.features) ? item.features : []).slice(0, 3).map(feat => `
-              <span class="feature-tag"><i class="fa-solid fa-check"></i> ${feat}</span>
+              <span class="feature-tag"><i class="fa-solid fa-check"></i> ${esc(feat)}</span>
             `).join('')}
           </div>
 
           <div class="card-footer">
-            <button class="btn-card-detail view-detail-btn" data-id="${item.id}">
+            <button class="btn-card-detail view-detail-btn" data-id="${esc(item.id)}">
               <i class="fa-solid fa-book-open"></i> Lihat Menu &amp; Ulasan
             </button>
-            <button class="btn btn-outline btn-sm bookmark-btn ${isBookmarked ? 'active' : ''}" data-id="${item.id}" title="${isBookmarked ? 'Hapus Simpanan' : 'Simpan Tempat Ini'}">
+            <button class="btn btn-outline btn-sm bookmark-btn ${isBookmarked ? 'active' : ''}" data-id="${esc(item.id)}" title="${isBookmarked ? 'Hapus Simpanan' : 'Simpan Tempat Ini'}">
               <i class="${isBookmarked ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i>
             </button>
           </div>
@@ -2249,14 +2268,14 @@ window.openDetailModal = async function (id) {
 
   detailModalContent.innerHTML = `
     <div style="position: relative; height: 220px; overflow: hidden; border-radius: var(--radius-xl) var(--radius-xl) 0 0;">
-      <img src="${normalized.image}" alt="${normalized.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80'" />
+      <img src="${safeUrl(normalized.image)}" alt="${esc(normalized.name)}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80'" />
       <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%); color: #fff;">
         <span style="background: var(--accent-500); color: #fff; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: var(--radius-full); text-transform: uppercase;">
-          ${normalized.categoryLabel}
+          ${esc(normalized.categoryLabel)}
         </span>
-        <h2 style="font-size: 1.6rem; font-weight: 800; margin-top: 4px; line-height: 1.2;">${normalized.name}</h2>
+        <h2 style="font-size: 1.6rem; font-weight: 800; margin-top: 4px; line-height: 1.2;">${esc(normalized.name)}</h2>
         <div style="font-size: 0.85rem; color: #fdba74; display: flex; align-items: center; gap: 6px; margin-top: 4px;">
-          <i class="fa-solid fa-location-dot"></i> ${normalized.location} (${normalized.distance})
+          <i class="fa-solid fa-location-dot"></i> ${esc(normalized.location)} (${esc(normalized.distance)})
         </div>
       </div>
     </div>
@@ -2274,23 +2293,23 @@ window.openDetailModal = async function (id) {
         </div>
         <div>
           <div style="font-size: 0.72rem; color: var(--neutral-500); font-weight: 700; text-transform: uppercase;">Jam Buka</div>
-          <div style="font-size: 0.85rem; font-weight: 800; color: var(--neutral-800); margin-top: 2px;">${normalized.hours}</div>
+          <div style="font-size: 0.85rem; font-weight: 800; color: var(--neutral-800); margin-top: 2px;">${esc(normalized.hours)}</div>
         </div>
       </div>
 
       <!-- Action Buttons -->
       <div class="modal-action-grid">
-        <a href="${mapsUrl}" target="_blank" rel="noopener" class="btn btn-outline" style="display:flex;align-items:center;justify-content:center;gap:8px;color:#1a73e8;border-color:#1a73e8;font-weight:700;text-decoration:none;">
+        <a href="${safeUrl(mapsUrl)}" target="_blank" rel="noopener" class="btn btn-outline" style="display:flex;align-items:center;justify-content:center;gap:8px;color:#1a73e8;border-color:#1a73e8;font-weight:700;text-decoration:none;">
           <i class="fa-solid fa-map-location-dot" style="color:#1a73e8;"></i> Rute Google Maps
         </a>
-        <a href="${waUrl}" target="_blank" rel="noopener" class="btn btn-wa-chat" title="Chat via WhatsApp">
+        <a href="${safeUrl(waUrl)}" target="_blank" rel="noopener" class="btn btn-wa-chat" title="Chat via WhatsApp">
           <i class="fa-brands fa-whatsapp" style="font-size:1.15rem;"></i> Chat Warung (WA)
         </a>
       </div>
 
       <!-- Description -->
       <p style="font-size: 0.925rem; color: var(--neutral-700); line-height: 1.6; margin-bottom: 20px;">
-        ${normalized.description}
+        ${esc(normalized.description)}
       </p>
 
       <!-- Facilities -->
@@ -2300,7 +2319,7 @@ window.openDetailModal = async function (id) {
       <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;">
         ${(Array.isArray(normalized.features) ? normalized.features : []).map(f => `
           <span style="background: var(--neutral-100); border: 1px solid var(--neutral-300); padding: 5px 12px; border-radius: var(--radius-full); font-size: 0.8rem; font-weight: 600; color: var(--neutral-800);">
-            <i class="fa-solid fa-check" style="color: var(--success-600);"></i> ${f}
+            <i class="fa-solid fa-check" style="color: var(--success-600);"></i> ${esc(f)}
           </span>
         `).join('')}
       </div>
@@ -2317,10 +2336,10 @@ window.openDetailModal = async function (id) {
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #fff; border: 1.5px solid var(--neutral-200); border-radius: var(--radius-md);">
             <div>
               <div style="font-size: 0.95rem; font-weight: 800; color: var(--neutral-900);">
-                ${menu.name}
+                ${esc(menu.name)}
                 ${menu.isBestSeller ? '<span style="background: var(--gold-100); color: var(--gold-600); font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 800;">Favorit Kos</span>' : ''}
               </div>
-              <div style="font-size: 0.75rem; color: var(--neutral-500);">${menu.portion}</div>
+              <div style="font-size: 0.75rem; color: var(--neutral-500);">${esc(menu.portion)}</div>
             </div>
             <div style="font-size: 1.1rem; font-weight: 900; color: var(--primary-800);">${formatIDR(menu.price)}</div>
           </div>
@@ -2335,7 +2354,7 @@ window.openDetailModal = async function (id) {
         ${isMahasiswa
       ? (hasReviewed
         ? `<span style="font-size:0.8rem;color:var(--success-600);font-weight:700;"><i class="fa-solid fa-check-circle"></i> Sudah Diulas</span>`
-        : `<button class="btn btn-primary btn-sm open-review-form-btn" data-id="${item.id}"><i class="fa-solid fa-pen"></i> Tulis Ulasan</button>`)
+        : `<button class="btn btn-primary btn-sm open-review-form-btn" data-id="${esc(item.id)}"><i class="fa-solid fa-pen"></i> Tulis Ulasan</button>`)
       : `<button class="btn btn-outline btn-sm" onclick="window.openLoginModal('mahasiswa')"><i class="fa-solid fa-lock"></i> Login untuk Ulasan</button>`
     }
       </div>
@@ -2345,18 +2364,18 @@ window.openDetailModal = async function (id) {
         ${reviews.map(rev => `
           <div style="background: var(--neutral-50); border: 1px solid var(--neutral-200); border-radius: var(--radius-lg); padding: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 0.9rem; font-weight: 800; color: var(--neutral-900);">${rev.reviewer_name || rev.users?.name || 'Mahasiswa'}</span>
+              <span style="font-size: 0.9rem; font-weight: 800; color: var(--neutral-900);">${esc(rev.reviewer_name || rev.users?.name || 'Mahasiswa')}</span>
               <span style="font-size: 0.75rem; color: var(--neutral-400);">${timeAgo(rev.created_at)}</span>
             </div>
             <div style="display: flex; gap: 10px; margin-bottom: 8px;">
               <span style="color: var(--gold-500); font-size: 0.8rem;">
-                ${'<i class="fa-solid fa-star"></i>'.repeat(rev.rating)}
+                ${'<i class="fa-solid fa-star"></i>'.repeat(Math.max(0, Math.min(5, Number(rev.rating) || 0)))}
               </span>
               <span style="background: var(--success-100); color: var(--success-600); font-size: 0.7rem; font-weight: 700; padding: 1px 8px; border-radius: var(--radius-full);">
                 Kenyang: ${rev.kenyang}/5
               </span>
             </div>
-            <p style="font-size: 0.85rem; color: var(--neutral-700); line-height: 1.5;">"${rev.comment}"</p>
+            <p style="font-size: 0.85rem; color: var(--neutral-700); line-height: 1.5;">"${esc(rev.comment)}"</p>
           </div>
         `).join('')}
       </div>
@@ -2589,10 +2608,10 @@ function renderRadarMapPins() {
       const html = `
         <div class="leaflet-warung-pin ${item.isFeatured ? 'featured' : ''} ${isSelected ? 'active' : ''}"
              style="opacity: ${opacity};"
-             title="${item.name} - Mulai ${priceText}">
+             title="${esc(item.name)} - Mulai ${esc(priceText)}">
           <i class="fa-solid ${item.isFeatured ? 'fa-star' : 'fa-utensils'} pin-icon-tag"></i>
-          <span class="pin-text-name">${shortName}</span>
-          <span class="pin-text-price">${priceText}</span>
+          <span class="pin-text-name">${esc(shortName)}</span>
+          <span class="pin-text-price">${esc(priceText)}</span>
         </div>
       `;
 
@@ -2626,8 +2645,8 @@ function renderRadarMapPins() {
       return `
         <div class="culinary-map-pin ${isSelected ? 'active' : ''}" 
              style="left: ${item.coordinates.x}%; top: ${item.coordinates.y}%; opacity: ${isWithinBudget ? '1' : '0.45'};" 
-             data-id="${item.id}"
-             title="${item.name} (${formatIDR(item.minPrice)})">
+             data-id="${esc(item.id)}"
+             title="${esc(item.name)} (${formatIDR(item.minPrice)})">
           <div class="pin-bubble ${item.isFeatured ? 'featured' : ''}">
             <i class="fa-solid fa-utensils"></i>
             <span>${formatIDR(item.minPrice)}</span>
@@ -2665,28 +2684,28 @@ function selectRadarSpot(id) {
 
   const popularMenus = item.popularMenus || [];
   const topMenusHtml = popularMenus.slice(0, 3).map(m => `
-    <span class="spot-menu-tag"><i class="fa-solid fa-check"></i> ${m.name} (${formatIDR(m.price)})</span>
+    <span class="spot-menu-tag"><i class="fa-solid fa-check"></i> ${esc(m.name)} (${formatIDR(m.price)})</span>
   `).join('');
 
   radarDetailContainer.innerHTML = `
     <div class="radar-spot-card">
       <div class="spot-card-hero">
-        <img src="${item.image}" alt="${item.name}" class="spot-card-img" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80'" />
+        <img src="${safeUrl(item.image)}" alt="${esc(item.name)}" class="spot-card-img" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80'" />
         <div class="spot-card-badges">
-          <span class="spot-badge-cat">${item.categoryLabel}</span>
+          <span class="spot-badge-cat">${esc(item.categoryLabel)}</span>
           <span class="badge-kenyang-score"><i class="fa-solid fa-bowl-food"></i> Kenyang ${item.kenyangScore}</span>
         </div>
       </div>
 
       <div class="spot-card-body">
-        <h4 class="radar-spot-title">${item.name}</h4>
+        <h4 class="radar-spot-title">${esc(item.name)}</h4>
         <div class="spot-meta-row">
-          <span class="spot-meta-distance"><i class="fa-solid fa-person-walking"></i> ${item.distance}</span>
-          <span class="spot-meta-area"><i class="fa-solid fa-location-dot"></i> ${item.area}</span>
+          <span class="spot-meta-distance"><i class="fa-solid fa-person-walking"></i> ${esc(item.distance)}</span>
+          <span class="spot-meta-area"><i class="fa-solid fa-location-dot"></i> ${esc(item.area)}</span>
         </div>
 
         <p style="font-size: 0.82rem; color: var(--neutral-600); margin-bottom: 12px; line-height: 1.45;">
-          ${(item.description || '').substring(0, 95)}...
+          ${esc((item.description || '').substring(0, 95))}...
         </p>
 
         <div class="spot-price-box">
@@ -2702,15 +2721,15 @@ function selectRadarSpot(id) {
         ` : ''}
 
         <div class="spot-actions-grid">
-          <a href="${mapsUrl}" target="_blank" rel="noopener" class="btn-spot-route" title="Buka rute navigasi Google Maps">
+          <a href="${safeUrl(mapsUrl)}" target="_blank" rel="noopener" class="btn-spot-route" title="Buka rute navigasi Google Maps">
             <i class="fa-solid fa-map-location-dot"></i> Rute Maps
           </a>
-          <a href="${waUrl}" target="_blank" rel="noopener" class="btn-spot-wa" title="Hubungi warung via WhatsApp">
+          <a href="${safeUrl(waUrl)}" target="_blank" rel="noopener" class="btn-spot-wa" title="Hubungi warung via WhatsApp">
             <i class="fa-brands fa-whatsapp"></i> Chat WA
           </a>
         </div>
 
-        <button class="btn btn-primary btn-sm btn-spot-full" id="radarDetailBtn" data-id="${item.id}">
+        <button class="btn btn-primary btn-sm btn-spot-full" id="radarDetailBtn" data-id="${esc(item.id)}">
           <i class="fa-solid fa-book-open"></i> Lihat Menu &amp; Ulasan
         </button>
       </div>
@@ -2786,8 +2805,8 @@ function updateMealPlanner() {
     plannerTimeline.innerHTML = `
       <div class="meal-slot-card">
         <span class="meal-time-badge time-sarapan"><i class="fa-regular fa-sun"></i> 07:00 • Sarapan Pagi</span>
-        <h5 class="meal-food-name">${plan.sarapan.food}</h5>
-        <p class="meal-place-name"><i class="fa-solid fa-store"></i> ${plan.sarapan.place}</p>
+        <h5 class="meal-food-name">${esc(plan.sarapan.food)}</h5>
+        <p class="meal-place-name"><i class="fa-solid fa-store"></i> ${esc(plan.sarapan.place)}</p>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
           <span class="meal-price-tag">${formatIDR(plan.sarapan.price)}</span>
           <span class="badge-kenyang-score"><i class="fa-solid fa-bowl-food"></i> Kenyang ${plan.sarapan.kenyang}</span>
@@ -2795,8 +2814,8 @@ function updateMealPlanner() {
       </div>
       <div class="meal-slot-card">
         <span class="meal-time-badge time-siang"><i class="fa-solid fa-sun"></i> 12:30 • Makan Siang</span>
-        <h5 class="meal-food-name">${plan.siang.food}</h5>
-        <p class="meal-place-name"><i class="fa-solid fa-store"></i> ${plan.siang.place}</p>
+        <h5 class="meal-food-name">${esc(plan.siang.food)}</h5>
+        <p class="meal-place-name"><i class="fa-solid fa-store"></i> ${esc(plan.siang.place)}</p>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
           <span class="meal-price-tag">${formatIDR(plan.siang.price)}</span>
           <span class="badge-kenyang-score"><i class="fa-solid fa-bowl-food"></i> Kenyang ${plan.siang.kenyang}</span>
@@ -2804,8 +2823,8 @@ function updateMealPlanner() {
       </div>
       <div class="meal-slot-card">
         <span class="meal-time-badge time-malam"><i class="fa-solid fa-moon"></i> 19:00 • Makan Malam</span>
-        <h5 class="meal-food-name">${plan.malam.food}</h5>
-        <p class="meal-place-name"><i class="fa-solid fa-store"></i> ${plan.malam.place}</p>
+        <h5 class="meal-food-name">${esc(plan.malam.food)}</h5>
+        <p class="meal-place-name"><i class="fa-solid fa-store"></i> ${esc(plan.malam.place)}</p>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
           <span class="meal-price-tag">${formatIDR(plan.malam.price)}</span>
           <span class="badge-kenyang-score"><i class="fa-solid fa-bowl-food"></i> Kenyang ${plan.malam.kenyang}</span>
@@ -3307,7 +3326,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // 19. Load data from Supabase Cloud, then render
-  console.log('[MUYANG] Loading data from Supabase...');
+  console.log('[MUYANG] Loading data from Database...');
   await Promise.all([
     refreshWarungsCache(),
     refreshBookmarkSet()
@@ -3335,5 +3354,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.section-reveal').forEach(el => el.classList.add('section-visible'));
   }
 
-  console.log('[MUYANG] Web App v3.0 Loaded — 100% Supabase Database');
+  console.log('[MUYANG] Web Successfully Loaded With Database...');
 });
