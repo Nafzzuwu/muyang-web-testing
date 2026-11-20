@@ -1408,7 +1408,7 @@ async function renderAdminDashboard() {
                   <div style="font-weight:700;color:var(--primary-900);">${esc(u.paket_kemitraan ? u.paket_kemitraan.name : (u.category || '-'))}</div>
                   <div style="font-weight:800;color:var(--accent-600);font-size:0.9rem;">${u.paket_kemitraan ? formatIDR(u.paket_kemitraan.price) : ''}</div>
                 </td>
-                <td>${esc(statusLabel[u.status] || u.status)}</td>
+                <td>${statusLabel[u.status] || esc(u.status)}</td>
                 <td class="admin-actions-cell">
                   ${u.status === 'pending' ? `
                     <button class="btn btn-primary btn-xs" onclick="window.adminApproveUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})">
