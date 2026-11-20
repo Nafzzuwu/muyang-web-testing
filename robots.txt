@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://munyang.my.id/sitemap.xml
+Sitemap: https://muyang.my.id/sitemap.xml
