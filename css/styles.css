@@ -2958,21 +2958,36 @@ textarea {
 .admin-renewal-group-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; color: var(--gold-600); background: rgba(254, 243, 199, 0.52); font-size: 0.78rem; font-weight: 800; }
 .admin-renewal-group-title span { display: inline-flex; align-items: center; gap: 7px; }
 .admin-renewal-group-title b { min-width: 24px; padding: 2px 7px; border-radius: var(--radius-full); color: var(--gold-600); background: var(--gold-100); text-align: center; }
-.admin-renewal-row { display: grid; grid-template-columns: minmax(190px, 1.3fr) minmax(160px, 0.9fr) auto; align-items: center; gap: 16px; padding: 13px 16px; border-top: 1px solid rgba(242, 215, 157, 0.6); background: rgba(255, 255, 255, 0.62); }
-.admin-renewal-main, .admin-renewal-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.admin-renewal-main strong { color: var(--primary-900); font-size: 0.88rem; }
-.admin-renewal-main span, .admin-renewal-meta { color: var(--neutral-600); font-size: 0.78rem; }
-.admin-renewal-meta b { color: var(--accent-600); font-size: 0.84rem; }
-.admin-renewal-meta a { color: var(--success-700); font-size: 0.76rem; font-weight: 700; }
-.admin-renewal-meta a:hover { text-decoration: underline; }
+.admin-renewal-row { display: grid; grid-template-columns: minmax(210px, 1.4fr) minmax(130px, 0.7fr) auto; align-items: center; gap: 16px; padding: 14px 16px; border-top: 1px solid rgba(242, 215, 157, 0.6); background: rgba(255, 255, 255, 0.78); }
+.admin-renewal-main, .admin-renewal-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.admin-renewal-title-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.admin-renewal-main strong { color: var(--primary-900); font-size: 0.9rem; }
+.admin-renewal-main > span { color: var(--neutral-600); font-size: 0.79rem; }
+.admin-renewal-main > span strong { color: var(--primary-900); font-size: 0.79rem; }
+.admin-reg-pill { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 6px; background: #F4EFE8; color: var(--neutral-600); font-size: 0.69rem; font-weight: 700; letter-spacing: 0.02em; }
+.admin-type-badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: var(--radius-full); font-size: 0.69rem; font-weight: 800; }
+.admin-type-badge.is-renewal { background: #FEF0D8; color: #9A4D09; }
+.admin-type-badge.is-upgrade { background: #DBEAFE; color: #1E40AF; }
+.admin-renewal-meta { align-items: flex-end; text-align: right; }
+.admin-renewal-meta-label { font-size: 0.69rem; font-weight: 600; color: var(--neutral-400); text-transform: uppercase; letter-spacing: 0.04em; }
+.admin-renewal-meta b { color: var(--accent-600); font-size: 0.92rem; font-weight: 800; }
+.admin-renewal-actions { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.btn-wa-icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: var(--radius-full); border: 1px solid #BCE5CA; background: #EEFBF2; color: var(--success-700); font-size: 0.95rem; text-decoration: none; transition: background 0.16s ease, transform 0.16s ease; }
+.btn-wa-icon:hover { background: #DCFCE7; transform: translateY(-1px); }
 .admin-expiring-group .admin-renewal-group-title { color: var(--accent-700); background: rgba(255, 237, 213, 0.6); }
 .admin-expiring-row .admin-renewal-meta b { color: var(--accent-700); }
-.status-badge { display: inline-block; white-space: nowrap; padding: 3px 10px; border-radius: var(--radius-full); font-size: 0.72rem; font-weight: 800; }
+.status-badge { display: inline-flex; align-items: center; gap: 5px; width: fit-content; white-space: nowrap; padding: 3px 10px; border-radius: var(--radius-full); font-size: 0.72rem; font-weight: 800; }
 .status-pending { background: var(--gold-100); color: var(--gold-600); }
 .status-payment { background: #DBEAFE; color: #1E40AF; }
 .status-verifying { background: #F3E8FF; color: #6B21A8; }
 .status-active { background: var(--success-100); color: var(--success-700); }
 .status-rejected { background: #FEE2E2; color: #991B1B; }
+.status-expired { background: #F3F4F6; color: #6B7280; border: 1px solid #D1D5DB; }
+.status-renewal-pending { background: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
+.admin-status-stack { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+.admin-pkg-pending-note { display: inline-flex; align-items: center; gap: 5px; margin-top: 5px; padding: 3px 8px; border-radius: 6px; background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; font-size: 0.72rem; font-weight: 700; }
+.admin-action-locked { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--radius-full); background: #FDF6EA; border: 1px dashed #E2BE86; color: #9A4D09; font-size: 0.75rem; font-weight: 700; }
+.admin-table tbody tr.has-pending-package td { background: rgba(255, 251, 235, 0.55); }
 
 .admin-loc-title { font-weight: 700; color: var(--primary-900); }
 .admin-loc-address { font-size: 0.82rem; color: var(--neutral-500); margin: 2px 0 6px; }
@@ -3133,8 +3148,8 @@ textarea {
    RESPONSIVE BREAKPOINTS
    =================================================================== */
 @media (max-width: 1024px) {
-  .admin-renewal-row { grid-template-columns: minmax(170px, 1fr) minmax(140px, 0.8fr); }
-  .admin-renewal-row .btn { grid-column: 1 / -1; justify-self: start; }
+  .admin-renewal-row { grid-template-columns: minmax(170px, 1fr) auto; }
+  .admin-renewal-actions { grid-column: 1 / -1; justify-content: flex-start; }
 
   .hero-banner {
     grid-template-columns: 1fr;
@@ -3191,8 +3206,10 @@ textarea {
 
   .admin-section-heading { flex-direction: column; gap: 4px; }
   .admin-section-note { max-width: none; text-align: left; }
-  .admin-renewal-row { grid-template-columns: 1fr; gap: 8px; padding: 13px; }
-  .admin-renewal-row .btn { grid-column: auto; width: 100%; }
+  .admin-renewal-row { grid-template-columns: 1fr; gap: 10px; padding: 13px; }
+  .admin-renewal-meta { align-items: flex-start; text-align: left; }
+  .admin-renewal-actions { grid-column: auto; width: 100%; }
+  .admin-renewal-actions .btn { flex: 1; justify-content: center; }
   .admin-table-wrap { border-radius: 10px; }
 
   .navbar {

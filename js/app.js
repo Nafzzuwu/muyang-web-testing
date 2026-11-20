@@ -1317,38 +1317,90 @@ window.openPackageChangeModal = async function () {
   };
 };
 
-async function renderAdminPartnershipOverview(tableEl) {
-  const session = LS.getSession();
-  if (!session?.token) return;
-  let box = document.getElementById('adminPartnershipOverview');
+function formatWaPhone(phone) {
+  return String(phone || '').replace(/[^0-9]/g, '').replace(/^0/, '');
+}
+
+function renderAdminPartnershipOverview(overviewData) {
+  const box = document.getElementById('adminPartnershipOverview');
   const section = document.getElementById('adminPartnershipSection');
-  if (!box) return;
-  const { data } = await DB.adminPartnershipOverview(session.token);
-  if (!data?.ok) { box.innerHTML = ''; if (section) section.style.display = 'none'; return; }
-  const expiring = (data.expiring || []).filter(r => r.days_left <= PARTNERSHIP_WARN_DAYS);
-  if (!data.pending.length && !expiring.length) {
+  if (!box) return { pendingList: [], expiringList: [] };
+
+  if (!overviewData?.ok) {
     box.innerHTML = '';
     if (section) section.style.display = 'none';
-    return;
+    return { pendingList: [], expiringList: [] };
   }
+
+  const pendingList = Array.isArray(overviewData.pending) ? overviewData.pending : [];
+  const expiringList = (Array.isArray(overviewData.expiring) ? overviewData.expiring : [])
+    .filter(r => r.days_left <= PARTNERSHIP_WARN_DAYS);
+
+  if (!pendingList.length && !expiringList.length) {
+    box.innerHTML = '';
+    if (section) section.style.display = 'none';
+    return { pendingList, expiringList };
+  }
+
   if (section) section.style.display = '';
   const fmt = (d) => new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+
   box.innerHTML = `
-    ${data.pending.length ? `<div class="admin-renewal-group">
-      <div class="admin-renewal-group-title"><span><i class="fa-solid fa-hourglass-half"></i> Menunggu konfirmasi pembayaran</span><b>${data.pending.length}</b></div>
-      ${data.pending.map(r => `<div class="admin-renewal-row">
-        <div class="admin-renewal-main"><strong>${esc(r.business_name)}</strong><span>${r.current_paket === r.new_paket ? `Perpanjang ${esc(r.new_paket)}` : `${esc(r.current_paket || '-')} → ${esc(r.new_paket)}`}</span></div>
-        <div class="admin-renewal-meta"><b>${formatIDR(r.amount)}</b><a href="https://wa.me/62${esc(String(r.phone).replace(/[^0-9]/g, '').replace(/^0/, ''))}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> ${esc(r.phone)}</a></div>
-        <button class="btn btn-primary btn-xs" onclick="window.adminApprovePackageChange(${Number(r.reg_id)})"><i class="fa-solid fa-check"></i> Terapkan Paket</button>
-      </div>`).join('')}
+    ${pendingList.length ? `<div class="admin-renewal-group">
+      <div class="admin-renewal-group-title"><span><i class="fa-solid fa-hourglass-half"></i> Menunggu konfirmasi pembayaran</span><b>${pendingList.length}</b></div>
+      ${pendingList.map(r => {
+        const isRenewal = !r.current_paket || r.current_paket === r.new_paket;
+        const typeLabel = isRenewal ? 'Perpanjangan' : 'Ganti Paket';
+        const pkgDetail = isRenewal
+          ? `Paket: <strong>${esc(r.new_paket)}</strong>`
+          : `Paket: ${esc(r.current_paket)} &rarr; <strong>${esc(r.new_paket)}</strong>`;
+        const waDigits = formatWaPhone(r.phone);
+        const waText = encodeURIComponent(`Halo ${r.business_name}, tim MUYANG telah menerima pengajuan ${typeLabel.toLowerCase()} paket ${r.new_paket} (REG#${Number(r.reg_id)}).`);
+        return `<div class="admin-renewal-row">
+          <div class="admin-renewal-main">
+            <div class="admin-renewal-title-row">
+              <strong>${esc(r.business_name)}</strong>
+              <span class="admin-reg-pill">REG#${Number(r.reg_id)}</span>
+              <span class="admin-type-badge ${isRenewal ? 'is-renewal' : 'is-upgrade'}">${typeLabel}</span>
+            </div>
+            <span>${pkgDetail}</span>
+          </div>
+          <div class="admin-renewal-meta">
+            <span class="admin-renewal-meta-label">Tagihan Paket</span>
+            <b>${formatIDR(r.amount)}</b>
+          </div>
+          <div class="admin-renewal-actions">
+            ${waDigits ? `<a href="https://wa.me/62${esc(waDigits)}?text=${waText}" target="_blank" rel="noopener" class="btn-wa-icon" title="Hubungi ${esc(r.business_name)} via WhatsApp" aria-label="Chat WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
+            <button class="btn btn-primary btn-xs" onclick="window.adminApprovePackageChange(${Number(r.reg_id)})"><i class="fa-solid fa-check"></i> Terapkan Paket</button>
+          </div>
+        </div>`;
+      }).join('')}
     </div>` : ''}
-    ${expiring.length ? `<div class="admin-renewal-group admin-expiring-group">
-      <div class="admin-renewal-group-title"><span><i class="fa-solid fa-triangle-exclamation"></i> Segera berakhir (≤ ${PARTNERSHIP_WARN_DAYS} hari)</span><b>${expiring.length}</b></div>
-      ${expiring.map(r => `<div class="admin-renewal-row admin-expiring-row">
-        <div class="admin-renewal-main"><strong>${esc(r.business_name)}</strong><span>Berakhir ${fmt(r.ends_at)}</span></div>
-        <div class="admin-renewal-meta"><b>${r.days_left} hari lagi</b><a href="https://wa.me/62${esc(String(r.phone).replace(/[^0-9]/g, '').replace(/^0/, ''))}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> ${esc(r.phone)}</a></div>
-      </div>`).join('')}
+    ${expiringList.length ? `<div class="admin-renewal-group admin-expiring-group">
+      <div class="admin-renewal-group-title"><span><i class="fa-solid fa-triangle-exclamation"></i> Segera berakhir (&le; ${PARTNERSHIP_WARN_DAYS} hari)</span><b>${expiringList.length}</b></div>
+      ${expiringList.map(r => {
+        const waDigits = formatWaPhone(r.phone);
+        const waText = encodeURIComponent(`Halo ${r.business_name}, masa aktif paket kemitraan MUYANG Anda berakhir pada ${fmt(r.ends_at)} (${r.days_left} hari lagi).`);
+        return `<div class="admin-renewal-row admin-expiring-row">
+          <div class="admin-renewal-main">
+            <div class="admin-renewal-title-row">
+              <strong>${esc(r.business_name)}</strong>
+              <span class="admin-reg-pill">REG#${Number(r.reg_id)}</span>
+            </div>
+            <span>Berakhir ${fmt(r.ends_at)}</span>
+          </div>
+          <div class="admin-renewal-meta">
+            <span class="admin-renewal-meta-label">Sisa Masa Aktif</span>
+            <b>${r.days_left} hari lagi</b>
+          </div>
+          <div class="admin-renewal-actions">
+            ${waDigits ? `<a href="https://wa.me/62${esc(waDigits)}?text=${waText}" target="_blank" rel="noopener" class="btn-wa-icon" title="Ingatkan ${esc(r.business_name)} via WhatsApp" aria-label="Ingatkan via WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
+          </div>
+        </div>`;
+      }).join('')}
     </div>` : ''}`;
+
+  return { pendingList, expiringList };
 }
 
 window.adminApprovePackageChange = async function (regId) {
@@ -1566,9 +1618,14 @@ async function renderAdminDashboard() {
   if (tableEl) tableEl.innerHTML = '<p style="color:var(--neutral-400);padding:16px;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat data dari database...</p>';
   if (statsEl) statsEl.innerHTML = '';
 
+  const session = LS.getSession();
   let registrations;
+  let overviewRes = { data: null };
   try {
-    registrations = await DB.getAllRegistrations();
+    [registrations, overviewRes] = await Promise.all([
+      DB.getAllRegistrations(),
+      session?.token ? DB.adminPartnershipOverview(session.token) : Promise.resolve({ data: null })
+    ]);
   } catch (error) {
     console.warn('[Admin] Load registrations error:', error);
     if (tableEl) tableEl.innerHTML = '<p style="color:#b91c1c;padding:16px;">Gagal memuat data admin. Sesi mungkin kedaluwarsa; keluar lalu masuk kembali.</p>';
@@ -1576,7 +1633,9 @@ async function renderAdminDashboard() {
     return;
   }
 
-  renderAdminPartnershipOverview(tableEl);
+  const { pendingList, expiringList } = renderAdminPartnershipOverview(overviewRes?.data);
+  const pendingByRegId = new Map(pendingList.map(r => [Number(r.reg_id), r]));
+  const expiringByRegId = new Map(expiringList.map(r => [Number(r.reg_id), r]));
 
   const statusLabel = {
     pending: '<span class="status-badge status-pending">Pending Review</span>',
@@ -1584,14 +1643,18 @@ async function renderAdminDashboard() {
     verifying: '<span class="status-badge status-verifying">Verifikasi Bayar</span>',
     active: '<span class="status-badge status-active">Mitra Aktif</span>',
     rejected: '<span class="status-badge status-rejected">Ditolak</span>',
-    expired: '<span class="status-badge" style="background:#f3f4f6;color:#6b7280;border:1px solid #d1d5db;font-weight:800;font-size:0.72rem;padding:3px 10px;border-radius:999px;">Kemitraan Berakhir</span>'
+    expired: '<span class="status-badge status-expired">Kemitraan Berakhir</span>'
   };
 
   // Stats Grid
   if (statsEl) {
     const total = registrations.length;
     const pending = registrations.filter(u => u.status === 'pending').length;
-    const payment = registrations.filter(u => u.status === 'awaiting_payment' || u.status === 'verifying').length;
+    const extraRenewalPending = pendingList.filter(r => {
+      const reg = registrations.find(u => Number(u.id) === Number(r.reg_id));
+      return !reg || (reg.status !== 'awaiting_payment' && reg.status !== 'verifying');
+    }).length;
+    const payment = registrations.filter(u => u.status === 'awaiting_payment' || u.status === 'verifying').length + extraRenewalPending;
     const active = registrations.filter(u => u.status === 'active').length;
     const expired = registrations.filter(u => u.status === 'expired').length;
 
@@ -1637,8 +1700,12 @@ async function renderAdminDashboard() {
             </tr>
           </thead>
           <tbody>
-            ${registrations.map(u => `
-              <tr>
+            ${registrations.map(u => {
+              const pendingPkg = pendingByRegId.get(Number(u.id));
+              const expiringPkg = expiringByRegId.get(Number(u.id));
+              const isRenewalReq = pendingPkg && (!pendingPkg.current_paket || pendingPkg.current_paket === pendingPkg.new_paket);
+              return `
+              <tr class="${pendingPkg ? 'has-pending-package' : ''}">
                 <td>
                   <div style="font-weight:800;color:var(--neutral-900);">${esc(u.business_name)}</div>
                   <div style="font-size:0.75rem;color:var(--neutral-500);margin-top:2px;"><span style="font-weight:600;">REG#${u.id}</span></div>
@@ -1651,47 +1718,61 @@ async function renderAdminDashboard() {
                 </td>
                 <td>
                   <div style="font-weight:700;">${esc(u.owner_name)}</div>
-                  <a href="https://wa.me/62${esc(String(u.phone).replace(/[^0-9]/g, '').replace(/^0/, ''))}" target="_blank" style="font-size:0.8rem;color:var(--success-600);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:2px;">
+                  <a href="https://wa.me/62${esc(formatWaPhone(u.phone))}" target="_blank" rel="noopener" style="font-size:0.8rem;color:var(--success-600);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:2px;">
                     <i class="fa-brands fa-whatsapp"></i> ${esc(u.phone)}
                   </a>
                 </td>
                 <td>
                   <div style="font-weight:700;color:var(--primary-900);">${esc(u.paket_kemitraan ? u.paket_kemitraan.name : (u.category || '-'))}</div>
                   <div style="font-weight:800;color:var(--accent-600);font-size:0.9rem;">${u.paket_kemitraan ? formatIDR(u.paket_kemitraan.price) : ''}</div>
+                  ${pendingPkg ? `<div class="admin-pkg-pending-note"><i class="fa-solid fa-rotate"></i> ${isRenewalReq ? 'Perpanjang' : 'Ajuan'}: ${esc(pendingPkg.new_paket)} (${formatIDR(pendingPkg.amount)})</div>` : ''}
                 </td>
-                <td>${statusLabel[u.status] || esc(u.status)}</td>
+                <td>
+                  <div class="admin-status-stack">
+                    ${statusLabel[u.status] || esc(u.status)}
+                    ${pendingPkg ? `<span class="status-badge status-renewal-pending"><i class="fa-solid fa-hourglass-half"></i> ${isRenewalReq ? 'Perpanjangan' : 'Ganti Paket'} &bull; Menunggu Bayar</span>` : ''}
+                    ${!pendingPkg && expiringPkg ? `<span class="status-badge status-pending">Berakhir ${expiringPkg.days_left} hari lagi</span>` : ''}
+                  </div>
+                </td>
                 <td class="admin-actions-cell">
                   <div class="admin-actions">
-                  ${u.status === 'pending' ? `
-                    <button class="btn btn-primary btn-xs" onclick="window.adminApproveUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})">
-                      <i class="fa-solid fa-check"></i> Setujui
-                    </button>
-                    <button class="btn btn-outline btn-xs" onclick="window.adminRejectUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})" style="color:#dc2626;border-color:#dc2626;">
-                      <i class="fa-solid fa-times"></i> Tolak
-                    </button>
-                  ` : ''}
-                  ${u.status === 'awaiting_payment' || u.status === 'verifying' ? `
-                    <button class="btn btn-accent btn-xs" onclick="window.adminActivateUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})">
-                      <i class="fa-solid fa-bolt"></i> Konfirmasi &amp; Aktifkan
-                    </button>
-                  ` : ''}
-                  ${u.status === 'active' ? `
-                    <span style="color:var(--success-600);font-size:0.82rem;font-weight:800;"><i class="fa-solid fa-circle-check"></i> Tayang Publik</span>
-                    <button class="btn btn-outline btn-xs" onclick="window.adminDeactivateUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})" style="color:#dc2626;border-color:#dc2626;margin-top:4px;">
-                      <i class="fa-solid fa-ban"></i> Nonaktifkan
-                    </button>
-                  ` : ''}
-                  ${u.status === 'rejected' ? `<span style="color:var(--neutral-400);font-size:0.82rem;">Ditolak</span>` : ''}
-                  ${u.status === 'expired' ? `
-                    <span style="color:#9ca3af;font-size:0.82rem;font-weight:700;"><i class="fa-solid fa-clock"></i> Nonaktif</span>
-                    <button class="btn btn-primary btn-xs" onclick="window.adminReactivateUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})" style="margin-top:4px;">
-                      <i class="fa-solid fa-rotate-right"></i> Aktifkan Kembali
-                    </button>
-                  ` : ''}
+                  ${pendingPkg ? `
+                    <span class="admin-action-locked" title="Konfirmasi melalui tombol Terapkan Paket di panel antrean atas">
+                      <i class="fa-solid fa-hourglass-half"></i> Menunggu konfirmasi paket
+                    </span>
+                  ` : `
+                    ${u.status === 'pending' ? `
+                      <button class="btn btn-primary btn-xs" onclick="window.adminApproveUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})">
+                        <i class="fa-solid fa-check"></i> Setujui
+                      </button>
+                      <button class="btn btn-outline btn-xs" onclick="window.adminRejectUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})" style="color:#dc2626;border-color:#dc2626;">
+                        <i class="fa-solid fa-times"></i> Tolak
+                      </button>
+                    ` : ''}
+                    ${u.status === 'awaiting_payment' || u.status === 'verifying' ? `
+                      <button class="btn btn-accent btn-xs" onclick="window.adminActivateUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})">
+                        <i class="fa-solid fa-bolt"></i> Konfirmasi &amp; Aktifkan
+                      </button>
+                    ` : ''}
+                    ${u.status === 'active' ? `
+                      <span style="color:var(--success-600);font-size:0.82rem;font-weight:800;"><i class="fa-solid fa-circle-check"></i> Tayang Publik</span>
+                      <button class="btn btn-outline btn-xs" onclick="window.adminDeactivateUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})" style="color:#dc2626;border-color:#dc2626;margin-top:4px;">
+                        <i class="fa-solid fa-ban"></i> Nonaktifkan
+                      </button>
+                    ` : ''}
+                    ${u.status === 'rejected' ? `<span style="color:var(--neutral-400);font-size:0.82rem;">Ditolak</span>` : ''}
+                    ${u.status === 'expired' ? `
+                      <span style="color:#9ca3af;font-size:0.82rem;font-weight:700;"><i class="fa-solid fa-clock"></i> Nonaktif</span>
+                      <button class="btn btn-primary btn-xs" onclick="window.adminReactivateUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})" style="margin-top:4px;">
+                        <i class="fa-solid fa-rotate-right"></i> Aktifkan Kembali
+                      </button>
+                    ` : ''}
+                  `}
                   </div>
                 </td>
               </tr>
-            `).join('')}
+            `;
+            }).join('')}
           </tbody>
         </table>
       `;
