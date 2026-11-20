@@ -1319,22 +1319,36 @@ window.openPackageChangeModal = async function () {
 
 async function renderAdminPartnershipOverview(tableEl) {
   const session = LS.getSession();
-  if (!tableEl || !session?.token) return;
+  if (!session?.token) return;
   let box = document.getElementById('adminPartnershipOverview');
-  if (!box) { box = document.createElement('div'); box.id = 'adminPartnershipOverview'; tableEl.parentElement.prepend(box); }
+  const section = document.getElementById('adminPartnershipSection');
+  if (!box) return;
   const { data } = await DB.adminPartnershipOverview(session.token);
-  if (!data?.ok) { box.innerHTML = ''; return; }
+  if (!data?.ok) { box.innerHTML = ''; if (section) section.style.display = 'none'; return; }
   const expiring = (data.expiring || []).filter(r => r.days_left <= PARTNERSHIP_WARN_DAYS);
-  if (!data.pending.length && !expiring.length) { box.innerHTML = ''; return; }
+  if (!data.pending.length && !expiring.length) {
+    box.innerHTML = '';
+    if (section) section.style.display = 'none';
+    return;
+  }
+  if (section) section.style.display = '';
   const fmt = (d) => new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-  box.innerHTML = `<div style="padding:12px 16px;margin-bottom:14px;border-radius:12px;background:#fffbeb;border:1px solid #fde68a;">
-    ${data.pending.length ? `<div style="font-weight:800;margin-bottom:6px;">Permintaan ganti/perpanjang paket (${data.pending.length})</div>` +
-      data.pending.map(r => `<div style="display:flex;gap:10px;justify-content:space-between;align-items:center;padding:4px 0;flex-wrap:wrap;">
-        <span><strong>${esc(r.business_name)}</strong>: ${r.current_paket === r.new_paket ? `Perpanjang <strong>${esc(r.new_paket)}</strong>` : `${esc(r.current_paket || '-')} → <strong>${esc(r.new_paket)}</strong>`} (${formatIDR(r.amount)}) · ${esc(r.phone)}</span>
-        <button class="btn btn-primary btn-xs" onclick="window.adminApprovePackageChange(${Number(r.reg_id)})">Pembayaran Diterima, Terapkan</button></div>`).join('') : ''}
-    ${expiring.length ? `<div style="font-weight:800;margin:${data.pending.length ? '10px' : '0'} 0 6px;">Segera berakhir (≤ ${PARTNERSHIP_WARN_DAYS} hari)</div>` +
-      expiring.map(r => `<div style="padding:2px 0;"><strong>${esc(r.business_name)}</strong> — ${fmt(r.ends_at)} (${r.days_left} hari lagi) · ${esc(r.phone)}</div>`).join('') : ''}
-  </div>`;
+  box.innerHTML = `
+    ${data.pending.length ? `<div class="admin-renewal-group">
+      <div class="admin-renewal-group-title"><span><i class="fa-solid fa-hourglass-half"></i> Menunggu konfirmasi pembayaran</span><b>${data.pending.length}</b></div>
+      ${data.pending.map(r => `<div class="admin-renewal-row">
+        <div class="admin-renewal-main"><strong>${esc(r.business_name)}</strong><span>${r.current_paket === r.new_paket ? `Perpanjang ${esc(r.new_paket)}` : `${esc(r.current_paket || '-')} → ${esc(r.new_paket)}`}</span></div>
+        <div class="admin-renewal-meta"><b>${formatIDR(r.amount)}</b><a href="https://wa.me/62${esc(String(r.phone).replace(/[^0-9]/g, '').replace(/^0/, ''))}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> ${esc(r.phone)}</a></div>
+        <button class="btn btn-primary btn-xs" onclick="window.adminApprovePackageChange(${Number(r.reg_id)})"><i class="fa-solid fa-check"></i> Terapkan Paket</button>
+      </div>`).join('')}
+    </div>` : ''}
+    ${expiring.length ? `<div class="admin-renewal-group admin-expiring-group">
+      <div class="admin-renewal-group-title"><span><i class="fa-solid fa-triangle-exclamation"></i> Segera berakhir (≤ ${PARTNERSHIP_WARN_DAYS} hari)</span><b>${expiring.length}</b></div>
+      ${expiring.map(r => `<div class="admin-renewal-row admin-expiring-row">
+        <div class="admin-renewal-main"><strong>${esc(r.business_name)}</strong><span>Berakhir ${fmt(r.ends_at)}</span></div>
+        <div class="admin-renewal-meta"><b>${r.days_left} hari lagi</b><a href="https://wa.me/62${esc(String(r.phone).replace(/[^0-9]/g, '').replace(/^0/, ''))}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> ${esc(r.phone)}</a></div>
+      </div>`).join('')}
+    </div>` : ''}`;
 }
 
 window.adminApprovePackageChange = async function (regId) {
