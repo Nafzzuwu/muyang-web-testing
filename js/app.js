@@ -142,6 +142,16 @@ const DB = {
     });
   },
 
+  async validateSession(token, role) {
+    const validationRpc = {
+      mahasiswa: 'mhs_my_bookmarks',
+      umkm: 'umkm_my_registration',
+      admin: 'admin_list_registrations'
+    }[role];
+    if (!validationRpc) return { data: null, error: new Error('Role sesi tidak valid.') };
+    return this.rpc(validationRpc, { p_token: token });
+  },
+
   async registerMahasiswa(nim, name, fakultas, password) {
     return this.rpc('app_register_mahasiswa', {
       p_nim: nim,
@@ -2936,6 +2946,7 @@ function initAdminSecretTrigger() {
 document.addEventListener('DOMContentLoaded', async () => {
 
   // 1. Navbar
+  const savedSession = LS.getSession();
   updateNavbarState();
 
   // 2. Global click interceptor for '#' anchor links
@@ -2964,9 +2975,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 4. Initial view
+  // 4. Restore a valid saved login session after reload/reopen
   const currentHash = window.location.hash;
-  if (currentHash === '#dashboard') {
+  const localSessionValid = savedSession?.token &&
+    (!savedSession.expiresAt || savedSession.expiresAt > Date.now());
+  if (localSessionValid) {
+    try {
+      const { error } = await withLoading(
+        () => DB.validateSession(savedSession.token, savedSession.role),
+        'Memulihkan sesi akun...'
+      );
+      if (error) throw error;
+      if (currentHash === '#home' || currentHash === '#katalog' || currentHash === '#radar-map' || currentHash === '#meal-planner' || currentHash === '#kemitraan-umkm') {
+        showLanding();
+        if (currentHash !== '#home') setTimeout(() => navigateToSection(currentHash), 100);
+      } else {
+        await routeToDashboard();
+      }
+    } catch (error) {
+      console.info('[AUTH] Saved session expired or invalid:', error?.message);
+      LS.clearSession();
+      updateNavbarState();
+      showLanding();
+      showToast('Sesi kamu sudah berakhir. Silakan masuk kembali.', 'error');
+      if (currentHash === '#dashboard') openModal('loginModal');
+    }
+  } else if (savedSession) {
+    LS.clearSession();
+    updateNavbarState();
+    showLanding();
+    showToast('Sesi kamu sudah berakhir. Silakan masuk kembali.', 'error');
+    if (currentHash === '#dashboard') openModal('loginModal');
+  } else if (currentHash === '#dashboard') {
     routeToDashboard();
   } else {
     showLanding();
