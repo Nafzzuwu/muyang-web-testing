@@ -1024,7 +1024,8 @@ window.logoutUser = function () {
 // ============================================================
 // SESSION WATCHER — tendang perangkat lama jika akun login di perangkat lain
 // ============================================================
-const SESSION_CHECK_INTERVAL_MS = 15000;
+const SESSION_CHECK_INTERVAL_MS = 60000; // cadangan; notifikasi utama lewat Realtime
+let kickChannel = null;
 let sessionWatcherTimer = null;
 let sessionCheckBusy = false;
 
@@ -1085,15 +1086,54 @@ async function checkSessionNow() {
   }
 }
 
+async function sha256Hex(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Dengarkan sinyal "kicked" dari database lewat Supabase Realtime (Broadcast).
+// Nama channel memakai hash token sendiri, jadi hanya perangkat pemilik token yang tahu.
+async function subscribeKickChannel(token) {
+  if (!supabaseClient || !window.crypto?.subtle) return;
+  try {
+    const hash = await sha256Hex(token);
+    // batalkan jika user sudah logout / login ulang selama hashing
+    if (LS.getSession()?.token !== token) return;
+    unsubscribeKickChannel();
+    kickChannel = supabaseClient
+      .channel('kick:' + hash)
+      .on('broadcast', { event: 'kicked' }, () => {
+        checkSessionNow();
+        setTimeout(checkSessionNow, 1000); // jaga-jaga jika pengecekan sebelumnya masih berjalan
+      })
+      .subscribe((status) => {
+        // setelah (re)connect, cek sekali untuk menutup celah pesan yang terlewat
+        if (status === 'SUBSCRIBED') checkSessionNow();
+      });
+  } catch (err) {
+    console.info('[AUTH] Realtime kick channel unavailable:', err?.message);
+  }
+}
+
+function unsubscribeKickChannel() {
+  if (kickChannel && supabaseClient) {
+    try { supabaseClient.removeChannel(kickChannel); } catch (_) { /* abaikan */ }
+  }
+  kickChannel = null;
+}
+
 function startSessionWatcher() {
   stopSessionWatcher();
-  if (!LS.getSession()?.token) return;
+  const token = LS.getSession()?.token;
+  if (!token) return;
   sessionWatcherTimer = setInterval(checkSessionNow, SESSION_CHECK_INTERVAL_MS);
+  subscribeKickChannel(token);
 }
 
 function stopSessionWatcher() {
   if (sessionWatcherTimer) clearInterval(sessionWatcherTimer);
   sessionWatcherTimer = null;
+  unsubscribeKickChannel();
 }
 
 document.addEventListener('visibilitychange', () => {
