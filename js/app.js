@@ -30,19 +30,57 @@ function showToast(message, type) {
 }
 
 let loadingDepth = 0;
-function setLoading(isLoading, message = 'Memproses...') {
+function setLoading(isLoading, message = 'Menyiapkan dapur...') {
   const loadingEl = document.getElementById('globalLoading');
   const textEl = document.getElementById('globalLoadingText');
   if (!loadingEl) return;
   loadingDepth = Math.max(0, loadingDepth + (isLoading ? 1 : -1));
   if (isLoading && textEl) textEl.textContent = message;
-  loadingEl.hidden = loadingDepth === 0;
-  loadingEl.setAttribute('aria-busy', loadingDepth > 0 ? 'true' : 'false');
+  const active = loadingDepth > 0;
+  loadingEl.classList.toggle('is-visible', active);
+  loadingEl.setAttribute('aria-busy', active ? 'true' : 'false');
+  loadingEl.setAttribute('aria-hidden', active ? 'false' : 'true');
 }
 
-async function withLoading(task, message = 'Memproses...') {
+async function withLoading(task, message = 'Menyiapkan dapur...') {
   setLoading(true, message);
   try { return await task(); } finally { setLoading(false); }
+}
+
+function setButtonLoading(btn, isLoading, loadingText = 'Memproses...') {
+  if (!btn) return;
+  if (isLoading) {
+    if (!btn.dataset.origHtml) btn.dataset.origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="btn-inline-spinner" aria-hidden="true"></span><span>${esc(loadingText)}</span>`;
+  } else {
+    btn.disabled = false;
+    if (btn.dataset.origHtml) {
+      btn.innerHTML = btn.dataset.origHtml;
+      delete btn.dataset.origHtml;
+    }
+  }
+}
+
+function renderSteamingBowlSvg() {
+  return `
+    <svg class="muyang-loader-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle class="loader-halo" cx="32" cy="34" r="24" fill="rgba(234, 88, 12, 0.08)" />
+      <path class="loader-steam loader-steam-1" d="M23 22C21.5 19.2 25.2 17 23.8 13.5" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"/>
+      <path class="loader-steam loader-steam-2" d="M32 20.5C30.5 17.2 34.2 14.8 32.8 11" stroke="#EA580C" stroke-width="2.6" stroke-linecap="round"/>
+      <path class="loader-steam loader-steam-3" d="M41 22C39.5 19.2 43.2 17 41.8 13.5" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"/>
+      <g class="loader-bowl-group">
+        <path d="M39 27L53 18" stroke="#FB923C" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M41.5 29L54.5 22.5" stroke="#C2410C" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M17.5 31.5C18.8 24.5 24.8 22 32 22C39.2 22 45.2 24.5 46.5 31.5H17.5Z" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.2"/>
+        <path d="M23 28.5C25 25.8 29.2 25 33.5 25.3" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round"/>
+        <rect x="13.5" y="31" width="37" height="3.8" rx="1.9" fill="#F59E0B"/>
+        <path d="M15.5 34.8C15.5 44.2 22.6 49 32 49C41.4 49 48.5 44.2 48.5 34.8H15.5Z" fill="#EA580C"/>
+        <path d="M19 39.2Q32 41.8 45 39.2" stroke="#FFEDD5" stroke-width="1.8" stroke-linecap="round" opacity="0.92"/>
+        <path d="M25 49L26.3 52.5C26.5 53.1 27.1 53.5 27.8 53.5H36.2C36.9 53.5 37.5 53.1 37.7 52.5L39 49H25Z" fill="#B45309"/>
+      </g>
+    </svg>
+  `;
 }
 
 function timeAgo(isoString) {
@@ -597,7 +635,8 @@ function showDashboard(viewId) {
 window.showLanding = showLanding;
 
 function setActiveNav(hash) {
-  document.querySelectorAll('.nav-links .nav-item').forEach(item => {
+  const items = document.querySelectorAll('.nav-links .nav-item');
+  items.forEach(item => {
     const a = item.querySelector('a');
     if (a && a.getAttribute('href') === hash) {
       item.classList.add('active');
@@ -605,14 +644,40 @@ function setActiveNav(hash) {
       item.classList.remove('active');
     }
   });
+  requestAnimationFrame(syncNavIndicator);
+}
+
+function syncNavIndicator() {
+  const navLinks = document.querySelector('.nav-links');
+  const active = navLinks?.querySelector('.nav-item.active a');
+  const indicator = navLinks?.querySelector('.nav-active-indicator');
+  if (!navLinks || !active || !indicator) return;
+  const navRect = navLinks.getBoundingClientRect();
+  const activeRect = active.getBoundingClientRect();
+  indicator.style.width = `${activeRect.width}px`;
+  indicator.style.transform = `translateX(${activeRect.left - navRect.left}px)`;
+  indicator.style.opacity = '1';
+}
+
+function setMobileDrawerOpen(isOpen) {
+  const drawer = document.getElementById('mobileNavDrawer');
+  const toggleBtn = document.getElementById('mobileMenuToggle');
+  if (!drawer) return;
+  drawer.classList.toggle('active', isOpen);
+  drawer.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+  if (toggleBtn) {
+    toggleBtn.classList.toggle('is-open', isOpen);
+    toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    const icon = toggleBtn.querySelector('i');
+    if (icon) {
+      icon.className = isOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+    }
+  }
 }
 
 function navigateToSection(hash) {
   showLanding();
-  const mobileNavDrawer = document.getElementById('mobileNavDrawer');
-  if (mobileNavDrawer && mobileNavDrawer.classList.contains('active')) {
-    mobileNavDrawer.classList.remove('active');
-  }
+  setMobileDrawerOpen(false);
   if (!hash || hash === '#' || hash === '#home') {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     history.replaceState(null, '', '#home');
@@ -719,7 +784,7 @@ function updateNavbarState() {
     document.getElementById('dropRadar')?.addEventListener('click', (e) => { e.preventDefault(); navigateToSection('#radar-map'); });
     document.getElementById('dropLogout')?.addEventListener('click', (e) => { e.preventDefault(); window.logoutUser(); });
     document.getElementById('mobileDashBtn')?.addEventListener('click', () => {
-      document.getElementById('mobileNavDrawer')?.classList.remove('active');
+      setMobileDrawerOpen(false);
       routeToDashboard();
     });
     document.getElementById('mobileLogoutBtn')?.addEventListener('click', () => window.logoutUser());
@@ -780,8 +845,8 @@ async function handleLoginMahasiswa(e) {
   const password = document.getElementById('loginPasswordMhs').value;
 
   const btn = e.target.querySelector('[type=submit]');
-  if (btn) { btn.disabled = true; btn.textContent = 'Memverifikasi...'; }
-  setLoading(true, 'Memverifikasi akun...');
+  setButtonLoading(btn, true, 'Memverifikasi...');
+  setLoading(true, 'Memverifikasi akun mahasiswa...');
 
   try {
     const { data, error } = await DB.login(nim, password, 'mahasiswa');
@@ -799,7 +864,7 @@ async function handleLoginMahasiswa(e) {
     console.warn('[AUTH] Login mahasiswa error:', err);
   } finally {
     setLoading(false);
-    if (btn) { btn.disabled = false; btn.textContent = 'Masuk'; }
+    setButtonLoading(btn, false);
   }
 }
 
@@ -810,7 +875,7 @@ async function handleLoginUmkm(e) {
   const password = document.getElementById('loginPasswordUmkm').value;
 
   const btn = e.target.querySelector('[type=submit]');
-  if (btn) { btn.disabled = true; btn.textContent = 'Memverifikasi...'; }
+  setButtonLoading(btn, true, 'Memverifikasi...');
   setLoading(true, 'Memverifikasi akun UMKM...');
 
   try {
@@ -829,7 +894,7 @@ async function handleLoginUmkm(e) {
     console.warn('[AUTH] Login UMKM error:', err);
   } finally {
     setLoading(false);
-    if (btn) { btn.disabled = false; btn.textContent = 'Masuk'; }
+    setButtonLoading(btn, false);
   }
 }
 
@@ -840,7 +905,7 @@ async function handleLoginAdmin(e) {
   const password = document.getElementById('adminPassword').value;
 
   const btn = e.target.querySelector('[type=submit]');
-  if (btn) { btn.disabled = true; btn.textContent = 'Memverifikasi...'; }
+  setButtonLoading(btn, true, 'Memverifikasi...');
   setLoading(true, 'Memverifikasi akses admin...');
 
   try {
@@ -859,7 +924,7 @@ async function handleLoginAdmin(e) {
     console.warn('[AUTH] Login admin error:', err);
   } finally {
     setLoading(false);
-    if (btn) { btn.disabled = false; btn.textContent = 'Masuk'; }
+    setButtonLoading(btn, false);
   }
 }
 
@@ -896,9 +961,8 @@ async function handleForgotPassword(e, role) {
   if (!verifier) { showToast('Isi data verifikasi terlebih dahulu.', 'error'); return; }
 
   const btn = e.target.querySelector('[type=submit]');
-  const btnLabel = btn ? btn.innerHTML : '';
-  if (btn) { btn.disabled = true; btn.textContent = 'Memverifikasi...'; }
-  setLoading(true, 'Memverifikasi data dan memperbarui password...');
+  setButtonLoading(btn, true, 'Memperbarui...');
+  setLoading(true, 'Memverifikasi data & memperbarui password...');
 
   try {
     const identifier = isMhs
@@ -924,7 +988,7 @@ async function handleForgotPassword(e, role) {
     console.warn('[AUTH] Forgot password error:', err);
   } finally {
     setLoading(false);
-    if (btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
+    setButtonLoading(btn, false);
   }
 }
 
@@ -940,7 +1004,7 @@ async function handleRegisterMahasiswa(e) {
   const password = document.getElementById('regPasswordMhs').value;
 
   const btn = e.target.querySelector('[type=submit]');
-  if (btn) { btn.disabled = true; btn.textContent = 'Mendaftarkan...'; }
+  setButtonLoading(btn, true, 'Mendaftarkan...');
   setLoading(true, 'Membuat akun mahasiswa...');
 
   try {
@@ -960,7 +1024,7 @@ async function handleRegisterMahasiswa(e) {
     console.warn('[AUTH] Register mahasiswa error:', err);
   } finally {
     setLoading(false);
-    if (btn) { btn.disabled = false; btn.textContent = 'Daftar Sekarang'; }
+    setButtonLoading(btn, false);
   }
 }
 
@@ -987,7 +1051,7 @@ async function handleRegisterUmkm(e) {
   if (locErr) { showToast(locErr, 'error'); return; }
 
   const btn = e.target.querySelector('[type=submit]');
-  if (btn) { btn.disabled = true; btn.textContent = 'Mendaftarkan...'; }
+  setButtonLoading(btn, true, 'Mengajukan...');
   setLoading(true, 'Mengirim pendaftaran UMKM...');
 
   try {
@@ -1013,7 +1077,7 @@ async function handleRegisterUmkm(e) {
     console.warn('[AUTH] Register UMKM error:', err);
   } finally {
     setLoading(false);
-    if (btn) { btn.disabled = false; btn.textContent = 'Daftar Mitra Sekarang'; }
+    setButtonLoading(btn, false);
   }
 }
 
@@ -1491,6 +1555,18 @@ async function renderUmkmDashboard() {
   const session = LS.getSession();
   if (!session || session.role !== 'umkm') return;
 
+  // Clear the previous UMKM view before fetching fresh status so an old
+  // expired banner cannot flash while the dashboard is being refreshed.
+  const activeView = document.getElementById('viewDashboardUmkmActive');
+  if (activeView) activeView.style.display = 'none';
+  const expiredBanner = document.getElementById('umkmExpiredBanner');
+  if (expiredBanner) expiredBanner.style.display = 'none';
+  const partnershipInfo = document.getElementById('umkmPartnershipInfo');
+  if (partnershipInfo) {
+    partnershipInfo.style.display = 'none';
+    partnershipInfo.innerHTML = '';
+  }
+
   // Ambil data live dari Supabase
   const [reg, warung] = await Promise.all([
     DB.getRegistrationByUserId(session.id),
@@ -1665,7 +1741,7 @@ async function renderAdminDashboard() {
   const statsEl = document.getElementById('adminStatsContainer');
   const reviewsTableEl = document.getElementById('adminReviewsTable');
 
-  if (tableEl) tableEl.innerHTML = '<p style="color:var(--neutral-400);padding:16px;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat data dari database...</p>';
+  if (tableEl) tableEl.innerHTML = `<div class="loading-inline">${renderSteamingBowlSvg()}<span>Memuat data mitra UMKM...</span></div>`;
   if (statsEl) statsEl.innerHTML = '';
 
   const session = LS.getSession();
@@ -2477,7 +2553,9 @@ function renderCulinaryGrid() {
   const heroCount = document.getElementById('heroResultCount');
   const data = filterCulinaryData();
   if (filteredCount) filteredCount.textContent = data.length;
-  if (heroCount) heroCount.textContent = data.length + ' Tempat';
+  if (heroCount) {
+    heroCount.textContent = data.length + ' Tempat';
+  }
 
   // Sync live Hero Campus Ledger Strip from real warungsCache
   const heroStatCount = document.getElementById('heroStatWarungCount');
@@ -2658,8 +2736,19 @@ window.openDetailModal = async function (id) {
   const detailModalContent = document.getElementById('detailModalContent');
   if (!detailModal || !detailModalContent) return;
 
-  // Show loading state
-  detailModalContent.innerHTML = '<div style="padding:60px;text-align:center;"><i class="fa-solid fa-spinner fa-spin fa-2x" style="color:var(--accent-500);"></i><p style="margin-top:12px;color:var(--neutral-500);">Memuat detail warung...</p></div>';
+  // Show branded steaming bowl + skeleton loading state
+  detailModalContent.innerHTML = `
+    <div class="loading-detail-wrap" role="status" aria-live="polite">
+      <div class="loading-detail-head">
+        ${renderSteamingBowlSvg()}
+        <span>Menyiapkan daftar menu &amp; ulasan...</span>
+      </div>
+      <div class="skeleton-block" style="height:160px;border-radius:14px;margin-bottom:16px;"></div>
+      <div class="skeleton-block" style="height:64px;border-radius:12px;margin-bottom:14px;"></div>
+      <div class="skeleton-block" style="height:48px;border-radius:10px;margin-bottom:10px;"></div>
+      <div class="skeleton-block" style="height:48px;border-radius:10px;"></div>
+    </div>
+  `;
   detailModal.classList.add('active');
 
   // Fetch warung from cache (already includes menus)
@@ -2838,8 +2927,8 @@ async function handleReviewSubmit(e) {
   const comment = document.getElementById('reviewComment').value.trim();
 
   const btn = e.target.querySelector('[type=submit]');
-  if (btn) { btn.disabled = true; btn.textContent = 'Mengirim...'; }
-  setLoading(true, 'Mengirim ulasan...');
+  setButtonLoading(btn, true, 'Mengirim...');
+  setLoading(true, 'Menerbitkan ulasan mahasiswa...');
 
   try {
     const { error } = await DB.insertReview({
@@ -2873,7 +2962,7 @@ async function handleReviewSubmit(e) {
     console.warn('[Review] Submit error:', err);
   } finally {
     setLoading(false);
-    if (btn) { btn.disabled = false; btn.textContent = 'Kirim Ulasan'; }
+    setButtonLoading(btn, false);
   }
 }
 
@@ -3642,8 +3731,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const btn = e.target.querySelector('[type=submit]');
-    if (btn) { btn.disabled = true; btn.textContent = 'Menyimpan...'; }
-    setLoading(true, 'Menyimpan menu...');
+    setButtonLoading(btn, true, 'Menyimpan...');
+    setLoading(true, 'Menyimpan menu warung...');
 
     try {
       // Upload foto menu jika ada
@@ -3680,7 +3769,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       showToast(`Menu "${name}" berhasil ditambahkan${imageUrl ? ' dengan foto' : ''}!`);
     } finally {
       setLoading(false);
-      if (btn) { btn.disabled = false; btn.textContent = 'Tambah Menu'; }
+      setButtonLoading(btn, false);
     }
   });
 
@@ -3700,9 +3789,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 17. Mobile Menu Drawer Toggle
-  document.getElementById('mobileMenuToggle')?.addEventListener('click', () => {
-    document.getElementById('mobileNavDrawer')?.classList.toggle('active');
+  // 17. Mobile Menu Drawer Toggle (smooth open/close + outside click + Escape + resize)
+  document.getElementById('mobileMenuToggle')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const drawer = document.getElementById('mobileNavDrawer');
+    setMobileDrawerOpen(!drawer?.classList.contains('active'));
+  });
+
+  document.addEventListener('click', (e) => {
+    const drawer = document.getElementById('mobileNavDrawer');
+    if (drawer?.classList.contains('active') && !e.target.closest('.main-header')) {
+      setMobileDrawerOpen(false);
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      setMobileDrawerOpen(false);
+      closeAllModals();
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) setMobileDrawerOpen(false);
   });
 
   // 18. Admin Secret Triggers
@@ -3810,15 +3919,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       for (const sec of spySections) {
         if (offset >= sec.offsetTop) currentId = sec.id;
       }
-      navItems.forEach(item => {
-        const href = item.querySelector('a')?.getAttribute('href') || '';
-        item.classList.toggle('active', href === '#' + currentId);
-      });
+       navItems.forEach(item => {
+         const href = item.querySelector('a')?.getAttribute('href') || '';
+         item.classList.toggle('active', href === '#' + currentId);
+       });
+       syncNavIndicator();
     }
   }
 
   window.addEventListener('scroll', updateScrollChrome, { passive: true });
+  window.addEventListener('resize', syncNavIndicator, { passive: true });
+  const navLinks = document.querySelector('.nav-links');
+  if (navLinks && !navLinks.querySelector('.nav-active-indicator')) {
+    const indicator = document.createElement('span');
+    indicator.className = 'nav-active-indicator';
+    indicator.setAttribute('aria-hidden', 'true');
+    navLinks.prepend(indicator);
+  }
   updateScrollChrome();
+  syncNavIndicator();
 
   // Subtle tactile tick on Hero Budget Display when slider or pills change
   const triggerBudgetTick = () => {
@@ -3833,5 +3952,113 @@ document.addEventListener('DOMContentLoaded', async () => {
     pill.addEventListener('click', triggerBudgetTick);
   });
 
+  // Initialize Curated Hero Spotlight Showcase
+  initHeroSpotlight();
+
   console.log('[MUYANG] Web App Successfully Loaded.');
 });
+
+// ============================================================
+// HERO CURATED SPOTLIGHT CONTROLLER (Option 1)
+// ============================================================
+const SPOTLIGHT_DATA = {
+  geprek: {
+    title: 'Lalapan & Geprek Barokah Mas Bro',
+    category: 'Ayam & Bebek · Jl. Kalimantan',
+    price: 'Rp 10.000',
+    distance: '130m dari Kampus',
+    kenyang: 'Kenyang 9.8/10',
+    rating: '4.8',
+    image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=800&q=80',
+    desc: 'Pilihan no. 1 anak kos Jl. Kalimantan: sambal bawang ulek dadakan pedas mantap, lalapan segar melimpah, dan nasi porsi kenyang.',
+    perks: ['Harga Mahasiswa', 'Nasi Porsi Banyak'],
+    searchQuery: 'Barokah Mas Bro'
+  },
+  hemat: {
+    title: 'Nasi Pecel Mbok Darmi',
+    category: 'Nasi Lauk · Jl. Kalimantan',
+    price: 'Rp 6.000',
+    distance: '100m dari Kampus',
+    kenyang: 'Kenyang 9.0/10',
+    rating: '4.9',
+    image: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=800&q=80',
+    desc: 'Menu legendaris penyelamat akhir bulan: bumbu pecel kental gurih khas Jember, sayur segar lengkap, dan rempeyek renyah.',
+    perks: ['Mulai Rp 6.000', 'Dekat Gerbang UNEJ'],
+    searchQuery: 'Mbok Darmi'
+  },
+  prasmanan: {
+    title: 'Warteg Barokah Jaya',
+    category: 'Warteg & Prasmanan · Jl. Jawa',
+    price: 'Rp 6.000',
+    distance: '320m dari Kampus',
+    kenyang: 'Kenyang 9.6/10',
+    rating: '4.7',
+    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
+    desc: 'Prasmanan lauk bebas di Jl. Jawa: oseng tempe, sayur lodeh, telur balado, dan aneka tumisan lezat ramah kantong.',
+    perks: ['30+ Pilihan Sayur', 'Buka Sampai Malam'],
+    searchQuery: 'Barokah Jaya'
+  }
+};
+
+function initHeroSpotlight() {
+  const tabs = document.querySelectorAll('.spotlight-tab');
+  const imgEl = document.getElementById('spotlightImg');
+  const titleEl = document.getElementById('spotlightTitle');
+  const catEl = document.getElementById('spotlightCategory');
+  const priceEl = document.getElementById('spotlightPriceVal');
+  const distEl = document.getElementById('spotlightDistanceTag');
+  const kenyangEl = document.getElementById('spotlightKenyangTag');
+  const ratingEl = document.getElementById('spotlightRating');
+  const descEl = document.getElementById('spotlightDesc');
+  const perksEl = document.getElementById('spotlightPerks');
+  const ctaBtn = document.getElementById('spotlightCtaBtn');
+
+  if (!tabs.length || !titleEl) return;
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const key = tab.getAttribute('data-curation');
+      const item = SPOTLIGHT_DATA[key];
+      if (!item) return;
+
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      if (imgEl) {
+        imgEl.style.opacity = '0.25';
+        imgEl.style.transform = 'scale(0.96)';
+        setTimeout(() => {
+          imgEl.src = item.image;
+          imgEl.alt = item.title;
+          imgEl.style.opacity = '1';
+          imgEl.style.transform = 'scale(1)';
+        }, 160);
+      }
+
+      if (titleEl) titleEl.textContent = item.title;
+      if (catEl) catEl.textContent = item.category;
+      if (priceEl) priceEl.textContent = item.price;
+      if (distEl) distEl.innerHTML = `<i class="fa-solid fa-person-walking"></i> ${item.distance}`;
+      if (kenyangEl) kenyangEl.innerHTML = `<i class="fa-solid fa-bowl-food"></i> ${item.kenyang}`;
+      if (ratingEl) ratingEl.textContent = item.rating;
+      if (descEl) descEl.textContent = item.desc;
+      if (perksEl) {
+        perksEl.innerHTML = item.perks.map(p => `<span class="spotlight-perk-item"><i class="fa-solid fa-circle-check"></i> ${p}</span>`).join('');
+      }
+      if (ctaBtn) {
+        ctaBtn.setAttribute('data-target-name', item.searchQuery);
+      }
+    });
+  });
+
+  if (ctaBtn) {
+    ctaBtn.addEventListener('click', () => {
+      const q = ctaBtn.getAttribute('data-target-name');
+      const searchInput = document.getElementById('catalogueSearch');
+      if (searchInput && q) {
+        searchInput.value = q;
+        searchInput.dispatchEvent(new Event('input'));
+      }
+    });
+  }
+}
