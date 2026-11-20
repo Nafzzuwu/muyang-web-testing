@@ -298,6 +298,8 @@
         </div>
       </div>
 
+      <div id="umkmPartnershipInfo" style="display:none;"></div>
+
       <div class="active-partner-pill" id="umkmActivePill">
         <i class="fa-solid fa-circle-check"></i> Mitra Aktif — Listing Tayang di Platform Muyang
       </div>
@@ -309,10 +311,9 @@
             <div class="expired-banner-title">Masa Kemitraan Telah Berakhir</div>
             <div class="expired-banner-desc">Warung Anda sudah tidak tampil di katalog publik. Hubungi Tim Muyang untuk
               memperpanjang kemitraan dan mengaktifkan kembali listing Anda.</div>
-            <a href="https://wa.me/6282336669588?text=Halo%20Tim%20Muyang!%20Saya%20ingin%20memperpanjang%20kemitraan%20warung%20saya."
-              target="_blank" class="btn btn-sm expired-renew-btn">
-              <i class="fa-brands fa-whatsapp"></i> Hubungi Muyang untuk Perpanjang
-            </a>
+            <button type="button" class="btn btn-sm expired-renew-btn" onclick="window.openPackageChangeModal()">
+              <i class="fa-solid fa-rotate"></i> Perpanjang / Ganti Paket
+            </button>
           </div>
         </div>
       </div>
@@ -806,10 +807,10 @@
             <h4 class="tier-name">Promosi Kilat</h4>
             <div class="tier-price-box">
               <span class="tier-price">Rp 30.000</span>
-              <div class="tier-period">per 3 hari masa promo</div>
+              <div class="tier-period">per 7 hari masa promo</div>
             </div>
             <ul class="tier-features">
-              <li><i class="fa-solid fa-check"></i> Sorotan promo selama 3 hari berturut-turut</li>
+              <li><i class="fa-solid fa-check"></i> Sorotan promo selama 7 hari berturut-turut</li>
               <li><i class="fa-solid fa-check"></i> Penanda promo khusus pada pin peta</li>
               <li><i class="fa-solid fa-check"></i> Cocok untuk pembukaan warung atau menu baru</li>
               <li><i class="fa-solid fa-check"></i> Tanpa potongan komisi penjualan</li>
@@ -1008,8 +1009,8 @@
               <label class="form-label" for="regPaket">Pilih Paket *</label>
               <select id="regPaket" class="form-select-ctrl">
                 <option value="Featured Listing" data-price="50000">Featured Listing — Rp 50.000/bulan</option>
-                <option value="Promosi Kilat" data-price="30000">Promosi Kilat — Rp 30.000/event</option>
-                <option value="Kampanye Bersama" data-price="100000">Kampanye Bersama — Rp 100.000/paket</option>
+                <option value="Promosi Kilat" data-price="30000">Promosi Kilat — Rp 30.000/7 hari</option>
+                <option value="Kampanye Bersama" data-price="100000">Kampanye Bersama — Rp 100.000/bulan</option>
               </select>
             </div>
             <div class="form-group">

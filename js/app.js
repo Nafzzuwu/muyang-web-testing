@@ -144,6 +144,13 @@ if (typeof window !== 'undefined' && window.supabase) {
   }
 }
 
+// Keuntungan otomatis per paket (harus sama dengan kolom di tabel paket_kemitraan)
+const PAKET_BENEFITS = {
+  'Featured Listing': { featured: true, badge: 'Mitra Baru Muyang' },
+  'Promosi Kilat': { featured: false, badge: 'Promo Kilat' },
+  'Kampanye Bersama': { featured: true, badge: 'Kampanye Muyang' }
+};
+
 // ============================================================
 // DATABASE HELPER — central fetch function
 // ============================================================
@@ -239,6 +246,11 @@ const DB = {
   async getMyRegistration(token) {
     return this.rpc('umkm_my_registration', { p_token: token });
   },
+
+  async getMyPartnership(token) { return this.rpc('umkm_my_partnership', { p_token: token }); },
+  async requestPackageChange(token, paketId) { return this.rpc('umkm_request_package_change', { p_token: token, p_paket_id: paketId }); },
+  async adminPartnershipOverview(token) { return this.rpc('admin_partnership_overview', { p_token: token }); },
+  async adminApprovePackageChange(token, regId) { return this.rpc('admin_approve_package_change', { p_token: token, p_reg_id: regId }); },
 
   async getMyWarung(token) {
     return this.rpc('umkm_my_warung', { p_token: token });
@@ -1242,6 +1254,87 @@ window.deleteMahasiswaReview = async function (reviewId) {
 };
 
 // ============================================================
+// MASA KEMITRAAN: info, ganti/perpanjang paket (UMKM) + ringkasan (admin)
+// ============================================================
+const MUYANG_WA = '6282336669588';
+
+async function renderPartnershipInfo() {
+  const box = document.getElementById('umkmPartnershipInfo');
+  const session = LS.getSession();
+  if (!box || !session?.token) return;
+  const { data } = await DB.getMyPartnership(session.token);
+  if (!data?.ok) { box.style.display = 'none'; return; }
+  const left = data.days_left;
+  const endTxt = data.ends_at ? new Date(data.ends_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '-';
+  let tone = '#ecfdf5;color:#065f46', msg;
+  if (data.status === 'expired') { tone = '#fef2f2;color:#991b1b'; msg = `Kemitraan berakhir pada ${endTxt}.`; }
+  else if (left !== null && left <= 7) { tone = '#fffbeb;color:#92400e'; msg = `Paket ${esc(data.paket_name)} berakhir ${endTxt} (${left} hari lagi). Perpanjang agar listing tidak turun.`; }
+  else { msg = `Paket ${esc(data.paket_name)} aktif sampai ${endTxt}${left !== null ? ` (${left} hari lagi)` : ''}.`; }
+  const pending = data.pending_name
+    ? `<div style="margin-top:6px;font-weight:700;">Permintaan ${esc(data.pending_name)} sedang menunggu verifikasi admin.</div>` : '';
+  box.style.cssText = `display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 16px;border-radius:12px;margin:12px 0;background:${tone};`;
+  box.innerHTML = `<div>${msg}${pending}</div>
+    <button class="btn btn-primary btn-sm" onclick="window.openPackageChangeModal()"><i class="fa-solid fa-rotate"></i> Ganti / Perpanjang Paket</button>`;
+}
+
+window.openPackageChangeModal = async function () {
+  document.getElementById('packageChangeModal')?.remove();
+  const pakets = await DB.getPaketList();
+  const modal = document.createElement('div');
+  modal.className = 'modal-backdrop active';
+  modal.id = 'packageChangeModal';
+  modal.innerHTML = `<div class="modal-card modal-sm"><button class="modal-close-btn" aria-label="Tutup">×</button>
+    <div class="modal-content-pad"><h3 style="margin:0 0 6px;">Ganti / Perpanjang Paket</h3>
+    <p style="margin:0 0 14px;color:#6b7280;">Pilih paket. Setelah transfer dan dikonfirmasi admin, paket langsung berlaku.</p>
+    <div id="pkgOptions" style="display:grid;gap:8px;">${pakets.map((p, i) => `
+      <label style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;cursor:pointer;">
+        <input type="radio" name="pkgChoice" value="${Number(p.id)}" ${i === 0 ? 'checked' : ''}>
+        <span><strong>${esc(p.name)}</strong> — ${formatIDR(p.price)} / ${Number(p.duration_days) || 30} hari</span>
+      </label>`).join('')}</div>
+    <button class="btn btn-accent btn-block" style="margin-top:14px;" id="pkgSubmit">Ajukan Permintaan</button></div></div>`;
+  document.body.appendChild(modal);
+  modal.querySelector('.modal-close-btn').onclick = () => modal.remove();
+  document.getElementById('pkgSubmit').onclick = async () => {
+    const id = Number(modal.querySelector('input[name="pkgChoice"]:checked')?.value);
+    const session = LS.getSession();
+    const { data, error } = await withLoading(() => DB.requestPackageChange(session.token, id), 'Mengajukan permintaan...');
+    if (error || !data?.ok) { showToast('Gagal mengajukan permintaan. Coba lagi.', 'error'); return; }
+    const wa = encodeURIComponent(`Halo Tim Muyang! Saya ingin ganti/perpanjang paket ke ${data.paket_name} senilai ${formatIDR(data.amount)} (ID: ${data.reg_id}). Berikut bukti transfer saya.`);
+    modal.querySelector('.modal-content-pad').innerHTML = `<h3 style="margin:0 0 8px;">Permintaan Terkirim</h3>
+      <p style="color:#6b7280;">Transfer ${formatIDR(data.amount)} lalu kirim bukti ke WhatsApp Muyang agar admin segera memverifikasi.</p>
+      <a class="btn btn-accent btn-block" target="_blank" rel="noopener" href="https://wa.me/${MUYANG_WA}?text=${wa}"><i class="fa-brands fa-whatsapp"></i> Kirim Bukti via WhatsApp</a>`;
+    renderPartnershipInfo();
+  };
+};
+
+async function renderAdminPartnershipOverview(tableEl) {
+  const session = LS.getSession();
+  if (!tableEl || !session?.token) return;
+  let box = document.getElementById('adminPartnershipOverview');
+  if (!box) { box = document.createElement('div'); box.id = 'adminPartnershipOverview'; tableEl.parentElement.prepend(box); }
+  const { data } = await DB.adminPartnershipOverview(session.token);
+  if (!data?.ok || (!data.pending.length && !data.expiring.length)) { box.innerHTML = ''; return; }
+  const fmt = (d) => new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+  box.innerHTML = `<div style="padding:12px 16px;margin-bottom:14px;border-radius:12px;background:#fffbeb;border:1px solid #fde68a;">
+    ${data.pending.length ? `<div style="font-weight:800;margin-bottom:6px;">Permintaan ganti/perpanjang paket (${data.pending.length})</div>` +
+      data.pending.map(r => `<div style="display:flex;gap:10px;justify-content:space-between;align-items:center;padding:4px 0;flex-wrap:wrap;">
+        <span><strong>${esc(r.business_name)}</strong>: ${esc(r.current_paket || '-')} → <strong>${esc(r.new_paket)}</strong> (${formatIDR(r.amount)}) · ${esc(r.phone)}</span>
+        <button class="btn btn-primary btn-xs" onclick="window.adminApprovePackageChange(${Number(r.reg_id)})">Pembayaran Diterima, Terapkan</button></div>`).join('') : ''}
+    ${data.expiring.length ? `<div style="font-weight:800;margin:${data.pending.length ? '10px' : '0'} 0 6px;">Segera berakhir (≤ 7 hari)</div>` +
+      data.expiring.map(r => `<div style="padding:2px 0;"><strong>${esc(r.business_name)}</strong> — ${fmt(r.ends_at)} (${r.days_left} hari lagi) · ${esc(r.phone)}</div>`).join('') : ''}
+  </div>`;
+}
+
+window.adminApprovePackageChange = async function (regId) {
+  const { data, error } = await withLoading(() => DB.adminApprovePackageChange(LS.getSession()?.token, regId), 'Menerapkan paket...');
+  if (error || !data?.ok) { showToast('Gagal menerapkan paket.', 'error'); return; }
+  await refreshWarungsCache();
+  renderCulinaryGrid();
+  await renderAdminDashboard();
+  showToast('Paket berhasil diterapkan.');
+};
+
+// ============================================================
 // DASHBOARD: UMKM (100% dari Supabase)
 // ============================================================
 // Atur tampilan dashboard UMKM sesuai masa kemitraan (aktif vs berakhir).
@@ -1320,6 +1413,7 @@ async function renderUmkmDashboard() {
     const paket = reg ? reg.paket_kemitraan : null;
     if (welcomeEl) welcomeEl.textContent = `${session.warungName} — ${paket ? paket.name : 'Mitra Aktif'}`;
     setUmkmExpiredState(false);
+    renderPartnershipInfo();
 
     if (warung) {
       // Tampilkan foto warung yang sudah ada di preview
@@ -1340,6 +1434,7 @@ async function renderUmkmDashboard() {
 
     // Sembunyikan badge "Mitra Aktif", tampilkan banner berakhir, nonaktifkan form
     setUmkmExpiredState(true);
+    renderPartnershipInfo();
 
     if (warung) {
       await renderUmkmMenuList(warung);
@@ -1454,6 +1549,8 @@ async function renderAdminDashboard() {
     if (reviewsTableEl) reviewsTableEl.innerHTML = '';
     return;
   }
+
+  renderAdminPartnershipOverview(tableEl);
 
   const statusLabel = {
     pending: '<span class="status-badge status-pending">Pending Review</span>',
@@ -1682,9 +1779,9 @@ window.adminActivateUmkm = async function (regId, warungName, userId) {
         rating: 4.5,
         reviews_count: 0,
         kenyang_score: 9.0,
-        is_featured: reg.paket_kemitraan?.name === 'Featured Listing' || reg.paket_kemitraan?.name === 'Kampanye Bersama',
+        is_featured: PAKET_BENEFITS[reg.paket_kemitraan?.name]?.featured ?? false,
         is_active: true,
-        promo_badge: 'Mitra Baru Muyang',
+        promo_badge: PAKET_BENEFITS[reg.paket_kemitraan?.name]?.badge || 'Mitra Baru Muyang',
         image_url: cat.image,
         hours: '08.00 - 21.00 WIB',
         features: defaultFeatures,
