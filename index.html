@@ -105,6 +105,11 @@
       </button>
     </div>
 
+    <!-- Hairline Reading Progress Bar -->
+    <div class="scroll-progress-track" aria-hidden="true">
+      <div class="scroll-progress-bar" id="scrollProgressBar"></div>
+    </div>
+
     <!-- Mobile Drawer -->
     <div id="mobileNavDrawer">
       <div class="mobile-drawer-links">
@@ -287,6 +292,7 @@
     <div class="container dash-container">
       <div class="dash-header">
         <div>
+          <span class="section-pill" style="margin-bottom:8px;">Panel Mitra Warung</span>
           <h2 class="dash-title"><i class="fa-solid fa-store"></i> Dashboard UMKM Mitra</h2>
           <p class="dash-subtitle" id="dashUmkmWelcome">Selamat datang!</p>
         </div>
@@ -309,7 +315,7 @@
           <i class="fa-solid fa-triangle-exclamation"></i>
           <div>
             <div class="expired-banner-title">Masa Kemitraan Telah Berakhir</div>
-            <div class="expired-banner-desc">Warung Anda sudah tidak tampil di katalog publik. Hubungi Tim Muyang untuk
+            <div class="expired-banner-desc">Warung Anda sudah tidak tampil di katalog publik. Pilih paket untuk
               memperpanjang kemitraan dan mengaktifkan kembali listing Anda.</div>
             <button type="button" class="btn btn-sm expired-renew-btn" onclick="window.openPackageChangeModal()">
               <i class="fa-solid fa-rotate"></i> Perpanjang / Ganti Paket
@@ -318,63 +324,69 @@
         </div>
       </div>
 
-      <div class="dash-section">
-        <h3 class="dash-section-title"><i class="fa-solid fa-camera"></i> Foto Profil Warung</h3>
-        <div class="photo-upload-row">
-          <img id="warungPhotoPreview" src="" alt="Foto Warung" class="warung-photo-preview" style="display:none;">
-          <div class="photo-upload-controls">
-            <label class="btn btn-outline btn-sm" for="warungPhotoInput">
-              <i class="fa-solid fa-upload"></i> Pilih Foto Warung
-            </label>
-            <input type="file" id="warungPhotoInput" accept="image/*" hidden>
-            <p class="field-hint">Format: JPG/PNG/WebP, maks 2MB. Foto akan tampil di katalog publik.</p>
-            <button id="uploadWarungPhotoBtn" class="btn btn-primary btn-sm" style="display:none;">
-              <i class="fa-solid fa-cloud-upload-alt"></i> Simpan Foto Warung
-            </button>
-            <span id="uploadWarungStatus" class="upload-status-text"></span>
+      <div class="umkm-dash-grid">
+        <div class="umkm-dash-col-main">
+          <div class="dash-section">
+            <h3 class="dash-section-title"><i class="fa-solid fa-utensils"></i> Daftar & Tambah Menu Warung</h3>
+            <form id="addMenuForm" class="add-menu-form">
+              <div class="add-menu-fields">
+                <input type="text" id="menuNameInput" class="form-input" placeholder="Nama menu (cth: Nasi Goreng Spesial)"
+                  required>
+                <input type="number" id="menuPriceInput" class="form-input" placeholder="Harga (Rp)" min="1000" required>
+                <input type="text" id="menuPortionInput" class="form-input"
+                  placeholder="Keterangan porsi (cth: Porsi Jumbo)">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Tambah</button>
+              </div>
+              <div class="menu-photo-row">
+                <label class="btn btn-outline btn-sm" for="menuPhotoInput">
+                  <i class="fa-solid fa-image"></i> Foto Menu (opsional)
+                </label>
+                <input type="file" id="menuPhotoInput" accept="image/*" hidden>
+                <img id="menuPhotoPreview" src="" alt="Preview" class="menu-photo-preview" style="display:none;">
+                <span id="menuPhotoName" class="field-hint"></span>
+              </div>
+            </form>
+            <div id="umkmMenuList" class="dash-menu-list"></div>
+          </div>
+
+          <div class="dash-section">
+            <h3 class="dash-section-title"><i class="fa-solid fa-comments"></i> Ulasan Masuk dari Mahasiswa UNEJ</h3>
+            <div id="umkmReviewsList" class="dash-grid"></div>
           </div>
         </div>
-      </div>
 
-      <div class="dash-section" id="umkmLocationSection" style="display:none;">
-        <h3 class="dash-section-title"><i class="fa-solid fa-map-location-dot"></i> Lokasi Warung di Peta</h3>
-        <div id="umkmLocationMap" class="loc-picker-map" aria-label="Peta lokasi warung"></div>
-        <div class="loc-picker-actions">
-          <button type="button" class="btn btn-outline btn-sm" id="umkmUseMyLocation"><i
-              class="fa-solid fa-crosshairs"></i> Gunakan lokasi saya</button>
-          <button type="button" class="btn btn-primary btn-sm" id="umkmSaveLocationBtn"
-            onclick="window.saveUmkmLocation()"><i class="fa-solid fa-floppy-disk"></i> Simpan Lokasi</button>
-          <span id="umkmCoordsText" class="loc-picker-text"></span>
+        <div class="umkm-dash-col-side">
+          <div class="dash-section">
+            <h3 class="dash-section-title"><i class="fa-solid fa-camera"></i> Foto Utama Warung</h3>
+            <div class="photo-upload-row photo-upload-stack">
+              <img id="warungPhotoPreview" src="" alt="Foto Warung" class="warung-photo-preview" style="display:none;">
+              <div class="photo-upload-controls">
+                <label class="btn btn-outline btn-sm" for="warungPhotoInput">
+                  <i class="fa-solid fa-upload"></i> Pilih Foto Warung
+                </label>
+                <input type="file" id="warungPhotoInput" accept="image/*" hidden>
+                <p class="field-hint">Format JPG/PNG/WebP (maks. 2MB). Tampil sebagai sampul utama di katalog.</p>
+                <button id="uploadWarungPhotoBtn" class="btn btn-primary btn-sm" style="display:none;">
+                  <i class="fa-solid fa-cloud-upload-alt"></i> Simpan Foto Warung
+                </button>
+                <span id="uploadWarungStatus" class="upload-status-text"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="dash-section" id="umkmLocationSection" style="display:none;">
+            <h3 class="dash-section-title"><i class="fa-solid fa-map-location-dot"></i> Titik Lokasi di Peta</h3>
+            <div id="umkmLocationMap" class="loc-picker-map" aria-label="Peta lokasi warung"></div>
+            <div class="loc-picker-actions">
+              <button type="button" class="btn btn-outline btn-sm" id="umkmUseMyLocation"><i
+                  class="fa-solid fa-crosshairs"></i> Lokasi Saya</button>
+              <button type="button" class="btn btn-primary btn-sm" id="umkmSaveLocationBtn"
+                onclick="window.saveUmkmLocation()"><i class="fa-solid fa-floppy-disk"></i> Simpan Titik</button>
+              <span id="umkmCoordsText" class="loc-picker-text"></span>
+            </div>
+            <p class="loc-picker-hint">Geser pin ke lokasi warung yang tepat, lalu klik Simpan Titik.</p>
+          </div>
         </div>
-        <p class="loc-picker-hint">Geser pin ke lokasi warung yang benar, lalu klik Simpan Lokasi.</p>
-      </div>
-
-      <div class="dash-section">
-        <h3 class="dash-section-title"><i class="fa-solid fa-plus"></i> Tambah Menu Warung</h3>
-        <form id="addMenuForm" class="add-menu-form">
-          <div class="add-menu-fields">
-            <input type="text" id="menuNameInput" class="form-input" placeholder="Nama menu (cth: Nasi Goreng Spesial)"
-              required>
-            <input type="number" id="menuPriceInput" class="form-input" placeholder="Harga (Rp)" min="1000" required>
-            <input type="text" id="menuPortionInput" class="form-input"
-              placeholder="Keterangan porsi (cth: Porsi Jumbo)">
-            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Tambah</button>
-          </div>
-          <div class="menu-photo-row">
-            <label class="btn btn-outline btn-sm" for="menuPhotoInput">
-              <i class="fa-solid fa-image"></i> Foto Menu (opsional)
-            </label>
-            <input type="file" id="menuPhotoInput" accept="image/*" hidden>
-            <img id="menuPhotoPreview" src="" alt="Preview" class="menu-photo-preview" style="display:none;">
-            <span id="menuPhotoName" class="field-hint"></span>
-          </div>
-        </form>
-        <div id="umkmMenuList" class="dash-menu-list"></div>
-      </div>
-
-      <div class="dash-section">
-        <h3 class="dash-section-title"><i class="fa-solid fa-comments"></i> Ulasan Masuk dari Mahasiswa UNEJ</h3>
-        <div id="umkmReviewsList" class="dash-grid"></div>
       </div>
 
       <div class="dash-bottom-action">
@@ -436,6 +448,15 @@
       <div class="container">
         <div class="hero-banner">
 
+          <!-- Subtle Architectural Editorial Stamp -->
+          <div class="hero-editorial-stamp" aria-hidden="true">
+            <svg viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="70" cy="70" r="64" stroke="rgba(251,191,36,0.22)" stroke-width="1" stroke-dasharray="4 4"/>
+              <circle cx="70" cy="70" r="48" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+              <path d="M70 12V24M70 116V128M12 70H24M116 70H128" stroke="rgba(251,191,36,0.3)" stroke-width="1.2"/>
+            </svg>
+          </div>
+
           <!-- Left Editorial Content -->
           <div class="hero-content">
             <div class="hero-badge-row hero-anim-1">
@@ -444,7 +465,7 @@
                 UNEJ</span>
             </div>
 
-            <h1 class="hero-title hero-anim-2">Makan kenyang tanpa bikin dompet menipis.</h1>
+            <h1 class="hero-title hero-anim-2">Makan kenyang <span class="hero-title-accent">tanpa bikin</span> dompet menipis.</h1>
 
             <p class="hero-desc hero-anim-3">
               Cek harga menu asli, jarak jalan kaki dari fakultas, dan ulasan porsi jujur dari sesama mahasiswa
@@ -455,10 +476,28 @@
             <div class="hero-street-strip hero-anim-4">
               <span class="street-strip-label">Kawasan populer:</span>
               <div class="street-tags">
-                <button type="button" class="street-tag-btn" data-quick-area="Jl. Kalimantan">Jl. Kalimantan</button>
-                <button type="button" class="street-tag-btn" data-quick-area="Jl. Jawa">Jl. Jawa</button>
-                <button type="button" class="street-tag-btn" data-quick-area="Jl. Mastrip">Jl. Mastrip</button>
-                <button type="button" class="street-tag-btn" data-quick-area="Jl. Riau">Jl. Riau</button>
+                <button type="button" class="street-tag-btn" data-quick-area="Jl. Kalimantan"><i class="fa-solid fa-location-arrow"></i> Jl. Kalimantan</button>
+                <button type="button" class="street-tag-btn" data-quick-area="Jl. Jawa"><i class="fa-solid fa-location-arrow"></i> Jl. Jawa</button>
+                <button type="button" class="street-tag-btn" data-quick-area="Jl. Mastrip"><i class="fa-solid fa-location-arrow"></i> Jl. Mastrip</button>
+                <button type="button" class="street-tag-btn" data-quick-area="Jl. Riau"><i class="fa-solid fa-location-arrow"></i> Jl. Riau</button>
+              </div>
+            </div>
+
+            <!-- Live Campus Ledger Strip (synced from warungsCache) -->
+            <div class="hero-ledger-strip hero-anim-4" aria-label="Ringkasan Direktori Kampus">
+              <div class="ledger-item">
+                <span class="ledger-val" id="heroStatWarungCount">8+ Warung</span>
+                <span class="ledger-label">Mitra Aktif UNEJ</span>
+              </div>
+              <div class="ledger-divider" aria-hidden="true"></div>
+              <div class="ledger-item">
+                <span class="ledger-val" id="heroStatMinPrice">Rp 7.000</span>
+                <span class="ledger-label">Porsi Mulai Dari</span>
+              </div>
+              <div class="ledger-divider" aria-hidden="true"></div>
+              <div class="ledger-item">
+                <span class="ledger-val">0% Komisi</span>
+                <span class="ledger-label">Harga Asli Warung</span>
               </div>
             </div>
           </div>
@@ -850,6 +889,12 @@
             </button>
           </div>
 
+        </div>
+
+        <div class="pricing-note-strip">
+          <span><i class="fa-solid fa-hand-holding-dollar"></i> 0% potongan komisi setiap transaksi</span>
+          <span><i class="fa-solid fa-store"></i> Pembayaran mahasiswa langsung di warung</span>
+          <span><i class="fa-solid fa-rotate"></i> Perpanjang atau ganti paket kapan saja</span>
         </div>
 
       </div>
@@ -1293,9 +1338,9 @@
         <div class="footer-brand-head">
           <div class="brand-icon footer-brand-icon" id="footerBrandIcon" aria-hidden="true">
             <svg class="muyang-emblem" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M17.5 15.5C16.5 13.5 19.5 12 18.5 9.5" stroke="#FBBF24" stroke-width="2.2" stroke-linecap="round"/>
-              <path d="M23.5 14.5C22.5 12 25.5 10.5 24.5 7.5" stroke="#FBBF24" stroke-width="2.2" stroke-linecap="round"/>
-              <path d="M29.5 15.5C28.5 13.5 31.5 12 30.5 9.5" stroke="#FBBF24" stroke-width="2.2" stroke-linecap="round"/>
+              <path class="steam-line steam-1" d="M17.5 15.5C16.5 13.5 19.5 12 18.5 9.5" stroke="#FBBF24" stroke-width="2.2" stroke-linecap="round"/>
+              <path class="steam-line steam-2" d="M23.5 14.5C22.5 12 25.5 10.5 24.5 7.5" stroke="#FBBF24" stroke-width="2.2" stroke-linecap="round"/>
+              <path class="steam-line steam-3" d="M29.5 15.5C28.5 13.5 31.5 12 30.5 9.5" stroke="#FBBF24" stroke-width="2.2" stroke-linecap="round"/>
               <path d="M29 19.5L39.5 12.5" stroke="#FDBA74" stroke-width="2" stroke-linecap="round"/>
               <path d="M31 21L40.5 16" stroke="#FB923C" stroke-width="2" stroke-linecap="round"/>
               <path d="M12.5 23C13.5 17.5 18.5 15.5 24 15.5C29.5 15.5 34.5 17.5 35.5 23H12.5Z" fill="#FEF3C7"/>

@@ -1267,9 +1267,55 @@ async function renderPartnershipInfo() {
   if (!data?.ok) { box.style.display = 'none'; return; }
   const left = data.days_left;
   const endTxt = data.ends_at ? new Date(data.ends_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '-';
+
+  // Jika ada pengajuan perpanjangan / ganti paket yang menunggu verifikasi pembayaran (baik aktif maupun expired)
+  if (data.pending_name) {
+    let pendingAmount = Number(data.pending_amount) || 0;
+    if (!pendingAmount) {
+      const pakets = await DB.getPaketList();
+      const matched = (pakets || []).find(p => String(p.name).toLowerCase() === String(data.pending_name).toLowerCase());
+      if (matched) pendingAmount = Number(matched.price) || 0;
+    }
+    const waText = encodeURIComponent(
+      `Halo Tim Muyang! Saya ${session.warungName || ''} ingin mengonfirmasi pembayaran perpanjangan/ganti paket ${data.pending_name}${pendingAmount ? ` senilai ${formatIDR(pendingAmount)}` : ''}. Berikut bukti transfer saya.`
+    );
+    box.style.cssText = '';
+    box.className = 'umkm-renewal-card';
+    box.style.display = 'flex';
+    box.innerHTML = `
+      <div class="umkm-renewal-card-top">
+        <span class="umkm-renewal-badge"><i class="fa-solid fa-hourglass-half"></i> Menunggu Konfirmasi Pembayaran</span>
+        <span style="font-size:0.8rem;font-weight:700;color:#92400E;">Paket Dipilih: ${esc(data.pending_name)}</span>
+      </div>
+      <div class="umkm-renewal-body">
+        Pengajuan paket <strong>${esc(data.pending_name)}</strong> telah tercatat. Silakan transfer sesuai nominal paket dan kirim bukti transfer ke WhatsApp Tim Muyang agar listing segera aktif kembali.
+      </div>
+      <div class="umkm-renewal-bank">
+        <span>Rekening: <strong>BRI 1234-5678-9012-3456</strong> a.n. MUYANG UNEJ</span>
+        ${pendingAmount ? `<span>Nominal: <strong>${formatIDR(pendingAmount)}</strong></span>` : ''}
+      </div>
+      <div class="umkm-renewal-actions">
+        <a href="https://wa.me/${MUYANG_WA}?text=${waText}" target="_blank" rel="noopener" class="btn btn-accent btn-sm">
+          <i class="fa-brands fa-whatsapp"></i> Kirim Bukti Transfer via WhatsApp
+        </a>
+        <button type="button" class="btn btn-outline btn-sm" onclick="window.openPackageChangeModal()">
+          <i class="fa-solid fa-rotate"></i> Ubah Pilihan Paket
+        </button>
+      </div>
+    `;
+
+    if (data.status === 'expired') {
+      const desc = document.querySelector('#umkmExpiredBanner .expired-banner-desc');
+      if (desc) {
+        desc.textContent = `Masa aktif berakhir pada ${endTxt}. Pengajuan perpanjangan paket ${data.pending_name} sedang menunggu konfirmasi pembayaran di atas.`;
+      }
+    }
+    return;
+  }
+
+  box.className = '';
   let tone = '#ecfdf5;color:#065f46', msg;
   if (data.status === 'expired') {
-    // Banner "Masa Kemitraan Telah Berakhir" sudah menampilkan info + tombol perpanjang; jangan dobel.
     box.style.display = 'none';
     const desc = document.querySelector('#umkmExpiredBanner .expired-banner-desc');
     if (desc) {
@@ -1280,10 +1326,8 @@ async function renderPartnershipInfo() {
   }
   if (left !== null && left <= PARTNERSHIP_WARN_DAYS) { tone = '#fffbeb;color:#92400e'; msg = `Paket ${esc(data.paket_name)} berakhir ${endTxt} (${left} hari lagi). Perpanjang agar listing tidak turun.`; }
   else { msg = `Paket ${esc(data.paket_name)} aktif sampai ${endTxt}${left !== null ? ` (${left} hari lagi)` : ''}.`; }
-  const pending = data.pending_name
-    ? `<div style="margin-top:6px;font-weight:700;">Permintaan ${esc(data.pending_name)} sedang menunggu verifikasi admin.</div>` : '';
   box.style.cssText = `display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 16px;border-radius:12px;margin:12px 0;background:${tone};`;
-  box.innerHTML = `<div>${msg}${pending}</div>
+  box.innerHTML = `<div>${msg}</div>
     <button class="btn btn-primary btn-sm" onclick="window.openPackageChangeModal()"><i class="fa-solid fa-rotate"></i> Ganti / Perpanjang Paket</button>`;
 }
 
@@ -1313,7 +1357,7 @@ window.openPackageChangeModal = async function () {
     modal.querySelector('.modal-content-pad').innerHTML = `<h3 style="margin:0 0 8px;">Permintaan Terkirim</h3>
       <p style="color:#6b7280;">Transfer ${formatIDR(data.amount)} lalu kirim bukti ke WhatsApp Muyang agar admin segera memverifikasi.</p>
       <a class="btn btn-accent btn-block" target="_blank" rel="noopener" href="https://wa.me/${MUYANG_WA}?text=${wa}"><i class="fa-brands fa-whatsapp"></i> Kirim Bukti via WhatsApp</a>`;
-    renderPartnershipInfo();
+    await renderPartnershipInfo();
   };
 };
 
@@ -2428,6 +2472,20 @@ function renderCulinaryGrid() {
   const data = filterCulinaryData();
   if (filteredCount) filteredCount.textContent = data.length;
   if (heroCount) heroCount.textContent = data.length + ' Tempat';
+
+  // Sync live Hero Campus Ledger Strip from real warungsCache
+  const heroStatCount = document.getElementById('heroStatWarungCount');
+  const heroStatMin = document.getElementById('heroStatMinPrice');
+  if (heroStatCount && warungsCache.length > 0) {
+    heroStatCount.textContent = warungsCache.length + ' Warung';
+  }
+  if (heroStatMin && warungsCache.length > 0) {
+    const validPrices = warungsCache.map(w => Number(w.minPrice)).filter(p => p > 0);
+    if (validPrices.length > 0) {
+      heroStatMin.textContent = formatIDR(Math.min(...validPrices));
+    }
+  }
+
   if (!culinaryGrid) return;
 
   if (data.length === 0) {
@@ -2481,6 +2539,13 @@ function renderCulinaryGrid() {
             <i class="fa-solid fa-location-dot"></i>
             <span>${esc(item.location)}</span>
           </p>
+
+          ${item.openHours ? `
+          <div class="card-hours-row">
+            <i class="fa-regular fa-clock"></i>
+            <span>Buka ${esc(item.openHours)}</span>
+          </div>
+          ` : ''}
 
           <div class="card-price-box">
             <div>
@@ -3150,35 +3215,38 @@ function updateMealPlanner() {
   if (plannerKenyangScore) plannerKenyangScore.textContent = `${plan.avgKenyang.toFixed(1)} / 10`;
 
   if (plannerTimeline) {
-    plannerTimeline.innerHTML = `
-      <div class="meal-slot-card">
-        <span class="meal-time-badge time-sarapan"><i class="fa-regular fa-sun"></i> 07:00 • Sarapan Pagi</span>
-        <h5 class="meal-food-name">${esc(plan.sarapan.food)}</h5>
-        <p class="meal-place-name"><i class="fa-solid fa-store"></i> ${esc(plan.sarapan.place)}</p>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
-          <span class="meal-price-tag">${formatIDR(plan.sarapan.price)}</span>
-          <span class="badge-kenyang-score"><i class="fa-solid fa-bowl-food"></i> Kenyang ${plan.sarapan.kenyang}</span>
+    const findWarungByPlace = (placeName) => {
+      const needle = String(placeName || '').toLowerCase().split('jl.')[0].trim();
+      if (!needle) return null;
+      return warungsCache.find(w => String(w.name || '').toLowerCase().includes(needle)) || null;
+    };
+
+    const renderSlot = (slot, badgeClass, iconClass, timeLabel) => {
+      const matched = findWarungByPlace(slot.place);
+      return `
+        <div class="meal-slot-card">
+          <span class="meal-time-badge ${badgeClass}"><i class="${iconClass}"></i> ${timeLabel}</span>
+          <h5 class="meal-food-name">${esc(slot.food)}</h5>
+          <p class="meal-place-name"><i class="fa-solid fa-store"></i> ${esc(slot.place)}</p>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 14px;">
+            <span class="meal-price-tag">${formatIDR(slot.price)}</span>
+            <span class="badge-kenyang-score"><i class="fa-solid fa-bowl-food"></i> Kenyang ${slot.kenyang}</span>
+          </div>
+          ${matched ? `
+            <button type="button" class="meal-slot-link" onclick="window.openDetailModal('${esc(matched.id)}')">
+              <span>Lihat Menu &amp; Lokasi Warung</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          ` : ''}
         </div>
-      </div>
-      <div class="meal-slot-card">
-        <span class="meal-time-badge time-siang"><i class="fa-solid fa-sun"></i> 12:30 • Makan Siang</span>
-        <h5 class="meal-food-name">${esc(plan.siang.food)}</h5>
-        <p class="meal-place-name"><i class="fa-solid fa-store"></i> ${esc(plan.siang.place)}</p>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
-          <span class="meal-price-tag">${formatIDR(plan.siang.price)}</span>
-          <span class="badge-kenyang-score"><i class="fa-solid fa-bowl-food"></i> Kenyang ${plan.siang.kenyang}</span>
-        </div>
-      </div>
-      <div class="meal-slot-card">
-        <span class="meal-time-badge time-malam"><i class="fa-solid fa-moon"></i> 19:00 • Makan Malam</span>
-        <h5 class="meal-food-name">${esc(plan.malam.food)}</h5>
-        <p class="meal-place-name"><i class="fa-solid fa-store"></i> ${esc(plan.malam.place)}</p>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
-          <span class="meal-price-tag">${formatIDR(plan.malam.price)}</span>
-          <span class="badge-kenyang-score"><i class="fa-solid fa-bowl-food"></i> Kenyang ${plan.malam.kenyang}</span>
-        </div>
-      </div>
-    `;
+      `;
+    };
+
+    plannerTimeline.innerHTML = [
+      renderSlot(plan.sarapan, 'time-sarapan', 'fa-regular fa-sun', '07:00 • Sarapan Pagi'),
+      renderSlot(plan.siang, 'time-siang', 'fa-solid fa-sun', '12:30 • Makan Siang'),
+      renderSlot(plan.malam, 'time-malam', 'fa-solid fa-moon', '19:00 • Makan Malam')
+    ].join('');
   }
 }
 
@@ -3711,6 +3779,53 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     document.querySelectorAll('.section-reveal').forEach(el => el.classList.add('section-visible'));
   }
+
+  // 22. Sticky Header Elevation, Reading Progress Bar & Section Scroll Spy
+  const mainHeader = document.querySelector('.main-header');
+  const progressBar = document.getElementById('scrollProgressBar');
+  const navItems = Array.from(document.querySelectorAll('.nav-links .nav-item'));
+  const spySections = ['katalog', 'radar-map', 'meal-planner', 'kemitraan-umkm']
+    .map(id => document.getElementById(id))
+    .filter(Boolean);
+
+  function updateScrollChrome() {
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    if (mainHeader) {
+      mainHeader.classList.toggle('scrolled', scrollY > 24);
+    }
+    if (progressBar) {
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = docHeight > 0 ? Math.min(100, Math.max(0, (scrollY / docHeight) * 100)) : 0;
+      progressBar.style.width = pct.toFixed(1) + '%';
+    }
+    if (spySections.length > 0 && navItems.length > 0) {
+      let currentId = spySections[0].id;
+      const offset = scrollY + 180;
+      for (const sec of spySections) {
+        if (offset >= sec.offsetTop) currentId = sec.id;
+      }
+      navItems.forEach(item => {
+        const href = item.querySelector('a')?.getAttribute('href') || '';
+        item.classList.toggle('active', href === '#' + currentId);
+      });
+    }
+  }
+
+  window.addEventListener('scroll', updateScrollChrome, { passive: true });
+  updateScrollChrome();
+
+  // Subtle tactile tick on Hero Budget Display when slider or pills change
+  const triggerBudgetTick = () => {
+    const disp = document.getElementById('heroBudgetDisplay');
+    if (!disp) return;
+    disp.classList.remove('tick');
+    void disp.offsetWidth;
+    disp.classList.add('tick');
+  };
+  document.getElementById('heroBudgetSlider')?.addEventListener('input', triggerBudgetTick);
+  document.querySelectorAll('.hero-budget-pill').forEach(pill => {
+    pill.addEventListener('click', triggerBudgetTick);
+  });
 
   console.log('[MUYANG] Web App Successfully Loaded.');
 });
