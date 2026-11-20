@@ -137,9 +137,9 @@ let supabaseClient = null;
 if (typeof window !== 'undefined' && window.supabase) {
   try {
     supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-    console.log('[MUYANG] Supabase v3.0 Client OK');
+    console.log('[MUYANG] Database Client OK');
   } catch (err) {
-    console.warn('[MUYANG] Supabase init error:', err);
+    console.warn('[MUYANG] Database init error:', err);
   }
 }
 
@@ -3354,5 +3354,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.section-reveal').forEach(el => el.classList.add('section-visible'));
   }
 
-  console.log('[MUYANG] Web App v3.0 Loaded — 100% Supabase Database');
+  console.log('[MUYANG] Web App Successfully Loaded.');
 });
