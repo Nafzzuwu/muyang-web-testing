@@ -1,0 +1,14 @@
+{
+  "name": "MUYANG — Murah Kenyang",
+  "short_name": "MUYANG",
+  "description": "Direktori kuliner hemat dan mengenyangkan sekitar kampus UNEJ.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2B0F0D",
+  "theme_color": "#2B0F0D",
+  "lang": "id",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

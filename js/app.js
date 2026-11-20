@@ -137,9 +137,9 @@ let supabaseClient = null;
 if (typeof window !== 'undefined' && window.supabase) {
   try {
     supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-    console.log('[MUYANG] Database Client OK');
+    console.log('[MUYANG] Supabase v3.0 Client OK');
   } catch (err) {
-    console.warn('[MUYANG] Database init error:', err);
+    console.warn('[MUYANG] Supabase init error:', err);
   }
 }
 
@@ -1625,7 +1625,7 @@ window.adminReactivateUmkm = function (regId, warungName) {
     title: 'Aktifkan kembali mitra?',
     message: `Warung ${warungName} akan kembali tampil di katalog publik.`,
     buttonLabel: '<i class="fa-solid fa-rotate-right"></i> Aktifkan Kembali',
-    icon: 'fa-store-circle-check',
+    icon: 'fa-store',
     onConfirm: async () => {
       await DB.runAdminAction('reactivate', regId);
       await refreshWarungsCache();
@@ -3326,7 +3326,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // 19. Load data from Supabase Cloud, then render
-  console.log('[MUYANG] Loading data from Database...');
+  console.log('[MUYANG] Loading data from Supabase...');
   await Promise.all([
     refreshWarungsCache(),
     refreshBookmarkSet()
@@ -3354,5 +3354,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.section-reveal').forEach(el => el.classList.add('section-visible'));
   }
 
-  console.log('[MUYANG] Web Successfully Loaded With Database...');
+  console.log('[MUYANG] Web App v3.0 Loaded — 100% Supabase Database');
 });
