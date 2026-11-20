@@ -104,6 +104,7 @@ function saveAuthResponse(authData) {
     fakultas: extra.fakultas || 'Mahasiswa UNEJ',
     status: user.status || (user.role === 'umkm' ? 'pending' : undefined)
   });
+  startSessionWatcher();
   return true;
 }
 
@@ -159,6 +160,10 @@ const DB = {
       p_password: password,
       p_role: role
     });
+  },
+
+  async checkSession(token) {
+    return this.rpc('app_check_session', { p_token: token });
   },
 
   async validateSession(token, role) {
@@ -1006,6 +1011,7 @@ async function handleRegisterUmkm(e) {
 window.logoutUser = function () {
   const session = LS.getSession();
   withLoading(async () => {
+    stopSessionWatcher();
     if (session?.token) await DB.rpc('app_logout', { p_token: session.token });
     LS.clearSession();
     updateNavbarState();
@@ -1014,6 +1020,88 @@ window.logoutUser = function () {
     showToast('Berhasil keluar. Sampai jumpa!');
   }, 'Keluar dari akun...');
 };
+
+// ============================================================
+// SESSION WATCHER — tendang perangkat lama jika akun login di perangkat lain
+// ============================================================
+const SESSION_CHECK_INTERVAL_MS = 15000;
+let sessionWatcherTimer = null;
+let sessionCheckBusy = false;
+
+function showSessionKickedModal() {
+  document.getElementById('sessionKickedModal')?.remove();
+  const modal = document.createElement('div');
+  modal.className = 'modal-backdrop active';
+  modal.id = 'sessionKickedModal';
+  modal.setAttribute('role', 'alertdialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.innerHTML = `
+    <div class="modal-card modal-xs">
+      <div class="modal-content-pad" style="text-align:center;">
+        <div style="font-size:2.4rem;color:#c2410c;margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <h3 style="margin:0 0 8px;">Akun Login di Perangkat Lain</h3>
+        <p style="margin:0 0 18px;color:#6b7280;line-height:1.5;">
+          Akun kamu baru saja dipakai masuk di perangkat lain, jadi sesi di perangkat ini otomatis diakhiri.
+          Satu akun hanya bisa aktif di satu perangkat. Jika itu bukan kamu, segera masuk kembali dan ganti password.
+        </p>
+        <button class="btn btn-primary" style="width:100%;" id="sessionKickedOk">Masuk Kembali</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  document.getElementById('sessionKickedOk')?.addEventListener('click', () => {
+    modal.remove();
+    openModal('loginModal');
+  });
+}
+
+function handleSessionEnded(reason) {
+  stopSessionWatcher();
+  LS.clearSession();
+  updateNavbarState();
+  showLanding();
+  history.replaceState(null, '', '#home');
+  if (reason === 'replaced') {
+    showSessionKickedModal();
+  } else {
+    showToast('Sesi kamu sudah berakhir. Silakan masuk kembali.', 'error');
+  }
+}
+
+async function checkSessionNow() {
+  if (sessionCheckBusy) return;
+  const session = LS.getSession();
+  if (!session?.token) { stopSessionWatcher(); return; }
+  sessionCheckBusy = true;
+  try {
+    const { data, error } = await DB.checkSession(session.token);
+    if (error || !data) return; // gangguan jaringan: jangan logout
+    // abaikan jika user sudah login ulang selama request berjalan
+    if (LS.getSession()?.token !== session.token) return;
+    if (data.ok === false) handleSessionEnded(data.reason);
+  } catch (err) {
+    console.info('[AUTH] Session check skipped:', err?.message);
+  } finally {
+    sessionCheckBusy = false;
+  }
+}
+
+function startSessionWatcher() {
+  stopSessionWatcher();
+  if (!LS.getSession()?.token) return;
+  sessionWatcherTimer = setInterval(checkSessionNow, SESSION_CHECK_INTERVAL_MS);
+}
+
+function stopSessionWatcher() {
+  if (sessionWatcherTimer) clearInterval(sessionWatcherTimer);
+  sessionWatcherTimer = null;
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && LS.getSession()?.token) checkSessionNow();
+});
+window.addEventListener('focus', () => {
+  if (LS.getSession()?.token) checkSessionNow();
+});
 
 // ============================================================
 // DASHBOARD: MAHASISWA (100% dari Supabase)
@@ -3019,6 +3107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         'Memulihkan sesi akun...'
       );
       if (error) throw error;
+      startSessionWatcher();
       if (currentHash === '#home' || currentHash === '#katalog' || currentHash === '#radar-map' || currentHash === '#meal-planner' || currentHash === '#kemitraan-umkm') {
         showLanding();
         if (currentHash !== '#home') setTimeout(() => navigateToSection(currentHash), 100);
@@ -3027,11 +3116,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } catch (error) {
       console.info('[AUTH] Saved session expired or invalid:', error?.message);
+      let endReason = 'expired';
+      try {
+        const chk = await DB.checkSession(savedSession.token);
+        if (chk.data?.reason === 'replaced') endReason = 'replaced';
+      } catch (_) { /* abaikan */ }
       LS.clearSession();
       updateNavbarState();
       showLanding();
-      showToast('Sesi kamu sudah berakhir. Silakan masuk kembali.', 'error');
-      if (currentHash === '#dashboard') openModal('loginModal');
+      if (endReason === 'replaced') {
+        showSessionKickedModal();
+      } else {
+        showToast('Sesi kamu sudah berakhir. Silakan masuk kembali.', 'error');
+        if (currentHash === '#dashboard') openModal('loginModal');
+      }
     }
   } else if (savedSession) {
     LS.clearSession();
