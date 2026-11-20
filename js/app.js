@@ -1257,6 +1257,7 @@ window.deleteMahasiswaReview = async function (reviewId) {
 // MASA KEMITRAAN: info, ganti/perpanjang paket (UMKM) + ringkasan (admin)
 // ============================================================
 const MUYANG_WA = '6282336669588';
+const PARTNERSHIP_WARN_DAYS = 3; // peringatan "segera berakhir" hanya jika sisa <= 3 hari (paket terpendek 7 hari)
 
 async function renderPartnershipInfo() {
   const box = document.getElementById('umkmPartnershipInfo');
@@ -1277,7 +1278,7 @@ async function renderPartnershipInfo() {
     }
     return;
   }
-  if (left !== null && left <= 7) { tone = '#fffbeb;color:#92400e'; msg = `Paket ${esc(data.paket_name)} berakhir ${endTxt} (${left} hari lagi). Perpanjang agar listing tidak turun.`; }
+  if (left !== null && left <= PARTNERSHIP_WARN_DAYS) { tone = '#fffbeb;color:#92400e'; msg = `Paket ${esc(data.paket_name)} berakhir ${endTxt} (${left} hari lagi). Perpanjang agar listing tidak turun.`; }
   else { msg = `Paket ${esc(data.paket_name)} aktif sampai ${endTxt}${left !== null ? ` (${left} hari lagi)` : ''}.`; }
   const pending = data.pending_name
     ? `<div style="margin-top:6px;font-weight:700;">Permintaan ${esc(data.pending_name)} sedang menunggu verifikasi admin.</div>` : '';
@@ -1322,15 +1323,17 @@ async function renderAdminPartnershipOverview(tableEl) {
   let box = document.getElementById('adminPartnershipOverview');
   if (!box) { box = document.createElement('div'); box.id = 'adminPartnershipOverview'; tableEl.parentElement.prepend(box); }
   const { data } = await DB.adminPartnershipOverview(session.token);
-  if (!data?.ok || (!data.pending.length && !data.expiring.length)) { box.innerHTML = ''; return; }
+  if (!data?.ok) { box.innerHTML = ''; return; }
+  const expiring = (data.expiring || []).filter(r => r.days_left <= PARTNERSHIP_WARN_DAYS);
+  if (!data.pending.length && !expiring.length) { box.innerHTML = ''; return; }
   const fmt = (d) => new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
   box.innerHTML = `<div style="padding:12px 16px;margin-bottom:14px;border-radius:12px;background:#fffbeb;border:1px solid #fde68a;">
     ${data.pending.length ? `<div style="font-weight:800;margin-bottom:6px;">Permintaan ganti/perpanjang paket (${data.pending.length})</div>` +
       data.pending.map(r => `<div style="display:flex;gap:10px;justify-content:space-between;align-items:center;padding:4px 0;flex-wrap:wrap;">
-        <span><strong>${esc(r.business_name)}</strong>: ${esc(r.current_paket || '-')} → <strong>${esc(r.new_paket)}</strong> (${formatIDR(r.amount)}) · ${esc(r.phone)}</span>
+        <span><strong>${esc(r.business_name)}</strong>: ${r.current_paket === r.new_paket ? `Perpanjang <strong>${esc(r.new_paket)}</strong>` : `${esc(r.current_paket || '-')} → <strong>${esc(r.new_paket)}</strong>`} (${formatIDR(r.amount)}) · ${esc(r.phone)}</span>
         <button class="btn btn-primary btn-xs" onclick="window.adminApprovePackageChange(${Number(r.reg_id)})">Pembayaran Diterima, Terapkan</button></div>`).join('') : ''}
-    ${data.expiring.length ? `<div style="font-weight:800;margin:${data.pending.length ? '10px' : '0'} 0 6px;">Segera berakhir (≤ 7 hari)</div>` +
-      data.expiring.map(r => `<div style="padding:2px 0;"><strong>${esc(r.business_name)}</strong> — ${fmt(r.ends_at)} (${r.days_left} hari lagi) · ${esc(r.phone)}</div>`).join('') : ''}
+    ${expiring.length ? `<div style="font-weight:800;margin:${data.pending.length ? '10px' : '0'} 0 6px;">Segera berakhir (≤ ${PARTNERSHIP_WARN_DAYS} hari)</div>` +
+      expiring.map(r => `<div style="padding:2px 0;"><strong>${esc(r.business_name)}</strong> — ${fmt(r.ends_at)} (${r.days_left} hari lagi) · ${esc(r.phone)}</div>`).join('') : ''}
   </div>`;
 }
 
@@ -1596,7 +1599,7 @@ async function renderAdminDashboard() {
         <div><div class="admin-stat-val">${active}</div><div class="admin-stat-label">Mitra Aktif</div></div>
       </div>
       ${expired > 0 ? `
-      <div class="admin-stat-card" style="border-left:3px solid #9ca3af;">
+      <div class="admin-stat-card">
         <div class="admin-stat-icon" style="background:#f3f4f6;color:#6b7280;"><i class="fa-solid fa-ban"></i></div>
         <div><div class="admin-stat-val" style="color:#6b7280;">${expired}</div><div class="admin-stat-label">Kemitraan Berakhir</div></div>
       </div>` : ''}
@@ -1644,6 +1647,7 @@ async function renderAdminDashboard() {
                 </td>
                 <td>${statusLabel[u.status] || esc(u.status)}</td>
                 <td class="admin-actions-cell">
+                  <div class="admin-actions">
                   ${u.status === 'pending' ? `
                     <button class="btn btn-primary btn-xs" onclick="window.adminApproveUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})">
                       <i class="fa-solid fa-check"></i> Setujui
@@ -1670,6 +1674,7 @@ async function renderAdminDashboard() {
                       <i class="fa-solid fa-rotate-right"></i> Aktifkan Kembali
                     </button>
                   ` : ''}
+                  </div>
                 </td>
               </tr>
             `).join('')}
