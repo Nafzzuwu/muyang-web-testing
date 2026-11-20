@@ -1267,8 +1267,17 @@ async function renderPartnershipInfo() {
   const left = data.days_left;
   const endTxt = data.ends_at ? new Date(data.ends_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '-';
   let tone = '#ecfdf5;color:#065f46', msg;
-  if (data.status === 'expired') { tone = '#fef2f2;color:#991b1b'; msg = `Kemitraan berakhir pada ${endTxt}.`; }
-  else if (left !== null && left <= 7) { tone = '#fffbeb;color:#92400e'; msg = `Paket ${esc(data.paket_name)} berakhir ${endTxt} (${left} hari lagi). Perpanjang agar listing tidak turun.`; }
+  if (data.status === 'expired') {
+    // Banner "Masa Kemitraan Telah Berakhir" sudah menampilkan info + tombol perpanjang; jangan dobel.
+    box.style.display = 'none';
+    const desc = document.querySelector('#umkmExpiredBanner .expired-banner-desc');
+    if (desc) {
+      const base = 'Warung Anda sudah tidak tampil di katalog publik. Pilih paket untuk memperpanjang kemitraan dan mengaktifkan kembali listing Anda.';
+      desc.textContent = data.ends_at ? `Berakhir pada ${endTxt}. ${base}` : base;
+    }
+    return;
+  }
+  if (left !== null && left <= 7) { tone = '#fffbeb;color:#92400e'; msg = `Paket ${esc(data.paket_name)} berakhir ${endTxt} (${left} hari lagi). Perpanjang agar listing tidak turun.`; }
   else { msg = `Paket ${esc(data.paket_name)} aktif sampai ${endTxt}${left !== null ? ` (${left} hari lagi)` : ''}.`; }
   const pending = data.pending_name
     ? `<div style="margin-top:6px;font-weight:700;">Permintaan ${esc(data.pending_name)} sedang menunggu verifikasi admin.</div>` : '';
