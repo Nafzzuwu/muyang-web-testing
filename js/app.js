@@ -1116,6 +1116,28 @@ window.deleteMahasiswaReview = async function (reviewId) {
 // ============================================================
 // DASHBOARD: UMKM (100% dari Supabase)
 // ============================================================
+// Atur tampilan dashboard UMKM sesuai masa kemitraan (aktif vs berakhir).
+// Dipanggil di kedua kondisi supaya sisa tampilan sebelumnya tidak "bocor".
+function setUmkmExpiredState(isExpired) {
+  const pill = document.getElementById('umkmActivePill');
+  if (pill) pill.style.display = isExpired ? 'none' : '';
+
+  const banner = document.getElementById('umkmExpiredBanner');
+  if (banner) banner.style.display = isExpired ? '' : 'none';
+
+  const addMenuForm = document.getElementById('addMenuForm');
+  if (addMenuForm) {
+    addMenuForm.style.opacity = isExpired ? '0.5' : '';
+    addMenuForm.style.pointerEvents = isExpired ? 'none' : '';
+  }
+
+  const uploadBtn = document.getElementById('uploadWarungPhotoBtn');
+  if (uploadBtn) {
+    uploadBtn.disabled = isExpired;
+    uploadBtn.title = isExpired ? 'Perpanjang kemitraan untuk mengupload foto.' : '';
+  }
+}
+
 async function renderUmkmDashboard() {
   const session = LS.getSession();
   if (!session || session.role !== 'umkm') return;
@@ -1169,6 +1191,7 @@ async function renderUmkmDashboard() {
     const welcomeEl = document.getElementById('dashUmkmWelcome');
     const paket = reg ? reg.paket_kemitraan : null;
     if (welcomeEl) welcomeEl.textContent = `${session.warungName} — ${paket ? paket.name : 'Mitra Aktif'}`;
+    setUmkmExpiredState(false);
 
     if (warung) {
       // Tampilkan foto warung yang sudah ada di preview
@@ -1187,17 +1210,8 @@ async function renderUmkmDashboard() {
     const welcomeEl = document.getElementById('dashUmkmWelcome');
     if (welcomeEl) welcomeEl.textContent = `${session.warungName} — Masa Kemitraan Berakhir`;
 
-    // Show expired banner if exists, else reuse active view
-    const expiredBanner = document.getElementById('umkmExpiredBanner');
-    if (expiredBanner) expiredBanner.style.display = '';
-    // Disable add menu and photo upload
-    const addMenuForm = document.getElementById('addMenuForm');
-    if (addMenuForm) {
-      addMenuForm.style.opacity = '0.5';
-      addMenuForm.style.pointerEvents = 'none';
-    }
-    const uploadBtn = document.getElementById('uploadWarungPhotoBtn');
-    if (uploadBtn) { uploadBtn.disabled = true; uploadBtn.title = 'Perpanjang kemitraan untuk mengupload foto.'; }
+    // Sembunyikan badge "Mitra Aktif", tampilkan banner berakhir, nonaktifkan form
+    setUmkmExpiredState(true);
 
     if (warung) {
       await renderUmkmMenuList(warung);
