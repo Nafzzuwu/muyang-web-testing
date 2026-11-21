@@ -1349,7 +1349,7 @@ async function renderPartnershipInfo() {
         ${data.status === 'expired' ? `Masa kemitraan berakhir pada <strong>${endTxt}</strong> dan listing warung tidak tampil di katalog publik. ` : ''}Pengajuan paket <strong>${esc(data.pending_name)}</strong> telah tercatat. Silakan transfer sesuai nominal paket dan kirim bukti transfer ke WhatsApp Tim Muyang${data.status === 'expired' ? ' agar listing dapat diaktifkan kembali' : ''}.
       </div>
       <div class="umkm-renewal-bank">
-        <span>Rekening: <strong>BRI 1234-5678-9012-3456</strong> a.n. MUYANG UNEJ</span>
+        <span>Rekening: <strong>BCA 1234-5678-9012-3456</strong> a.n. TIM MUYANG</span>
         ${pendingAmount ? `<span>Nominal: <strong>${formatIDR(pendingAmount)}</strong></span>` : ''}
       </div>
       <div class="umkm-renewal-actions">
