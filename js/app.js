@@ -63,24 +63,7 @@ function setButtonLoading(btn, isLoading, loadingText = 'Memproses...') {
 }
 
 function renderSteamingBowlSvg() {
-  return `
-    <svg class="muyang-loader-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <circle class="loader-halo" cx="32" cy="34" r="24" fill="rgba(234, 88, 12, 0.08)" />
-      <path class="loader-steam loader-steam-1" d="M23 22C21.5 19.2 25.2 17 23.8 13.5" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"/>
-      <path class="loader-steam loader-steam-2" d="M32 20.5C30.5 17.2 34.2 14.8 32.8 11" stroke="#EA580C" stroke-width="2.6" stroke-linecap="round"/>
-      <path class="loader-steam loader-steam-3" d="M41 22C39.5 19.2 43.2 17 41.8 13.5" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"/>
-      <g class="loader-bowl-group">
-        <path d="M39 27L53 18" stroke="#FB923C" stroke-width="2.4" stroke-linecap="round"/>
-        <path d="M41.5 29L54.5 22.5" stroke="#C2410C" stroke-width="2.4" stroke-linecap="round"/>
-        <path d="M17.5 31.5C18.8 24.5 24.8 22 32 22C39.2 22 45.2 24.5 46.5 31.5H17.5Z" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.2"/>
-        <path d="M23 28.5C25 25.8 29.2 25 33.5 25.3" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round"/>
-        <rect x="13.5" y="31" width="37" height="3.8" rx="1.9" fill="#F59E0B"/>
-        <path d="M15.5 34.8C15.5 44.2 22.6 49 32 49C41.4 49 48.5 44.2 48.5 34.8H15.5Z" fill="#EA580C"/>
-        <path d="M19 39.2Q32 41.8 45 39.2" stroke="#FFEDD5" stroke-width="1.8" stroke-linecap="round" opacity="0.92"/>
-        <path d="M25 49L26.3 52.5C26.5 53.1 27.1 53.5 27.8 53.5H36.2C36.9 53.5 37.5 53.1 37.7 52.5L39 49H25Z" fill="#B45309"/>
-      </g>
-    </svg>
-  `;
+  return `<span class="muyang-dots" aria-hidden="true"><i></i><i></i><i></i></span>`;
 }
 
 function timeAgo(isoString) {
@@ -1115,7 +1098,7 @@ function showSessionKickedModal() {
   modal.innerHTML = `
     <div class="modal-card modal-xs">
       <div class="modal-content-pad" style="text-align:center;">
-        <div style="font-size:2.4rem;color:#c2410c;margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div style="font-size:2.4rem;color:#0F7A5C;margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation"></i></div>
         <h3 style="margin:0 0 8px;">Akun Login di Perangkat Lain</h3>
         <p style="margin:0 0 18px;color:#6b7280;line-height:1.5;">
           Akun kamu baru saja dipakai masuk di perangkat lain, jadi sesi di perangkat ini otomatis diakhiri.
@@ -1222,6 +1205,11 @@ window.addEventListener('focus', () => {
 // ============================================================
 // DASHBOARD: MAHASISWA (100% dari Supabase)
 // ============================================================
+function setDashStat(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
 async function renderMahasiswaDashboard() {
   const session = LS.getSession();
   if (!session || session.role !== 'mahasiswa') return;
@@ -1235,11 +1223,17 @@ async function renderMahasiswaDashboard() {
     DB.getUserReviews(session.id)
   ]);
 
+  setDashStat('dashStatSaved', bookmarkRows.filter(b => b.warungs).length);
+  setDashStat('dashStatReviews', reviewRows.length);
+  setDashStat('dashStatKenyang', reviewRows.length
+    ? (reviewRows.reduce((s, r) => s + (Number(r.kenyang) || 0), 0) / reviewRows.length).toFixed(1)
+    : '–');
+
   // 1. Render Bookmarks
   const bookmarkListEl = document.getElementById('dashBookmarkList');
   if (bookmarkListEl) {
     if (bookmarkRows.length === 0) {
-      bookmarkListEl.innerHTML = '<p style="color:var(--neutral-500);font-size:0.9rem;">Belum ada simpanan. Jelajahi katalog kuliner dan klik ikon bookmark pada warung favoritmu!</p>';
+      bookmarkListEl.innerHTML = '<p class="dash-empty-text">Belum ada simpanan. Jelajahi katalog kuliner dan klik ikon bookmark pada warung favoritmu!</p>';
     } else {
       bookmarkListEl.innerHTML = bookmarkRows.map(bm => {
         const w = bm.warungs;
@@ -1250,14 +1244,14 @@ async function renderMahasiswaDashboard() {
             <div class="dash-bm-info">
               <h4>${esc(w.name)}</h4>
               <p><i class="fa-solid fa-location-dot"></i> ${esc(w.area || '')} (${esc(w.distance || '')})</p>
-              <p style="color:var(--accent-600);font-weight:800;margin-top:4px;">Mulai ${formatIDR(w.min_price || 0)}</p>
+              <p class="dash-bm-price">Mulai ${formatIDR(w.min_price || 0)}</p>
             </div>
             <div class="dash-bm-actions">
               <button class="btn btn-primary btn-sm" onclick="window.openDetailModal(${esc(JSON.stringify(String(w.id)))})">
                 <i class="fa-solid fa-eye"></i> Lihat Menu
               </button>
-              <button class="btn btn-outline btn-sm" onclick="window.removeDashBookmark(${esc(JSON.stringify(String(w.id)))})" title="Hapus Simpanan">
-                <i class="fa-solid fa-trash-can" style="color:#dc2626;"></i>
+              <button class="btn btn-outline btn-sm btn-danger-soft" onclick="window.removeDashBookmark(${esc(JSON.stringify(String(w.id)))})" title="Hapus Simpanan">
+                <i class="fa-solid fa-trash-can"></i>
               </button>
             </div>
           </div>
@@ -1270,24 +1264,24 @@ async function renderMahasiswaDashboard() {
   const reviewListEl = document.getElementById('dashReviewList');
   if (reviewListEl) {
     if (reviewRows.length === 0) {
-      reviewListEl.innerHTML = '<p style="color:var(--neutral-500);font-size:0.9rem;">Kamu belum menulis ulasan kuliner. Berikan ulasan pada tempat makan yang pernah kamu kunjungi!</p>';
+      reviewListEl.innerHTML = '<p class="dash-empty-text">Kamu belum menulis ulasan kuliner. Berikan ulasan pada tempat makan yang pernah kamu kunjungi!</p>';
     } else {
       reviewListEl.innerHTML = reviewRows.map(r => `
         <div class="dash-review-card">
           <div class="dash-review-top">
-            <span class="dash-review-warung"><i class="fa-solid fa-store" style="color:var(--accent-500);"></i> ${esc(r.warungs?.name || 'Warung')}</span>
+            <span class="dash-review-warung"><i class="fa-solid fa-store"></i> ${esc(r.warungs?.name || 'Warung')}</span>
             <span class="dash-review-date">${timeAgo(r.created_at)}</span>
           </div>
           <div class="dash-review-badges">
-            <span style="color:var(--gold-500);font-size:0.85rem;">${'<i class="fa-solid fa-star"></i>'.repeat(Math.max(0, Math.min(5, Number(r.rating) || 0)))}</span>
-            <span style="background:var(--success-100);color:var(--success-700);font-size:0.75rem;font-weight:800;padding:2px 8px;border-radius:var(--radius-full);">Kenyang: ${r.kenyang}/5</span>
+            <span class="dash-stars">${'<i class="fa-solid fa-star"></i>'.repeat(Math.max(0, Math.min(5, Number(r.rating) || 0)))}</span>
+            <span class="dash-kenyang">Kenyang: ${r.kenyang}/5</span>
           </div>
           <p class="dash-review-comment">"${esc(r.comment)}"</p>
-          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px;">
+          <div class="dash-review-actions">
             <button class="btn btn-primary btn-xs" onclick="window.openDetailModal(${esc(JSON.stringify(String(r.warung_id)))})">
               <i class="fa-solid fa-eye"></i> Buka Warung
             </button>
-            <button class="btn btn-outline btn-xs" style="color:#dc2626;border-color:#dc2626;" onclick="window.deleteMahasiswaReview(${Number(r.id)})" title="Hapus Ulasan">
+            <button class="btn btn-outline btn-xs btn-danger-soft" onclick="window.deleteMahasiswaReview(${Number(r.id)})" title="Hapus Ulasan">
               <i class="fa-solid fa-trash-can"></i> Hapus
             </button>
           </div>
@@ -1660,26 +1654,27 @@ async function renderUmkmMenuList(warung) {
   }
 
   const menus = warung.warung_menus || [];
+  setDashStat('dashStatMenus', menus.length);
   if (menus.length === 0) {
-    listEl.innerHTML = '<p style="color:var(--neutral-400);font-size:0.85rem;">Belum ada menu warung. Tambahkan menu pertama Anda pada formulir di atas.</p>';
+    listEl.innerHTML = '<p class="dash-empty-text">Belum ada menu warung. Tambahkan menu pertama Anda pada formulir di atas.</p>';
     return;
   }
   listEl.innerHTML = menus.map(m => `
     <div class="dash-menu-item">
-      <div style="display:flex;align-items:center;gap:10px;">
+      <div class="dash-menu-main">
         ${m.image_url
-      ? `<img src="${safeUrl(m.image_url)}" alt="${esc(m.name)}" style="width:48px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--neutral-200);" onerror="this.style.display='none'">`
-      : `<div style="width:48px;height:40px;background:var(--neutral-100);border-radius:6px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--neutral-300);"><i class="fa-solid fa-utensils" style="color:var(--neutral-300);font-size:0.9rem;"></i></div>`
+      ? `<img src="${safeUrl(m.image_url)}" alt="${esc(m.name)}" class="dash-menu-thumb" onerror="this.style.display='none'">`
+      : `<div class="dash-menu-thumb is-empty"><i class="fa-solid fa-utensils"></i></div>`
     }
         <div>
           <span class="dash-menu-name">${esc(m.name)}</span>
-          ${m.is_best_seller ? '<span style="background:var(--gold-100);color:var(--gold-600);font-size:0.68rem;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;">Favorit</span>' : ''}
+          ${m.is_best_seller ? '<span class="dash-tag-fav">Favorit</span>' : ''}
           <span class="dash-menu-portion">${esc(m.portion || '')}</span>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:12px;">
+      <div class="dash-menu-side">
         <span class="dash-menu-price">${formatIDR(m.price)}</span>
-        <label style="font-size:0.75rem;cursor:pointer;display:flex;align-items:center;gap:4px;">
+        <label class="dash-menu-toggle">
           <input type="checkbox" ${m.is_available ? 'checked' : ''} onchange="window.toggleMenuAvailability(${Number(m.id)}, this.checked)"> Tersedia
         </label>
         <button class="btn-icon-danger" onclick="window.deleteUmkmMenu(${Number(m.id)})" title="Hapus Menu">
@@ -1700,21 +1695,25 @@ async function renderUmkmIncomingReviews(warungId) {
   const reviewsEl = document.getElementById('umkmReviewsList');
   if (!reviewsEl) return;
   const reviews = await DB.getReviewsForWarung(warungId);
+  setDashStat('dashStatReviewsIn', reviews.length);
+  setDashStat('dashStatRating', reviews.length
+    ? (reviews.reduce((s, r) => s + (Number(r.rating) || 0), 0) / reviews.length).toFixed(1)
+    : '–');
 
   if (reviews.length === 0) {
-    reviewsEl.innerHTML = '<p style="color:var(--neutral-400);font-size:0.85rem;">Belum ada ulasan baru dari mahasiswa untuk warung Anda.</p>';
+    reviewsEl.innerHTML = '<p class="dash-empty-text">Belum ada ulasan baru dari mahasiswa untuk warung Anda.</p>';
     return;
   }
 
   reviewsEl.innerHTML = reviews.map(r => `
     <div class="dash-review-card">
       <div class="dash-review-top">
-        <span style="font-weight:800;color:var(--primary-900);">${esc(r.reviewer_name || r.users?.name || 'Mahasiswa')}</span>
+        <span class="dash-review-warung">${esc(r.reviewer_name || r.users?.name || 'Mahasiswa')}</span>
         <span class="dash-review-date">${timeAgo(r.created_at)}</span>
       </div>
       <div class="dash-review-badges">
-        <span style="color:var(--gold-500);font-size:0.85rem;">${'<i class="fa-solid fa-star"></i>'.repeat(Math.max(0, Math.min(5, Number(r.rating) || 0)))}</span>
-        <span style="background:var(--success-100);color:var(--success-700);font-size:0.75rem;font-weight:800;padding:2px 8px;border-radius:var(--radius-full);">Kenyang: ${r.kenyang}/5</span>
+        <span class="dash-stars">${'<i class="fa-solid fa-star"></i>'.repeat(Math.max(0, Math.min(5, Number(r.rating) || 0)))}</span>
+        <span class="dash-kenyang">Kenyang: ${r.kenyang}/5</span>
       </div>
       <p class="dash-review-comment">"${esc(r.comment)}"</p>
     </div>
@@ -1803,8 +1802,8 @@ async function renderAdminDashboard() {
       </div>
       ${expired > 0 ? `
       <div class="admin-stat-card">
-        <div class="admin-stat-icon" style="background:#f3f4f6;color:#6b7280;"><i class="fa-solid fa-ban"></i></div>
-        <div><div class="admin-stat-val" style="color:#6b7280;">${expired}</div><div class="admin-stat-label">Kemitraan Berakhir</div></div>
+        <div class="admin-stat-icon expired"><i class="fa-solid fa-ban"></i></div>
+        <div><div class="admin-stat-val">${expired}</div><div class="admin-stat-label">Kemitraan Berakhir</div></div>
       </div>` : ''}
     `;
   }
@@ -1871,7 +1870,7 @@ async function renderAdminDashboard() {
                       <button class="btn btn-primary btn-xs" onclick="window.adminApproveUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})">
                         <i class="fa-solid fa-check"></i> Setujui
                       </button>
-                      <button class="btn btn-outline btn-xs" onclick="window.adminRejectUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})" style="color:#dc2626;border-color:#dc2626;">
+                      <button class="btn btn-outline btn-xs btn-danger-soft" onclick="window.adminRejectUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})">
                         <i class="fa-solid fa-times"></i> Tolak
                       </button>
                     ` : ''}
@@ -1882,7 +1881,7 @@ async function renderAdminDashboard() {
                     ` : ''}
                     ${u.status === 'active' ? `
                       <span style="color:var(--success-600);font-size:0.82rem;font-weight:800;"><i class="fa-solid fa-circle-check"></i> Tayang Publik</span>
-                      <button class="btn btn-outline btn-xs" onclick="window.adminDeactivateUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})" style="color:#dc2626;border-color:#dc2626;margin-top:4px;">
+                      <button class="btn btn-outline btn-xs btn-danger-soft" onclick="window.adminDeactivateUmkm(${esc(JSON.stringify(u.id))}, ${esc(JSON.stringify(u.business_name))}, ${esc(JSON.stringify(u.user_id))})">
                         <i class="fa-solid fa-ban"></i> Nonaktifkan
                       </button>
                     ` : ''}
@@ -1939,7 +1938,7 @@ async function renderAdminDashboard() {
                 </td>
                 <td style="font-size:0.85rem;color:var(--neutral-700);max-width:300px;">"${esc(r.comment)}"</td>
                 <td>
-                  <button class="btn btn-outline btn-xs" style="color:#dc2626;border-color:#dc2626;" onclick="window.adminDeleteReview(${Number(r.id)})">
+                  <button class="btn btn-outline btn-xs btn-danger-soft" onclick="window.adminDeleteReview(${Number(r.id)})">
                     <i class="fa-solid fa-trash-can"></i> Hapus
                   </button>
                 </td>
@@ -2041,12 +2040,15 @@ window.adminActivateUmkm = async function (regId, warungName, userId) {
 
 let pendingConfirmAction = null;
 
-function openConfirmAction({ title, message, buttonLabel, icon = 'fa-circle-question', onConfirm }) {
+function openConfirmAction({ title, message, buttonLabel, icon = 'fa-circle-question', tone = 'neutral', onConfirm }) {
   pendingConfirmAction = onConfirm;
   document.getElementById('confirmActionTitle').textContent = title;
   document.getElementById('confirmActionMessage').textContent = message;
   document.getElementById('confirmActionIcon').className = `fa-solid ${icon}`;
-  document.getElementById('confirmActionBtn').innerHTML = buttonLabel;
+  document.querySelector('#confirmActionModal .confirm-icon-box').className = `confirm-icon-box is-${tone}`;
+  const confirmBtn = document.getElementById('confirmActionBtn');
+  confirmBtn.className = tone === 'danger' ? 'btn btn-danger' : 'btn btn-primary';
+  confirmBtn.innerHTML = buttonLabel;
   openModal('confirmActionModal');
 }
 
@@ -2082,6 +2084,7 @@ window.adminDeactivateUmkm = function (regId, warungName) {
     message: `Warung ${warungName} akan hilang dari katalog publik, namun data, menu, dan ulasan tetap tersimpan.`,
     buttonLabel: '<i class="fa-solid fa-ban"></i> Nonaktifkan',
     icon: 'fa-store-slash',
+    tone: 'danger',
     onConfirm: async () => {
       await DB.runAdminAction('deactivate', regId);
       await refreshWarungsCache();
@@ -2100,6 +2103,7 @@ window.adminReactivateUmkm = function (regId, warungName) {
     message: `Warung ${warungName} akan kembali tampil di katalog publik.`,
     buttonLabel: '<i class="fa-solid fa-rotate-right"></i> Aktifkan Kembali',
     icon: 'fa-store',
+    tone: 'success',
     onConfirm: async () => {
       await DB.runAdminAction('reactivate', regId);
       await refreshWarungsCache();
@@ -2595,7 +2599,7 @@ function renderCulinaryGrid() {
     return `
       <article class="culinary-card" data-id="${esc(item.id)}">
         <div class="card-img-wrapper">
-          <img src="${safeUrl(item.image)}" alt="${esc(item.name)}" class="card-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80'" />
+          <img src="${safeUrl(item.image)}" alt="${esc(item.name)}" class="card-img" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80'" />
           <div class="card-top-badges">
             ${featuredBadge}
             <span class="badge-distance"><i class="fa-solid fa-person-walking"></i> ${esc(item.distance)}</span>
@@ -2782,7 +2786,7 @@ window.openDetailModal = async function (id) {
           ${esc(normalized.categoryLabel)}
         </span>
         <h2 style="font-size: 1.6rem; font-weight: 800; margin-top: 4px; line-height: 1.2;">${esc(normalized.name)}</h2>
-        <div style="font-size: 0.85rem; color: #fdba74; display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+        <div style="font-size: 0.85rem; color: #9BE8CC; display: flex; align-items: center; gap: 6px; margin-top: 4px;">
           <i class="fa-solid fa-location-dot"></i> ${esc(normalized.location)} (${esc(normalized.distance)})
         </div>
       </div>
@@ -2839,7 +2843,7 @@ window.openDetailModal = async function (id) {
       </h4>
       <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px;">
         ${normalized.popularMenus.length === 0
-      ? '<p style="color:var(--neutral-400);font-size:0.85rem;">Belum ada menu yang ditambahkan.</p>'
+      ? '<p class="dash-empty-text">Belum ada menu yang ditambahkan.</p>'
       : normalized.popularMenus.map(menu => `
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #fff; border: 1.5px solid var(--neutral-200); border-radius: var(--radius-md);">
             <div>
@@ -2868,7 +2872,7 @@ window.openDetailModal = async function (id) {
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px;">
-        ${reviews.length === 0 ? '<p style="color:var(--neutral-400);font-size:0.85rem;">Belum ada ulasan. Jadilah mahasiswa pertama yang mengulas!</p>' : ''}
+        ${reviews.length === 0 ? '<p class="dash-empty-text">Belum ada ulasan. Jadilah mahasiswa pertama yang mengulas!</p>' : ''}
         ${reviews.map(rev => `
           <div style="background: var(--neutral-50); border: 1px solid var(--neutral-200); border-radius: var(--radius-lg); padding: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
@@ -3198,7 +3202,7 @@ function selectRadarSpot(id) {
   radarDetailContainer.innerHTML = `
     <div class="radar-spot-card">
       <div class="spot-card-hero">
-        <img src="${safeUrl(item.image)}" alt="${esc(item.name)}" class="spot-card-img" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80'" />
+        <img src="${safeUrl(item.image)}" alt="${esc(item.name)}" class="spot-card-img" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80'" />
         <div class="spot-card-badges">
           <span class="spot-badge-cat">${esc(item.categoryLabel)}</span>
           <span class="badge-kenyang-score"><i class="fa-solid fa-bowl-food"></i> Kenyang ${item.kenyangScore}</span>
@@ -3557,6 +3561,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 5. Hero Slider
   const heroSlider = document.getElementById('heroBudgetSlider');
+  // Perf: coalesce filter re-renders into one per animation frame
+  let catalogueRenderQueued = false;
+  let catalogueMapQueued = false;
+  function scheduleCatalogueRender(withMap) {
+    if (withMap) catalogueMapQueued = true;
+    if (catalogueRenderQueued) return;
+    catalogueRenderQueued = true;
+    requestAnimationFrame(() => {
+      catalogueRenderQueued = false;
+      renderCulinaryGrid();
+      if (catalogueMapQueued) {
+        catalogueMapQueued = false;
+        updateRadarMap();
+      }
+    });
+  }
   const heroDisplay = document.getElementById('heroBudgetDisplay');
   if (heroSlider) {
     heroSlider.addEventListener('input', (e) => {
@@ -3564,8 +3584,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       state.maxBudget = val;
       if (heroDisplay) heroDisplay.textContent = formatIDR(val);
       document.querySelectorAll('.hero-budget-pill').forEach(p => p.classList.remove('active'));
-      renderCulinaryGrid();
-      updateRadarMap();
+      scheduleCatalogueRender(true);
     });
   }
 
@@ -3583,9 +3602,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // 6. Catalogue Filters
+  let searchDebounce;
   document.getElementById('catalogueSearch')?.addEventListener('input', (e) => {
     state.searchQuery = e.target.value;
-    renderCulinaryGrid();
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(renderCulinaryGrid, 160);
   });
 
   document.querySelectorAll('.category-chip').forEach(chip => {
@@ -3867,20 +3888,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // 19. Load data from Supabase Cloud, then render
-  console.log('[MUYANG] Loading data from Supabase...');
-  await Promise.all([
-    refreshWarungsCache(),
-    refreshBookmarkSet()
-  ]);
-
-  // 20. Initial Renders
-  renderCulinaryGrid();
-  renderRadarMapPins();
-  if (warungsCache.length > 0) selectRadarSpot(warungsCache[0].id);
-  setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 400);
-  updateMealPlanner();
-
-  // 21. Scroll-reveal animation
+  // 21. Scroll-reveal animation (runs before network so sections never stay hidden)
   if ('IntersectionObserver' in window) {
     const revealObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -3895,6 +3903,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.section-reveal').forEach(el => el.classList.add('section-visible'));
   }
 
+  console.log('[MUYANG] Loading data from Supabase...');
+  await Promise.all([
+    refreshWarungsCache(),
+    refreshBookmarkSet()
+  ]);
+
+  // 20. Initial Renders
+  renderCulinaryGrid();
+  renderRadarMapPins();
+  if (warungsCache.length > 0) selectRadarSpot(warungsCache[0].id);
+  setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 400);
+  updateMealPlanner();
+
+
   // 22. Sticky Header Elevation, Reading Progress Bar & Section Scroll Spy
   const mainHeader = document.querySelector('.main-header');
   const progressBar = document.getElementById('scrollProgressBar');
@@ -3903,31 +3925,70 @@ document.addEventListener('DOMContentLoaded', async () => {
     .map(id => document.getElementById(id))
     .filter(Boolean);
 
+  // Scroll chrome (perf): metrics are measured once (and on resize/height change),
+  // never inside the scroll handler. Reads happen before writes, writes only when a value changes.
+  let spyOffsets = [];
+  let docMax = 0;
+  let metricsDirty = true;
+  let lastScrolled = null;
+  let lastSpyId = null;
+  let scrollTicking = false;
+
+  function measureScrollMetrics() {
+    const base = window.scrollY || window.pageYOffset || 0;
+    docMax = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    spyOffsets = spySections.map(sec => ({ id: sec.id, top: sec.getBoundingClientRect().top + base }));
+    metricsDirty = false;
+  }
+
   function updateScrollChrome() {
-    const scrollY = window.scrollY || window.pageYOffset || 0;
-    if (mainHeader) {
-      mainHeader.classList.toggle('scrolled', scrollY > 24);
+    scrollTicking = false;
+    if (metricsDirty) measureScrollMetrics();
+    const y = window.scrollY || window.pageYOffset || 0;
+
+    const scrolled = y > 24;
+    if (mainHeader && scrolled !== lastScrolled) {
+      mainHeader.classList.toggle('scrolled', scrolled);
+      lastScrolled = scrolled;
     }
     if (progressBar) {
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const pct = docHeight > 0 ? Math.min(100, Math.max(0, (scrollY / docHeight) * 100)) : 0;
-      progressBar.style.width = pct.toFixed(1) + '%';
+      const pct = docMax > 0 ? Math.min(1, Math.max(0, y / docMax)) : 0;
+      progressBar.style.transform = 'scaleX(' + pct.toFixed(4) + ')';
     }
-    if (spySections.length > 0 && navItems.length > 0) {
-      let currentId = spySections[0].id;
-      const offset = scrollY + 180;
-      for (const sec of spySections) {
-        if (offset >= sec.offsetTop) currentId = sec.id;
+    if (spyOffsets.length > 0 && navItems.length > 0) {
+      let currentId = spyOffsets[0].id;
+      const probe = y + 180;
+      for (const s of spyOffsets) {
+        if (probe >= s.top) currentId = s.id;
       }
-       navItems.forEach(item => {
-         const href = item.querySelector('a')?.getAttribute('href') || '';
-         item.classList.toggle('active', href === '#' + currentId);
-       });
-       syncNavIndicator();
+      if (currentId !== lastSpyId) {
+        lastSpyId = currentId;
+        navItems.forEach(item => {
+          const href = item.querySelector('a')?.getAttribute('href') || '';
+          item.classList.toggle('active', href === '#' + currentId);
+        });
+        syncNavIndicator();
+      }
     }
   }
 
-  window.addEventListener('scroll', updateScrollChrome, { passive: true });
+  function requestScrollUpdate() {
+    if (!scrollTicking) {
+      scrollTicking = true;
+      requestAnimationFrame(updateScrollChrome);
+    }
+  }
+
+  function markMetricsDirty() {
+    metricsDirty = true;
+    requestScrollUpdate();
+  }
+
+  window.addEventListener('scroll', requestScrollUpdate, { passive: true });
+  window.addEventListener('resize', markMetricsDirty, { passive: true });
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(markMetricsDirty).observe(document.body);
+  }
   window.addEventListener('resize', syncNavIndicator, { passive: true });
   const navLinks = document.querySelector('.nav-links');
   if (navLinks && !navLinks.querySelector('.nav-active-indicator')) {
@@ -4062,3 +4123,93 @@ function initHeroSpotlight() {
     });
   }
 }
+
+// ============================================================
+// DROPDOWN PAKET (register UMKM): <select> asli tetap jadi sumber nilai,
+// tampilannya diganti daftar pilihan bergaya tema.
+// ============================================================
+(function enhancePaketSelect() {
+  const select = document.getElementById('regPaket');
+  if (!select || select.dataset.enhanced) return;
+  select.dataset.enhanced = '1';
+
+  const parse = (opt) => {
+    const [name, rest = ''] = opt.textContent.split(' — ');
+    const m = rest.match(/^(.*?)\/(.+)$/);
+    return { value: opt.value, name: name.trim(), price: m ? m[1].trim() : rest.trim(), period: m ? m[2].trim() : '' };
+  };
+  const items = Array.from(select.options).map(parse);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'paket-select';
+  wrap.innerHTML = `
+    <button type="button" class="paket-trigger" id="regPaketTrigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="regPaketList">
+      <span class="paket-trigger-text"><strong></strong><small></small></span>
+      <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+    </button>
+    <ul class="paket-list" id="regPaketList" role="listbox" tabindex="-1" hidden>
+      ${items.map((it, i) => `
+        <li class="paket-option" role="option" id="regPaketOpt${i}" data-index="${i}">
+          <span class="paket-opt-name">${esc(it.name)}</span>
+          <span class="paket-opt-price"><b>${esc(it.price)}</b>${it.period ? `<small>/ ${esc(it.period)}</small>` : ''}</span>
+          <i class="fa-solid fa-check paket-opt-check" aria-hidden="true"></i>
+        </li>`).join('')}
+    </ul>`;
+  select.classList.add('paket-native');
+  select.setAttribute('tabindex', '-1');
+  select.setAttribute('aria-hidden', 'true');
+  select.parentNode.insertBefore(wrap, select);
+  document.querySelector('label[for="regPaket"]')?.setAttribute('for', 'regPaketTrigger');
+
+  const trigger = wrap.querySelector('.paket-trigger');
+  const list = wrap.querySelector('.paket-list');
+  const opts = Array.from(list.children);
+  let active = Math.max(0, select.selectedIndex);
+
+  const paint = () => {
+    const it = items[Math.max(0, select.selectedIndex)];
+    trigger.querySelector('strong').textContent = it.name;
+    trigger.querySelector('small').textContent = `${it.price}${it.period ? ' / ' + it.period : ''}`;
+    opts.forEach((o, i) => {
+      o.setAttribute('aria-selected', String(i === select.selectedIndex));
+      o.classList.toggle('is-active', i === active);
+    });
+    if (!list.hidden) list.setAttribute('aria-activedescendant', `regPaketOpt${active}`);
+  };
+  const setOpen = (open) => {
+    list.hidden = !open;
+    wrap.classList.toggle('is-open', open);
+    trigger.setAttribute('aria-expanded', String(open));
+    if (open) { active = Math.max(0, select.selectedIndex); list.focus({ preventScroll: true }); }
+    else if (document.activeElement === list) trigger.focus();
+    paint();
+  };
+  const choose = (i) => {
+    select.selectedIndex = i;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    setOpen(false);
+    trigger.focus();
+  };
+
+  trigger.addEventListener('click', () => setOpen(list.hidden));
+  trigger.addEventListener('keydown', (e) => {
+    if (['ArrowDown', 'ArrowUp'].includes(e.key)) { e.preventDefault(); setOpen(true); }
+  });
+  list.addEventListener('click', (e) => {
+    const o = e.target.closest('.paket-option');
+    if (o) choose(Number(o.dataset.index));
+  });
+  list.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(opts.length - 1, active + 1); paint(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(0, active - 1); paint(); }
+    else if (e.key === 'Home') { e.preventDefault(); active = 0; paint(); }
+    else if (e.key === 'End') { e.preventDefault(); active = opts.length - 1; paint(); }
+    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(active); }
+    else if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); trigger.focus(); }
+    else if (e.key === 'Tab') setOpen(false);
+  });
+  document.addEventListener('click', (e) => { if (!wrap.contains(e.target) && !list.hidden) setOpen(false); });
+  select.addEventListener('change', paint);
+  select.form?.addEventListener('reset', () => setTimeout(paint, 0));
+  paint();
+})();

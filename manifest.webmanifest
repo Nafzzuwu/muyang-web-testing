@@ -4,8 +4,8 @@
   "description": "Direktori kuliner hemat dan mengenyangkan sekitar kampus UNEJ.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#2B0F0D",
-  "theme_color": "#2B0F0D",
+  "background_color": "#0C3326",
+  "theme_color": "#0C3326",
   "lang": "id",
   "icons": [
     { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
