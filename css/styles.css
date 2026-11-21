@@ -6371,3 +6371,15 @@ body { background: var(--bg-parchment); color: var(--neutral-800); }
 .paket-opt-price small { font-size: 0.72rem; color: var(--neutral-500); }
 .paket-opt-check { color: var(--primary-800); font-size: 0.8rem; visibility: hidden; }
 .paket-option[aria-selected="true"] .paket-opt-check { visibility: visible; }
+
+/* FIX TAMPILAN MOBILE */
+@media (max-width: 1100px) {
+  .catalogue-layout { grid-template-columns: minmax(0, 1fr); }
+  .catalogue-layout > * { min-width: 0; }
+  .catalogue-layout .filter-bar-card { max-width: 100%; }
+  .filter-row-top > *, .filter-select, .search-input-group { min-width: 0; max-width: 100%; }
+}
+@media (max-width: 960px) {
+  .hero-banner, .section-header, .radar-map-wrapper, .planner-container-card { grid-template-columns: minmax(0, 1fr); }
+  .hero-banner > *, .radar-map-wrapper > *, .planner-container-card > * { min-width: 0; }
+}
